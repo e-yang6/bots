@@ -1,40 +1,36 @@
 /**
- * MediaPipe Pose gesture detection for controlling the 3D model.
+ * MediaPipe Pose gesture detection — scale only.
  *
- * Reads the XR camera frame (via camera-access feature), feeds it to
- * MediaPipe Pose Landmarker at ~5fps, and maps body gestures to
- * scale/rotate/move commands.
+ * Detects a person's arm height to control model scale:
+ *   - Arms raised above shoulders → model gets bigger
+ *   - Arms lowered below hips → model gets smaller
+ *   - Arms at rest (between shoulders and hips) → no change
  *
- * Gestures (detected on a person standing in frame):
- *   - Arms spread apart / together → scale up / down
- *   - Body twist (shoulders rotate) → rotate model
- *   - Both hands raised above head → reset scale and rotation
+ * This avoids the problem of needing to bring hands together
+ * before spreading them. Raising/lowering arms is unambiguous.
  */
 
-const POSE_PROCESS_INTERVAL = 200; // ms between pose detections (~5fps)
-const SMOOTHING = 0.3; // lerp factor for gesture values (0 = ignore new, 1 = instant)
+const POSE_PROCESS_INTERVAL = 200; // ~5fps
 
-// Landmark indices (MediaPipe Pose 33-point model)
+// Landmark indices
 const LEFT_SHOULDER = 11;
 const RIGHT_SHOULDER = 12;
 const LEFT_WRIST = 15;
 const RIGHT_WRIST = 16;
-const LEFT_ELBOW = 13;
-const RIGHT_ELBOW = 14;
-const NOSE = 0;
 const LEFT_HIP = 23;
 const RIGHT_HIP = 24;
 
 let poseLandmarker = null;
 let lastPoseTime = 0;
+
 let gestureState = {
-    armSpan: null,       // normalized distance between wrists
-    shoulderAngle: null, // rotation of shoulder line
-    handsAboveHead: false,
     personDetected: false,
+    // 'up' = both arms raised above shoulders → scale up
+    // 'down' = both arms below hips → scale down
+    // 'neutral' = anything else → hold current scale
+    action: 'neutral',
 };
 
-// Offscreen canvas for reading XR camera frames
 let offscreenCanvas = null;
 let offscreenCtx = null;
 
@@ -67,10 +63,6 @@ export async function initPoseDetection() {
     return true;
 }
 
-/**
- * Process an XR camera frame for pose detection.
- * Call this from the render loop with the XR frame's camera view.
- */
 export function processXRFrame(renderer, frame) {
     if (!poseLandmarker || !frame) return;
 
@@ -83,23 +75,21 @@ export function processXRFrame(renderer, frame) {
     if (!pose || !pose.views || pose.views.length === 0) return;
 
     const view = pose.views[0];
-    if (!view.camera) return; // camera-access not available
+    if (!view.camera) return;
 
     const glBinding = new XRWebGLBinding(session, renderer.getContext());
     let cameraTexture;
     try {
         cameraTexture = glBinding.getCameraImage(view.camera);
     } catch (e) {
-        return; // camera-access not supported on this device
+        return;
     }
     if (!cameraTexture) return;
 
-    // Read the WebGL texture into our offscreen canvas
     const gl = renderer.getContext();
     const width = view.camera.width;
     const height = view.camera.height;
 
-    // Create framebuffer to read from the camera texture
     const fb = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, cameraTexture, 0);
@@ -110,7 +100,6 @@ export function processXRFrame(renderer, frame) {
         return;
     }
 
-    // Read pixels — use a smaller resolution for performance
     const scale = Math.min(1, 320 / Math.max(width, height));
     const w = Math.round(width * scale);
     const h = Math.round(height * scale);
@@ -120,36 +109,29 @@ export function processXRFrame(renderer, frame) {
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.deleteFramebuffer(fb);
 
-    // Put into offscreen canvas for MediaPipe
     offscreenCanvas.width = w;
     offscreenCanvas.height = h;
     const imageData = new ImageData(new Uint8ClampedArray(pixels.buffer), w, h);
     offscreenCtx.putImageData(imageData, 0, 0);
 
-    // Flip vertically (WebGL reads bottom-up)
     offscreenCtx.save();
     offscreenCtx.scale(1, -1);
     offscreenCtx.drawImage(offscreenCanvas, 0, -h);
     offscreenCtx.restore();
 
-    // Run pose detection
     try {
         const results = poseLandmarker.detectForVideo(offscreenCanvas, now);
         if (results.landmarks && results.landmarks.length > 0) {
             updateGestureState(results.landmarks[0]);
         } else {
             gestureState.personDetected = false;
+            gestureState.action = 'neutral';
         }
-    } catch (e) {
-        // Silently skip detection errors
-    }
+    } catch (e) {}
 
     lastPoseTime = now;
 }
 
-/**
- * Fallback: process a regular video element (for non-XR camera-access).
- */
 export function processVideoFrame(videoElement) {
     if (!poseLandmarker || !videoElement.videoWidth) return;
 
@@ -162,10 +144,9 @@ export function processVideoFrame(videoElement) {
             updateGestureState(results.landmarks[0]);
         } else {
             gestureState.personDetected = false;
+            gestureState.action = 'neutral';
         }
-    } catch (e) {
-        // skip
-    }
+    } catch (e) {}
 
     lastPoseTime = now;
 }
@@ -177,72 +158,53 @@ function updateGestureState(landmarks) {
     const rw = landmarks[RIGHT_WRIST];
     const ls = landmarks[LEFT_SHOULDER];
     const rs = landmarks[RIGHT_SHOULDER];
-    const nose = landmarks[NOSE];
+    const lh = landmarks[LEFT_HIP];
+    const rh = landmarks[RIGHT_HIP];
 
-    // Arm span: distance between wrists, normalized by shoulder width
-    const shoulderWidth = Math.sqrt(
-        (ls.x - rs.x) ** 2 + (ls.y - rs.y) ** 2
-    );
-    const wristDist = Math.sqrt(
-        (lw.x - rw.x) ** 2 + (lw.y - rw.y) ** 2
-    );
-    const armSpan = shoulderWidth > 0.01 ? wristDist / shoulderWidth : 1;
+    // Average Y positions (in MediaPipe, Y increases downward)
+    const shoulderY = (ls.y + rs.y) / 2;
+    const hipY = (lh.y + rh.y) / 2;
+    const leftWristY = lw.y;
+    const rightWristY = rw.y;
 
-    // Shoulder angle: rotation of the line between shoulders
-    const shoulderAngle = Math.atan2(ls.y - rs.y, ls.x - rs.x);
-
-    // Hands above head: both wrists above nose
-    const handsAboveHead = lw.y < nose.y - 0.1 && rw.y < nose.y - 0.1;
-
-    // Smooth values
-    if (gestureState.armSpan === null) {
-        gestureState.armSpan = armSpan;
-        gestureState.shoulderAngle = shoulderAngle;
-    } else {
-        gestureState.armSpan += (armSpan - gestureState.armSpan) * SMOOTHING;
-        gestureState.shoulderAngle += angleDiff(shoulderAngle, gestureState.shoulderAngle) * SMOOTHING;
+    // Both wrists above shoulders → scale up
+    if (leftWristY < shoulderY && rightWristY < shoulderY) {
+        gestureState.action = 'up';
     }
-
-    gestureState.handsAboveHead = handsAboveHead;
-}
-
-function angleDiff(a, b) {
-    let d = a - b;
-    while (d > Math.PI) d -= 2 * Math.PI;
-    while (d < -Math.PI) d += 2 * Math.PI;
-    return d;
+    // Both wrists below hips → scale down
+    else if (leftWristY > hipY && rightWristY > hipY) {
+        gestureState.action = 'down';
+    }
+    // Anything else → neutral (hold)
+    else {
+        gestureState.action = 'neutral';
+    }
 }
 
 /**
- * Apply gesture state to a model group.
- * Call each frame after processXRFrame/processVideoFrame.
+ * Apply gesture to model scale.
+ * Call each frame. Returns the current scale.
  *
- * baseScale: the initial scale (e.g., 0.001 for mm→m)
- * Returns the new scale value.
+ * When arms are raised: scale grows continuously.
+ * When arms are lowered: scale shrinks continuously.
+ * When neutral: scale stays put.
  */
-export function applyGestures(modelGroup, baseScale) {
-    if (!gestureState.personDetected) return baseScale;
+const SCALE_SPEED = 0.008; // per frame
+const MIN_SCALE = 0.0003;
+const MAX_SCALE = 0.008;
 
-    // Reset on hands above head
-    if (gestureState.handsAboveHead) {
-        modelGroup.rotation.y = 0;
-        modelGroup.scale.setScalar(baseScale);
-        return baseScale;
+export function applyGestures(modelGroup, currentScale) {
+    if (!gestureState.personDetected) return currentScale;
+
+    let newScale = currentScale;
+
+    if (gestureState.action === 'up') {
+        newScale = currentScale * (1 + SCALE_SPEED);
+    } else if (gestureState.action === 'down') {
+        newScale = currentScale * (1 - SCALE_SPEED);
     }
 
-    // Scale: arm span of ~1 = neutral (arms at shoulder width).
-    // Spread arms = bigger, bring together = smaller.
-    // Map armSpan [0.3, 4.0] → scale multiplier [0.3, 3.0]
-    const span = gestureState.armSpan || 1;
-    const scaleMultiplier = Math.max(0.3, Math.min(3.0, span / 1.2));
-    const newScale = baseScale * scaleMultiplier;
+    newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, newScale));
     modelGroup.scale.setScalar(newScale);
-
-    // Rotate: shoulder twist maps to Y rotation
-    // Neutral shoulder angle is ~0 (horizontal). Twist maps to rotation.
-    if (gestureState.shoulderAngle !== null) {
-        modelGroup.rotation.y = gestureState.shoulderAngle * 3;
-    }
-
     return newScale;
 }
