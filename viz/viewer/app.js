@@ -2,6 +2,7 @@
  * WebXR AR viewer for aorta visualization.
  *
  * AR mode: place model on a surface via hit-test, tap to place.
+ *   After placement: pinch to scale, two-finger twist to rotate.
  * Desktop: orbit controls.
  */
 
@@ -17,6 +18,14 @@ let hitTestSource = null;
 let hitTestSourceRequested = false;
 let modelPlaced = false;
 let isARActive = false;
+
+// Pinch/rotate gesture state (pointer-event based, works in WebXR dom-overlay)
+const activePointers = new Map();
+let prevPinchDist = null;
+let prevPinchAngle = null;
+const MIN_SCALE = 0.0002;
+const MAX_SCALE = 0.5;
+const DESKTOP_SCALE = 0.001;
 
 function init() {
     scene = new THREE.Scene();
@@ -37,7 +46,7 @@ function init() {
     scene.add(dirLight);
 
     modelGroup = new THREE.Group();
-    modelGroup.scale.setScalar(0.001);
+    modelGroup.scale.setScalar(DESKTOP_SCALE);
     scene.add(modelGroup);
 
     const reticleGeo = new THREE.RingGeometry(0.03, 0.04, 32);
@@ -51,11 +60,13 @@ function init() {
     controls.enableDamping = true;
     controls.target.set(0, 0, 0);
 
+    const overlay = document.getElementById('overlay');
+
     if ('xr' in navigator) {
         const arButton = ARButton.createButton(renderer, {
             requiredFeatures: ['hit-test'],
             optionalFeatures: ['dom-overlay'],
-            domOverlay: { root: document.getElementById('overlay') },
+            domOverlay: { root: overlay },
         });
         document.getElementById('ar-button-container').appendChild(arButton);
 
@@ -63,14 +74,24 @@ function init() {
             isARActive = true;
             modelPlaced = false;
             modelGroup.visible = false;
+            modelGroup.scale.setScalar(DESKTOP_SCALE);
+            modelGroup.rotation.set(0, 0, 0);
             controls.enabled = false;
+            // Make overlay receive pointer events during XR
+            overlay.style.pointerEvents = 'auto';
+            overlay.style.touchAction = 'none';
         });
         renderer.xr.addEventListener('sessionend', () => {
             isARActive = false;
             modelGroup.visible = true;
             modelGroup.position.set(0, 0, 0);
             modelGroup.quaternion.identity();
+            modelGroup.scale.setScalar(DESKTOP_SCALE);
             controls.enabled = true;
+            // Restore overlay passthrough for desktop
+            overlay.style.pointerEvents = '';
+            overlay.style.touchAction = '';
+            resetGesture();
         });
     }
 
@@ -78,7 +99,13 @@ function init() {
         const session = renderer.xr.getSession();
         session.addEventListener('select', onARSelect);
     });
-    renderer.domElement.addEventListener('pointerdown', onPointerDown);
+
+    // Pointer events on the overlay — these fire during WebXR dom-overlay
+    overlay.addEventListener('pointerdown', onGesturePointerDown);
+    overlay.addEventListener('pointermove', onGesturePointerMove);
+    overlay.addEventListener('pointerup', onGesturePointerUp);
+    overlay.addEventListener('pointercancel', onGesturePointerUp);
+
     window.addEventListener('resize', onWindowResize);
 
     loadScene('scene.json');
@@ -145,10 +172,6 @@ function onARSelect() {
     if (isARActive) placeModel();
 }
 
-function onPointerDown() {
-    if (isARActive) placeModel();
-}
-
 function onXRFrame(timestamp, frame) {
     if (!isARActive || modelPlaced) return;
 
@@ -175,6 +198,80 @@ function onXRFrame(timestamp, frame) {
         }
     }
 }
+
+// --- Pointer-event gesture handlers (work in WebXR dom-overlay) ---
+
+function getPointerDist(a, b) {
+    const dx = a.clientX - b.clientX;
+    const dy = a.clientY - b.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+}
+
+function getPointerAngle(a, b) {
+    return Math.atan2(b.clientY - a.clientY, b.clientX - a.clientX);
+}
+
+function resetGesture() {
+    activePointers.clear();
+    prevPinchDist = null;
+    prevPinchAngle = null;
+}
+
+function onGesturePointerDown(event) {
+    if (!isARActive) return;
+
+    // Single tap before placement → place model
+    if (!modelPlaced) {
+        placeModel();
+        return;
+    }
+
+    activePointers.set(event.pointerId, { clientX: event.clientX, clientY: event.clientY });
+
+    if (activePointers.size === 2) {
+        const [a, b] = [...activePointers.values()];
+        prevPinchDist = getPointerDist(a, b);
+        prevPinchAngle = getPointerAngle(a, b);
+    }
+}
+
+function onGesturePointerMove(event) {
+    if (!isARActive || !modelPlaced) return;
+    if (!activePointers.has(event.pointerId)) return;
+
+    activePointers.set(event.pointerId, { clientX: event.clientX, clientY: event.clientY });
+
+    if (activePointers.size === 2 && prevPinchDist !== null) {
+        const [a, b] = [...activePointers.values()];
+
+        // Pinch to scale
+        const dist = getPointerDist(a, b);
+        const scaleRatio = dist / prevPinchDist;
+        const newScale = THREE.MathUtils.clamp(
+            modelGroup.scale.x * scaleRatio,
+            MIN_SCALE,
+            MAX_SCALE
+        );
+        modelGroup.scale.setScalar(newScale);
+        prevPinchDist = dist;
+
+        // Two-finger rotate
+        const angle = getPointerAngle(a, b);
+        const angleDelta = angle - prevPinchAngle;
+        modelGroup.rotation.y += angleDelta;
+        prevPinchAngle = angle;
+    }
+}
+
+function onGesturePointerUp(event) {
+    activePointers.delete(event.pointerId);
+    if (activePointers.size < 2) {
+        prevPinchDist = null;
+        prevPinchAngle = null;
+    }
+}
+
+// ---
 
 function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight;
