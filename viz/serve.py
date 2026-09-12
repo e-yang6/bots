@@ -1,10 +1,12 @@
-"""Local development server for the WebXR viewer.
+"""Local HTTPS server for the WebXR viewer.
+
+Generates a self-signed certificate on first run so WebXR AR works
+over Wi-Fi from a phone without USB debugging.
 
 Usage:
   python -m viz.serve --port 8080 --scene-dir viz/output/subject001
 
-Then open: http://localhost:8080
-On Android (same Wi-Fi): http://<your-ip>:8080
+On your phone, open https://<your-ip>:8080 and accept the certificate warning.
 """
 
 import argparse
@@ -12,11 +14,12 @@ import functools
 import http.server
 import os
 import socketserver
+import ssl
+import subprocess
+import sys
 
 
 class ViewerHandler(http.server.SimpleHTTPRequestHandler):
-    """Serves viewer static files + scene assets from a combined root."""
-
     def __init__(self, *args, viewer_dir=None, scene_dir=None, **kwargs):
         self.viewer_dir = viewer_dir
         self.scene_dir = scene_dir
@@ -26,22 +29,22 @@ class ViewerHandler(http.server.SimpleHTTPRequestHandler):
         path = path.split('?')[0].split('#')[0]
         path = path.lstrip('/')
 
-        # /data/* serves from the scene directory
         if path.startswith('data/'):
             rel = path[len('data/'):]
             return os.path.join(self.scene_dir, rel)
 
-        # Check scene dir first for scene.json / aorta.glb at root
         scene_path = os.path.join(self.scene_dir, path)
         if path and os.path.exists(scene_path):
             return scene_path
 
-        # Everything else from the viewer directory
         return os.path.join(self.viewer_dir, path)
 
     def end_headers(self):
         self.send_header('Access-Control-Allow-Origin', '*')
         super().end_headers()
+
+    def log_message(self, format, *args):
+        pass  # quiet
 
     extensions_map = {
         **http.server.SimpleHTTPRequestHandler.extensions_map,
@@ -65,15 +68,43 @@ def get_local_ip():
         return '127.0.0.1'
 
 
+def ensure_cert(cert_dir):
+    """Generate a self-signed cert if one doesn't exist yet."""
+    cert_file = os.path.join(cert_dir, 'cert.pem')
+    key_file = os.path.join(cert_dir, 'key.pem')
+
+    if os.path.exists(cert_file) and os.path.exists(key_file):
+        return cert_file, key_file
+
+    os.makedirs(cert_dir, exist_ok=True)
+
+    ip = get_local_ip()
+    print(f'Generating self-signed certificate for {ip}...')
+
+    subprocess.run([
+        'openssl', 'req', '-x509', '-newkey', 'rsa:2048',
+        '-keyout', key_file, '-out', cert_file,
+        '-days', '365', '-nodes',
+        '-subj', f'/CN={ip}',
+        '-addext', f'subjectAltName=IP:{ip},IP:127.0.0.1',
+    ], check=True, capture_output=True)
+
+    print(f'Certificate saved to {cert_dir}/')
+    return cert_file, key_file
+
+
 def main():
-    parser = argparse.ArgumentParser(description='Serve the WebXR aorta viewer')
+    parser = argparse.ArgumentParser(description='Serve the WebXR aorta viewer over HTTPS')
     parser.add_argument('--port', type=int, default=8080)
     parser.add_argument('--scene-dir', default='viz/output',
-                        help='Directory containing exported scene (with scene.json and aorta.glb)')
+                        help='Directory containing exported scene')
+    parser.add_argument('--no-ssl', action='store_true',
+                        help='Use plain HTTP instead of HTTPS')
     args = parser.parse_args()
 
     viewer_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'viewer')
     scene_dir = os.path.abspath(args.scene_dir)
+    cert_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.certs')
 
     handler = functools.partial(
         ViewerHandler,
@@ -82,10 +113,24 @@ def main():
     )
 
     ip = get_local_ip()
+    protocol = 'http' if args.no_ssl else 'https'
+
     with socketserver.TCPServer(('', args.port), handler) as httpd:
-        print(f'Viewer:  http://localhost:{args.port}')
-        print(f'Mobile:  http://{ip}:{args.port}')
-        print(f'Scenes:  {scene_dir}')
+        if not args.no_ssl:
+            try:
+                cert_file, key_file = ensure_cert(cert_dir)
+                ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+                ctx.load_cert_chain(cert_file, key_file)
+                httpd.socket = ctx.wrap_socket(httpd.socket, server_side=True)
+            except Exception as e:
+                print(f'SSL setup failed ({e}), falling back to HTTP')
+                print('Install OpenSSL or use --no-ssl flag')
+                protocol = 'http'
+
+        print(f'Desktop: {protocol}://localhost:{args.port}')
+        print(f'Mobile:  {protocol}://{ip}:{args.port}')
+        if protocol == 'https':
+            print(f'Accept the certificate warning on your phone to continue.')
         print('Press Ctrl+C to stop')
         try:
             httpd.serve_forever()

@@ -3,3 +3,4 @@ __pycache__/
 .pytest_cache/
 scripts/inspection_output/
 viz/output/
+viz/.certs/
