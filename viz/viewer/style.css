@@ -1,0 +1,196 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: #0a0a0f;
+    color: #e0e0e0;
+    overflow: hidden;
+    touch-action: none;
+}
+
+#viewport {
+    width: 100vw;
+    height: 100vh;
+}
+
+#viewport canvas {
+    display: block;
+}
+
+/* ─── Overlay UI (visible in both AR and fallback) ─── */
+
+#overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10;
+}
+
+#overlay > * {
+    pointer-events: auto;
+}
+
+/* Top bar */
+#top-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 12px 16px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, transparent 100%);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+#top-bar h1 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #00ccff;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+#case-badge {
+    font-size: 12px;
+    background: rgba(0, 204, 255, 0.15);
+    border: 1px solid rgba(0, 204, 255, 0.3);
+    border-radius: 4px;
+    padding: 2px 8px;
+    color: #66ddff;
+}
+
+#branch-badge {
+    font-size: 12px;
+    background: rgba(255, 170, 0, 0.15);
+    border: 1px solid rgba(255, 170, 0, 0.3);
+    border-radius: 4px;
+    padding: 2px 8px;
+    color: #ffcc55;
+    margin-left: auto;
+}
+
+/* Status bar */
+#status {
+    position: absolute;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 13px;
+    color: #aaa;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 6px 16px;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+
+/* AR button container */
+#ar-button-container {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* ─── Branch info panel ─── */
+
+#info-panel {
+    position: absolute;
+    bottom: 120px;
+    left: 16px;
+    right: 16px;
+    max-width: 360px;
+    background: rgba(10, 15, 25, 0.92);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(0, 204, 255, 0.25);
+    border-radius: 12px;
+    padding: 16px;
+    transform: translateY(20px);
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.2s;
+    pointer-events: none;
+}
+
+#info-panel.visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+#info-panel h2 {
+    font-size: 14px;
+    color: #00ccff;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#info-panel h2 .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #00ccff;
+    display: inline-block;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 4px 12px;
+    font-size: 12px;
+}
+
+.info-grid .label {
+    color: #888;
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    align-self: center;
+}
+
+.info-grid .value {
+    color: #ddd;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 12px;
+}
+
+/* ─── Legend ─── */
+
+#legend {
+    position: absolute;
+    top: 50px;
+    right: 16px;
+    font-size: 11px;
+    background: rgba(10, 15, 25, 0.8);
+    border-radius: 8px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.legend-swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.legend-swatch.aorta { background: #cc3333; opacity: 0.7; }
+.legend-swatch.ostium { background: #00ccff; }
+.legend-swatch.seed { background: #ffaa00; }
+.legend-swatch.direction { background: #00ff88; border-radius: 2px; width: 12px; height: 4px; }
