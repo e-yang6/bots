@@ -9,8 +9,10 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_run_end_to_end_stub_pipeline_emits_valid_empty_json(tmp_path):
-    image = tmp_path / "subject001_orig.nii.gz"
-    aorta_mask = tmp_path / "subject001_mask.nii.gz"
+    case_dir = tmp_path / "subject001"
+    case_dir.mkdir()
+    image = case_dir / "orig1.nii.gz"
+    aorta_mask = case_dir / "mask1.nii.gz"
     output = tmp_path / "prediction.json"
     image.write_bytes(b"")
     aorta_mask.write_bytes(b"")
@@ -24,15 +26,17 @@ def test_run_end_to_end_stub_pipeline_emits_valid_empty_json(tmp_path):
     assert output.exists()
     data = json.loads(output.read_text())
     assert data == {
-        "case_id": "subject001_orig",
+        "case_id": "subject001",
         "parent": {"instance_id": "aorta"},
         "daughters": [],
     }
 
 
 def test_run_cli_subprocess_matches_exact_contract(tmp_path):
-    image = tmp_path / "subject002_orig.nii.gz"
-    aorta_mask = tmp_path / "subject002_mask.nii.gz"
+    case_dir = tmp_path / "subject002"
+    case_dir.mkdir()
+    image = case_dir / "orig2.nii.gz"
+    aorta_mask = case_dir / "mask2.nii.gz"
     output = tmp_path / "prediction.json"
     image.write_bytes(b"")
     aorta_mask.write_bytes(b"")
@@ -50,7 +54,7 @@ def test_run_cli_subprocess_matches_exact_contract(tmp_path):
 
     assert result.returncode == 0, result.stderr
     data = json.loads(output.read_text())
-    assert data["case_id"] == "subject002_orig"
+    assert data["case_id"] == "subject002"
     assert data["parent"] == {"instance_id": "aorta"}
     assert data["daughters"] == []
 

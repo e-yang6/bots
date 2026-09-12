@@ -24,7 +24,17 @@ PARENT_INSTANCE_ID = "aorta"
 
 
 def case_id_from_path(path):
-    """Derive a case_id from an input filename, e.g. '.../subject001/orig1.nii' -> 'subject001'."""
+    """Derive a case_id from an input path's parent folder name.
+
+    Real data is laid out as subject001/orig1.nii, so the case_id is the
+    directory containing the image, e.g. '.../subject001/orig1.nii' -> 'subject001'.
+    Falls back to the filename (stripped of .nii/.nii.gz) if the path has no
+    parent directory component.
+    """
+    parent = os.path.basename(os.path.dirname(os.path.normpath(path)))
+    if parent:
+        return parent
+
     base = os.path.basename(path)
     for ext in (".nii.gz", ".nii"):
         if base.endswith(ext):
