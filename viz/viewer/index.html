@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Aorta Viewer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <video id="camera-feed" playsinline muted hidden></video>
+    <canvas id="skeleton"></canvas>
+    <div id="viewport"></div>
+
+    <div id="overlay">
+        <div id="top-bar">
+            <h1>Aorta Viewer</h1>
+            <span id="case-badge">Case: <span id="case-id">---</span></span>
+        </div>
+
+        <div id="status"></div>
+
+        <div id="mode-bar">
+            <div id="mode-buttons">
+                <div id="ar-button-container"></div>
+                <button id="gesture-button" type="button">Gesture mode</button>
+            </div>
+            <div id="gesture-controls" hidden>
+                <button id="flip-camera-button" type="button">Flip camera</button>
+                <button id="skeleton-button" type="button" aria-pressed="false">Skeleton</button>
+                <button id="exit-gesture-button" type="button">Exit</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/",
+            "@mediapipe/tasks-vision": "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs"
+        }
+    }
+    </script>
+    <script type="module" src="app.js"></script>
+</body>
+</html>
