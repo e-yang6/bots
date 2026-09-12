@@ -1,14 +1,15 @@
 /**
- * WebXR AR viewer for aorta visualization.
+ * WebXR AR viewer for aorta visualization with gesture control.
  *
- * Loads a .glb aorta mesh. Branch markers will be added later
- * when the detection pipeline produces real predictions.
+ * AR mode: place model on surface via hit-test, then control with
+ * body gestures (MediaPipe Pose) or touch fallback.
  */
 
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { ARButton } from 'three/addons/webxr/ARButton.js';
+import { initPoseDetection, processXRFrame, processVideoFrame, applyGestures, getGestureState } from './gesture.js';
 
 let scene, camera, renderer, controls;
 let modelGroup;
@@ -18,12 +19,18 @@ let hitTestSourceRequested = false;
 let modelPlaced = false;
 let isARActive = false;
 
-// Pinch-to-scale and drag-to-rotate state
+// Gesture control
+let gestureReady = false;
+let cameraAccessAvailable = false;
+let fallbackVideo = null;
+let baseScale = 0.001;
+
+// Touch fallback state
 let touches = {};
 let prevPinchDist = 0;
 let prevTouchAngle = 0;
 let prevTouchCenter = { x: 0, y: 0 };
-let modelScale = 0.001; // base scale (mm to meters)
+let modelScale = 0.001;
 
 function init() {
     scene = new THREE.Scene();
@@ -44,7 +51,7 @@ function init() {
     scene.add(dirLight);
 
     modelGroup = new THREE.Group();
-    modelGroup.scale.setScalar(0.001); // mm to meters
+    modelGroup.scale.setScalar(baseScale);
     scene.add(modelGroup);
 
     // AR reticle
@@ -60,11 +67,11 @@ function init() {
     controls.enableDamping = true;
     controls.target.set(0, 0, 0);
 
-    // AR button
+    // AR button — request camera-access as optional so it works even if unsupported
     if ('xr' in navigator) {
         const arButton = ARButton.createButton(renderer, {
             requiredFeatures: ['hit-test'],
-            optionalFeatures: ['dom-overlay'],
+            optionalFeatures: ['dom-overlay', 'camera-access'],
             domOverlay: { root: document.getElementById('overlay') },
         });
         document.getElementById('ar-button-container').appendChild(arButton);
@@ -74,17 +81,20 @@ function init() {
             modelPlaced = false;
             modelGroup.visible = false;
             controls.enabled = false;
+            startGestureDetection();
         });
         renderer.xr.addEventListener('sessionend', () => {
             isARActive = false;
             modelGroup.visible = true;
             modelGroup.position.set(0, 0, 0);
             modelGroup.quaternion.identity();
+            modelGroup.scale.setScalar(baseScale);
             controls.enabled = true;
+            stopFallbackVideo();
         });
     }
 
-    // AR taps come through as 'select' on the controller, not DOM pointerdown
+    // AR tap to place
     renderer.xr.addEventListener('sessionstart', () => {
         const session = renderer.xr.getSession();
         session.addEventListener('select', onARSelect);
@@ -98,6 +108,50 @@ function init() {
     loadScene('scene.json');
     renderer.setAnimationLoop(animate);
 }
+
+// ─── Gesture detection setup ────────────────────────────────────────────────
+
+async function startGestureDetection() {
+    if (gestureReady) return;
+
+    const statusEl = document.getElementById('status');
+    statusEl.textContent = 'Loading gesture detection...';
+
+    try {
+        await initPoseDetection();
+        gestureReady = true;
+        statusEl.textContent = '';
+    } catch (err) {
+        console.warn('Pose detection init failed:', err);
+        statusEl.textContent = '';
+    }
+}
+
+function startFallbackVideo() {
+    // If XR camera-access isn't available, open a separate camera stream
+    if (fallbackVideo) return;
+
+    navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: 320, height: 240 }
+    }).then(stream => {
+        fallbackVideo = document.createElement('video');
+        fallbackVideo.srcObject = stream;
+        fallbackVideo.setAttribute('playsinline', '');
+        fallbackVideo.play();
+        console.log('Fallback camera started for gesture detection');
+    }).catch(err => {
+        console.warn('Could not open fallback camera:', err);
+    });
+}
+
+function stopFallbackVideo() {
+    if (fallbackVideo && fallbackVideo.srcObject) {
+        fallbackVideo.srcObject.getTracks().forEach(t => t.stop());
+        fallbackVideo = null;
+    }
+}
+
+// ─── Scene loading ──────────────────────────────────────────────────────────
 
 async function loadScene(sceneJsonUrl) {
     const statusEl = document.getElementById('status');
@@ -151,13 +205,23 @@ function fitCameraToModel() {
     controls.update();
 }
 
+// ─── Placement ──────────────────────────────────────────────────────────────
+
 function placeModel() {
     if (!modelPlaced && reticle.visible) {
         modelGroup.position.setFromMatrixPosition(reticle.matrix);
         modelGroup.visible = true;
         modelPlaced = true;
         reticle.visible = false;
-        document.getElementById('status').textContent = '';
+
+        const state = getGestureState();
+        if (gestureReady) {
+            document.getElementById('status').textContent = state.personDetected
+                ? 'Gesture control active'
+                : 'Point camera at a person for gesture control';
+        } else {
+            document.getElementById('status').textContent = '';
+        }
     }
 }
 
@@ -169,7 +233,7 @@ function onPointerDown() {
     if (isARActive) placeModel();
 }
 
-// ─── Touch gestures (pinch to scale, two-finger rotate) ─────────────────
+// ─── Touch gestures (fallback) ──────────────────────────────────────────────
 
 function getTouchDist(t1, t2) {
     const dx = t1.clientX - t2.clientX;
@@ -187,9 +251,7 @@ function getTouchCenter(t1, t2) {
 
 function onTouchStart(e) {
     if (!modelPlaced) return;
-    for (const t of e.changedTouches) {
-        touches[t.identifier] = t;
-    }
+    for (const t of e.changedTouches) touches[t.identifier] = t;
     const ids = Object.keys(touches);
     if (ids.length === 2) {
         e.preventDefault();
@@ -202,15 +264,12 @@ function onTouchStart(e) {
 
 function onTouchMove(e) {
     if (!modelPlaced) return;
-    for (const t of e.changedTouches) {
-        touches[t.identifier] = t;
-    }
+    for (const t of e.changedTouches) touches[t.identifier] = t;
     const ids = Object.keys(touches);
     if (ids.length === 2) {
         e.preventDefault();
         const t1 = touches[ids[0]], t2 = touches[ids[1]];
 
-        // Pinch to scale
         const dist = getTouchDist(t1, t2);
         if (prevPinchDist > 0) {
             const scaleFactor = dist / prevPinchDist;
@@ -220,60 +279,89 @@ function onTouchMove(e) {
         }
         prevPinchDist = dist;
 
-        // Two-finger rotate (around Y axis)
         const angle = getTouchAngle(t1, t2);
-        const deltaAngle = angle - prevTouchAngle;
-        modelGroup.rotation.y += deltaAngle;
+        modelGroup.rotation.y += angle - prevTouchAngle;
         prevTouchAngle = angle;
 
-        // Two-finger drag to move
         const center = getTouchCenter(t1, t2);
         if (isARActive) {
-            const dx = (center.x - prevTouchCenter.x) * 0.0005;
-            const dy = (center.y - prevTouchCenter.y) * -0.0005;
-            modelGroup.position.x += dx;
-            modelGroup.position.z += dy;
+            modelGroup.position.x += (center.x - prevTouchCenter.x) * 0.0005;
+            modelGroup.position.z += (center.y - prevTouchCenter.y) * -0.0005;
         }
         prevTouchCenter = center;
     }
 }
 
 function onTouchEnd(e) {
-    for (const t of e.changedTouches) {
-        delete touches[t.identifier];
-    }
-    if (Object.keys(touches).length < 2) {
-        prevPinchDist = 0;
-    }
+    for (const t of e.changedTouches) delete touches[t.identifier];
+    if (Object.keys(touches).length < 2) prevPinchDist = 0;
 }
 
+// ─── XR frame handling ─────────────────────────────────────────────────────
+
 function onXRFrame(timestamp, frame) {
-    if (!isARActive || modelPlaced) return;
+    if (!isARActive) return;
 
-    const session = renderer.xr.getSession();
-    const refSpace = renderer.xr.getReferenceSpace();
+    // Hit-test for placement
+    if (!modelPlaced) {
+        const session = renderer.xr.getSession();
+        const refSpace = renderer.xr.getReferenceSpace();
 
-    if (!hitTestSourceRequested) {
-        session.requestReferenceSpace('viewer').then((viewerSpace) => {
-            session.requestHitTestSource({ space: viewerSpace }).then((source) => {
-                hitTestSource = source;
+        if (!hitTestSourceRequested) {
+            session.requestReferenceSpace('viewer').then((viewerSpace) => {
+                session.requestHitTestSource({ space: viewerSpace }).then((source) => {
+                    hitTestSource = source;
+                });
             });
-        });
-        hitTestSourceRequested = true;
+            hitTestSourceRequested = true;
+        }
+
+        if (hitTestSource) {
+            const results = frame.getHitTestResults(hitTestSource);
+            if (results.length > 0) {
+                const hit = results[0];
+                const pose = hit.getPose(refSpace);
+                reticle.visible = true;
+                reticle.matrix.fromArray(pose.transform.matrix);
+            } else {
+                reticle.visible = false;
+            }
+        }
+        return;
     }
 
-    if (hitTestSource) {
-        const results = frame.getHitTestResults(hitTestSource);
-        if (results.length > 0) {
-            const hit = results[0];
-            const pose = hit.getPose(refSpace);
-            reticle.visible = true;
-            reticle.matrix.fromArray(pose.transform.matrix);
+    // Gesture detection on placed model
+    if (gestureReady) {
+        // Try XR camera-access first
+        let usedXRCamera = false;
+        try {
+            processXRFrame(renderer, frame);
+            const state = getGestureState();
+            if (state.personDetected) usedXRCamera = true;
+        } catch (e) {
+            // camera-access not available
+        }
+
+        // If XR camera didn't work, try fallback video
+        if (!usedXRCamera && !cameraAccessAvailable) {
+            if (!fallbackVideo) startFallbackVideo();
+            if (fallbackVideo && fallbackVideo.readyState >= 2) {
+                processVideoFrame(fallbackVideo);
+            }
         } else {
-            reticle.visible = false;
+            cameraAccessAvailable = true;
+        }
+
+        // Apply detected gestures to the model
+        const state = getGestureState();
+        if (state.personDetected) {
+            applyGestures(modelGroup, baseScale);
+            document.getElementById('status').textContent = 'Gesture control active';
         }
     }
 }
+
+// ─── Resize + render ────────────────────────────────────────────────────────
 
 function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight;
