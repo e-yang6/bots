@@ -1,19 +1,26 @@
 /**
  * Gesture mode: camera feed as background, MediaPipe Pose Landmarker on
- * each new video frame, body gestures mapped to a model transform.
+ * each new video frame. The detected person anchors the model (see
+ * BodyAnchor) and their hands control its scale (see GestureController).
  *
  * MediaPipe is imported lazily so desktop and AR users never download it.
  */
 
-import { GestureController, measurePose, POSE_CONNECTIONS } from './pose-gestures.js';
+import {
+    BodyAnchor,
+    GestureController,
+    measureBody,
+    measureHands,
+    POSE_CONNECTIONS,
+} from './pose-gestures.js';
 
 const WASM_URL = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm';
 const MODEL_URL = 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task';
 
 const STATUS_TEXT = {
-    'no-person': 'No person in view',
-    'idle': 'Raise both hands to control',
-    'tracking': 'Tracking',
+    'no-hands': 'Raise both hands to scale',
+    'idle': 'Raise both hands to scale',
+    'tracking': 'Scaling',
 };
 
 export class GestureMode {
@@ -27,6 +34,7 @@ export class GestureMode {
         this.skeleton = skeleton;
         this.onStatus = onStatus;
         this.controller = new GestureController();
+        this.anchor = new BodyAnchor();
         this.active = false;
         this.showSkeleton = false;
         this.mirrored = false;
@@ -43,6 +51,7 @@ export class GestureMode {
     async start() {
         this.active = true;
         this.controller.reset();
+        this.anchor.reset();
         this._setStatus('Starting camera...');
 
         if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
@@ -87,6 +96,7 @@ export class GestureMode {
         this._closeCamera();
         // Mirroring may change, which flips the signals: re-baseline.
         this.controller.release();
+        this.anchor.reset();
         try {
             await this._openCamera();
             if (!this.active) this._closeCamera();
@@ -109,9 +119,23 @@ export class GestureMode {
     }
 
     /**
+     * Map normalized display coordinates (0..1, already mirrored if needed)
+     * to CSS pixels, matching the video's object-fit: cover crop.
+     * @returns { x, y, videoHeightPx } or null before the video has a size
+     */
+    videoToScreen(nx, ny) {
+        const video = this.video;
+        if (!video.videoWidth || !video.videoHeight) return null;
+        const cw = window.innerWidth, ch = window.innerHeight;
+        const s = Math.max(cw / video.videoWidth, ch / video.videoHeight);
+        const dw = video.videoWidth * s, dh = video.videoHeight * s;
+        return { x: (cw - dw) / 2 + nx * dw, y: (ch - dh) / 2 + ny * dh, videoHeightPx: dh };
+    }
+
+    /**
      * Run detection if the video has a new frame. Call once per render frame.
-     * @returns the current model transform {scale, yaw, tilt}, or null if
-     *          there is nothing new to apply
+     * @returns { anchor, transform } where anchor is BodyAnchor output and
+     *          transform is { scale }, or null if there is nothing new
      */
     tick() {
         if (!this.active || !this._landmarker || !this._stream) return null;
@@ -134,10 +158,14 @@ export class GestureMode {
         const landmarks = result.landmarks?.[0] ?? null;
         const world = result.worldLandmarks?.[0] ?? null;
         const aspect = video.videoWidth / video.videoHeight;
-        const measurement = measurePose(landmarks, world, aspect, this.mirrored, this.controller.options);
-        const out = this.controller.update(measurement, now);
+        const options = this.controller.options;
+        const anchor = this.anchor.update(measureBody(landmarks, world, aspect, this.mirrored, options), now);
+        const hands = measureHands(landmarks, world, aspect, this.mirrored, options);
+        const out = this.controller.update(anchor.visible ? hands : null, now);
 
-        if (out.status === 'resetting') {
+        if (!anchor.visible) {
+            this._setStatus('No person in view');
+        } else if (out.status === 'resetting') {
             this._setStatus(out.resetProgress >= 1 ? 'Reset' : `Hold to reset ${Math.round(out.resetProgress * 100)}%`);
         } else {
             this._setStatus(STATUS_TEXT[out.status]);
@@ -146,7 +174,7 @@ export class GestureMode {
         this._lastLandmarks = landmarks;
         if (this.showSkeleton) this._drawSkeleton(landmarks);
 
-        return out.transform;
+        return { anchor, transform: out.transform };
     }
 
     async _openCamera() {

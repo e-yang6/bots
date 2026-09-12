@@ -47,19 +47,21 @@ Hackathon submission for the TORALIS Challenge: given a CT scan and a binary aor
 - The mesh is the patient's real anatomy from the mask.
 - Branch markers (ostium spheres, seed points, direction arrows, radius rings) were stripped from the viewer; the export pipeline still writes them to `scene.json`. Old marker/info-panel/raycasting/legend code is in `webxr-viz` git history.
 
-### Gesture mode (implemented, needs on-device testing)
-- Separate from WebXR AR, toggled by the "Gesture mode" button. Camera video behind a transparent Three.js canvas; the model floats in front of the camera. Not WebXR `camera-access` (experimental, flagged, janky with MediaPipe). Pose, not Hands — full body at a distance.
+### Gesture mode — person-anchored AR (needs on-device testing)
+- Separate from WebXR AR, toggled by the "Gesture mode" button. Camera video behind a transparent Three.js canvas. Pose, not Hands — full body at a distance.
+- **Why person-anchored:** the goal is viewing the artery from different angles while it stays put like a real object. WebXR raw `camera-access` + MediaPipe was tried and did not work. A gyroscope-only approach tracks phone rotation but not walking around, so it was rejected. Instead the detected person is the anchor.
 - MediaPipe `@mediapipe/tasks-vision@0.10.14` (import map), `pose_landmarker_lite`, GPU delegate with CPU fallback, `VIDEO` mode, 1 pose.
-- Gestures are clutched: only active while both wrists are above the hips; the pose at engage time is the baseline.
-  - Wrist spread / shoulder width (world landmarks) → scale (clamped 0.2–5×).
-  - Shoulder-line heading in x–z (world) → yaw, gain 2.
-  - Shoulder-line angle on screen → tilt, gain 2, ±90°.
-  - Both hands above the nose for 1.5 s → reset.
-  - Time-based EMA smoothing, dead zones, 300 ms grace for dropouts.
-- Signals are computed in display coordinates (x flipped when the video is mirrored) so the model follows what the viewer sees.
+- **Body anchor** (`measureBody` + `BodyAnchor`, One Euro filtered, 500 ms hold on dropouts):
+  - Position: 45% of the way from shoulder midpoint to hip midpoint, on screen; unprojected to a fixed scene depth (1.5 m).
+  - Life size from shoulder-to-hip image length / 0.50 m (fallback: shoulder width / 0.38 m corrected by cos(heading)).
+  - Heading (rotation.y) from world-landmark shoulder line in x–z; roll (rotation.z) from shoulder line on screen, folded so facing away doesn't flip it. Euler order `ZYX`.
+  - Mesh is LPS mm; in gesture mode an inner `anatomyGroup` rotates it −90° about X so superior is up and anterior faces the camera.
+  - Front camera: display is mirrored, so heading/roll/x are measured in display space and the model is mirrored (scale.x < 0).
+- **Scale gesture** (`measureHands` + `GestureController`), clutched while both wrists are above the hips: wrist spread / shoulder width → scale multiplier (0.2–5×); hands above nose for 1.5 s → reset. Touch pinch and two-finger rotate add on top.
+- Not handled: camera pitch (looking down on the person), non-average body proportions.
 
 ### Next
-1. **Tune gesture mode on a phone** (gains, dead zones, thresholds in `DEFAULT_OPTIONS`).
+1. **Tune gesture mode on a phone** (`DEFAULT_OPTIONS`: anchor fraction, proportions, filter cutoffs, `invertHeading` if turning is reversed).
 2. **Re-add branch markers** once the detection pipeline produces real predictions.
 3. **Visual QC for submission** — at least 3 cases showing aorta mask, detected ostia, and daughter-direction arrows.
 

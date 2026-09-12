@@ -40,29 +40,31 @@ Click and drag to rotate, scroll to zoom, click a marker for details.
 
 If it doesn't connect, allow Python through Windows Firewall when prompted.
 
-## Gesture mode (body gestures)
+## Gesture mode (person-anchored AR)
 
-Point the camera at a person; their body movements control the model. Works on Android Chrome and on a desktop webcam. No WebXR needed.
+Point the camera at a person. Their aorta is drawn in their chest at life size and stays attached to them like a real object: pan the phone, walk closer, or walk around them to see it from the side or back. Their hands control the scale. Works on Android Chrome and on a desktop webcam. No WebXR needed.
 
 1. Open the viewer (phone: `https://<your-ip>:8080`, accept the certificate warning; desktop: `http://localhost:8080`)
 2. Tap **Gesture mode** and allow camera access
-3. The person stands in view with their upper body visible (about 2–3 m away)
+3. The person stands in view, about 2–3 m away, with shoulders and ideally hips visible
 
-| Gesture | Effect |
+| Movement | Effect |
 |---|---|
-| Raise both hands above the hips | Start controlling (the current pose becomes the baseline) |
-| Move arms apart / together | Scale up / down |
-| Twist the torso | Spin the model |
-| Lean left / right | Tilt the model |
-| Lower the hands | Stop controlling; the model stays as it is |
-| Both hands above the head for 1.5 s | Reset size and rotation |
+| Walk around the person, or they turn | See the aorta from that side |
+| Person leans, or the phone tilts | Model tilts with the torso |
+| Move closer / further | Model grows / shrinks with the person |
+| Raise both hands above the hips, move arms apart / together | Scale up / down |
+| Lower the hands | Keep the current scale |
+| Both hands above the head for 1.5 s | Reset to life size |
+| Two-finger rotate / pinch on screen | Extra spin / scale |
 
-**Flip camera** switches between rear and front cameras (the front view is mirrored). **Skeleton** draws the detected pose over the video, which helps when tuning.
+**Flip camera** switches between rear and front cameras (the front view is mirrored, and so is the anatomy). **Skeleton** draws the detected pose over the video, which helps when tuning.
 
 Notes:
 - The camera needs a secure context: HTTPS, or `localhost` on desktop.
 - The pose model (MediaPipe Pose Landmarker lite) downloads from Google's CDN the first time gesture mode starts, so the phone needs internet access.
-- Gesture thresholds and gains are in `DEFAULT_OPTIONS` in `viewer/pose-gestures.js`. Unit tests: `node --test tests/test_pose_gestures.mjs`.
+- Life size assumes average adult proportions (shoulder-to-hip 0.50 m). Looking from well above or below the person is not tracked, and pose detection gets less reliable in pure side and back views.
+- Tunables are in `DEFAULT_OPTIONS` in `viewer/pose-gestures.js` (body proportions, anchor height, smoothing, gesture thresholds). If the model turns the opposite way to the person, set `invertHeading: true`. Unit tests: `node --test tests/test_pose_gestures.mjs`.
 
 ## What the markers mean
 

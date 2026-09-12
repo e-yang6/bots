@@ -33,8 +33,14 @@ let modelScale = 0.001; // base scale (mm to meters)
 let gestureMode;
 let isGestureActive = false;
 let aortaMaterial = null;
+let anatomyGroup;          // holds the mesh; oriented anatomically in gesture mode
+let lastGesture = null;    // latest { anchor, transform } from gesture mode
+let touchYaw = 0;          // extra two-finger rotation in gesture mode
 const MODEL_OPACITY = 0.35;
 const GESTURE_MODEL_OPACITY = 0.6; // more solid over a busy camera image
+// Model depth in the Three.js scene. Any value works: size is derived from
+// how large the person appears, so the overlay matches the video.
+const GESTURE_DEPTH_M = 1.5;
 
 function init() {
     scene = new THREE.Scene();
@@ -57,6 +63,8 @@ function init() {
     modelGroup = new THREE.Group();
     modelGroup.scale.setScalar(0.001); // mm to meters
     scene.add(modelGroup);
+    anatomyGroup = new THREE.Group();
+    modelGroup.add(anatomyGroup);
 
     // AR reticle
     const reticleGeo = new THREE.RingGeometry(0.03, 0.04, 32);
@@ -141,14 +149,12 @@ async function loadScene(sceneJsonUrl) {
         aortaMesh.traverse((child) => {
             if (child.isMesh) child.material = aortaMaterial;
         });
-        modelGroup.add(aortaMesh);
+        anatomyGroup.add(aortaMesh);
 
         document.getElementById('case-id').textContent = sceneData.case_id;
         if (statusEl.textContent === 'Loading...') statusEl.textContent = '';
 
-        if (isGestureActive) {
-            placeModelForGesture();
-        } else if (!isARActive) {
+        if (!isGestureActive && !isARActive) {
             modelGroup.visible = true;
             fitCameraToModel();
         }
@@ -202,6 +208,9 @@ function setupGestureMode() {
 
     flipButton.addEventListener('click', async () => {
         flipButton.disabled = true;
+        // The old anchor belongs to the other camera's image
+        lastGesture = null;
+        modelGroup.visible = false;
         await gestureMode.flipCamera();
         flipButton.disabled = false;
     });
@@ -215,20 +224,30 @@ function setupGestureMode() {
 
 function enterGestureMode() {
     isGestureActive = true;
+    lastGesture = null;
+    touchYaw = 0;
     controls.enabled = false;
     if (aortaMaterial) aortaMaterial.opacity = GESTURE_MODEL_OPACITY;
-    // Camera at the origin looking down -z; the model floats in front of it
+    // Camera at the origin looking down -z
     camera.position.set(0, 0, 0);
     camera.quaternion.identity();
-    // Yaw about the model's vertical axis first, then tilt about the view axis
-    modelGroup.rotation.order = 'ZYX';
-    placeModelForGesture();
+    camera.updateMatrixWorld();
+    // Mesh is in patient LPS mm (x = left, y = posterior, z = superior).
+    // Rotate so superior is up (+y) and anterior faces the camera (+z), as
+    // for a person facing the camera.
+    anatomyGroup.rotation.set(-Math.PI / 2, 0, 0);
+    // Turn with the torso first, then tilt about the view axis
+    modelGroup.rotation.set(0, 0, 0, 'ZYX');
+    // Hidden until a person is detected
+    modelGroup.visible = false;
 }
 
 function exitGestureMode() {
     isGestureActive = false;
+    lastGesture = null;
     gestureMode.stop();
     if (aortaMaterial) aortaMaterial.opacity = MODEL_OPACITY;
+    anatomyGroup.rotation.set(0, 0, 0);
     modelGroup.rotation.set(0, 0, 0, 'XYZ');
     modelGroup.position.set(0, 0, 0);
     modelGroup.scale.setScalar(modelScale);
@@ -237,27 +256,37 @@ function exitGestureMode() {
     fitCameraToModel();
 }
 
-/** Put the model in front of the camera, at a distance where it fits the view. */
-function placeModelForGesture() {
-    modelGroup.position.set(0, 0, 0);
-    modelGroup.rotation.set(0, 0, 0);
-    modelGroup.scale.setScalar(modelScale);
+/**
+ * Place the model in the detected person's chest at life size, turned and
+ * tilted with their torso. The person is the anchor, so moving the phone or
+ * walking around them keeps the model attached like a real object.
+ */
+function applyGesture({ anchor, transform }) {
+    const screen = anchor.visible ? gestureMode.videoToScreen(anchor.x, anchor.y) : null;
+    if (!screen) {
+        modelGroup.visible = false;
+        return;
+    }
+
+    // Ray through the anchor pixel, intersected with the plane z = -depth
+    const ndc = new THREE.Vector3(
+        (screen.x / window.innerWidth) * 2 - 1,
+        -(screen.y / window.innerHeight) * 2 + 1,
+        0.5,
+    ).unproject(camera);
+    const ray = ndc.sub(camera.position).normalize();
+    modelGroup.position.copy(ray.multiplyScalar(GESTURE_DEPTH_M / -ray.z));
+
+    // Life size: one real meter at the person spans heightPerMeter image
+    // heights; convert that on-screen length to scene meters at our depth.
+    const screenPxPerMeter = anchor.heightPerMeter * screen.videoHeightPx;
+    const scenePerPx = (2 * GESTURE_DEPTH_M * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2)) / window.innerHeight;
+    const s = modelScale * screenPxPerMeter * scenePerPx * transform.scale;
+    // A mirrored (front camera) image shows the mirror-image anatomy
+    modelGroup.scale.set(gestureMode.mirrored ? -s : s, s, s);
+
+    modelGroup.rotation.set(0, anchor.heading + touchYaw, anchor.roll, 'ZYX');
     modelGroup.visible = true;
-    modelGroup.updateMatrixWorld(true);
-
-    const sphere = new THREE.Box3().setFromObject(modelGroup).getBoundingSphere(new THREE.Sphere());
-    const radius = sphere.radius > 0 ? sphere.radius : 0.15;
-    const halfV = THREE.MathUtils.degToRad(camera.fov) / 2;
-    const halfH = Math.atan(Math.tan(halfV) * camera.aspect);
-    const distance = (radius / Math.sin(Math.min(halfV, halfH))) * 1.15;
-
-    modelGroup.position.set(-sphere.center.x, -sphere.center.y, -distance - sphere.center.z);
-    applyGestureTransform(gestureMode.controller.transform);
-}
-
-function applyGestureTransform(t) {
-    modelGroup.scale.setScalar(modelScale * t.scale);
-    modelGroup.rotation.set(0, t.yaw, t.tilt);
 }
 
 // ─── AR placement ───────────────────────────────────────────────────────
@@ -332,14 +361,16 @@ function onTouchMove(e) {
             const scaleFactor = dist / prevPinchDist;
             modelScale *= scaleFactor;
             modelScale = Math.max(0.0002, Math.min(0.01, modelScale));
-            modelGroup.scale.setScalar(modelScale);
+            // Gesture mode applies modelScale on the next frame
+            if (!isGestureActive) modelGroup.scale.setScalar(modelScale);
         }
         prevPinchDist = dist;
 
         // Two-finger rotate (around Y axis)
         const angle = getTouchAngle(t1, t2);
         const deltaAngle = angle - prevTouchAngle;
-        modelGroup.rotation.y += deltaAngle;
+        if (isGestureActive) touchYaw += deltaAngle;
+        else modelGroup.rotation.y += deltaAngle;
         prevTouchAngle = angle;
 
         // Two-finger drag to move (AR only)
@@ -396,14 +427,15 @@ function onWindowResize() {
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
     if (gestureMode) gestureMode.resizeSkeleton();
-    if (isGestureActive) placeModelForGesture();
 }
 
 function animate(timestamp, frame) {
     if (frame) onXRFrame(timestamp, frame);
     if (isGestureActive) {
-        const t = gestureMode.tick();
-        if (t) applyGestureTransform(t);
+        lastGesture = gestureMode.tick() ?? lastGesture;
+        // Re-apply every render frame: the camera runs slower than the
+        // display, and touch or resize may have changed the inputs.
+        if (lastGesture) applyGesture(lastGesture);
     } else if (!isARActive) {
         controls.update();
     }

@@ -1,23 +1,24 @@
 /**
- * Body-gesture interpretation for gesture mode.
+ * Body tracking and gesture interpretation for gesture mode.
  *
  * Pure logic, no DOM or Three.js, so it can be unit tested with Node
  * (see tests/test_pose_gestures.mjs).
  *
  * Input is one MediaPipe Pose Landmarker result (33 image landmarks and
- * 33 world landmarks). Output is a model transform: a scale multiplier,
- * a yaw (rotation about the vertical axis) and a tilt (rotation about
- * the camera's view axis), all relative to the model's default pose.
+ * 33 world landmarks). Two things come out of it:
  *
- * Gestures (only while both hands are raised above the hips):
- *   arms apart / together  -> scale up / down
- *   twist torso            -> yaw
- *   lean left / right      -> tilt
- *   both hands above head, held  -> reset
+ * 1. A body anchor (measureBody + BodyAnchor). The person in front of the
+ *    camera is the AR anchor: the aorta is drawn in their chest, at life
+ *    size, turned and tilted with their torso. Panning the phone, walking
+ *    closer, or walking around the person keeps the model attached to
+ *    them, so it behaves like a real object and can be viewed from any side.
  *
- * Control is clutched like a touch pinch: when the hands come up, the
- * current body pose becomes the baseline, and only changes from that
- * baseline move the model. Dropping the hands leaves the model as is.
+ * 2. A scale gesture (measureHands + GestureController), active only while
+ *    both hands are raised above the hips:
+ *      arms apart / together          -> scale up / down
+ *      both hands above head, held    -> reset scale
+ *    Control is clutched like a touch pinch: when the hands come up, the
+ *    current spread becomes the baseline. Dropping the hands keeps the scale.
  */
 
 export const LM = {
@@ -38,25 +39,40 @@ export const POSE_CONNECTIONS = [
 
 export const DEFAULT_OPTIONS = {
     minVisibility: 0.5,
-    // Torso length as a multiple of shoulder width, used to estimate hip
-    // height when the hips are out of frame.
-    torsoToShoulderRatio: 1.4,
+
+    // Adult body proportions used to turn image size into life size.
+    shoulderWidthM: 0.38,     // between shoulder landmarks
+    torsoLengthM: 0.50,       // shoulder midpoint to hip midpoint
+    // Where the aorta centroid sits: this fraction of the way from the
+    // shoulder midpoint to the hip midpoint.
+    aortaTorsoFraction: 0.45,
+    // Floor on |cos(heading)| when correcting shoulder width for turning,
+    // so a side-on view does not blow up the scale.
+    minHeadingCos: 0.35,
+    // Set true if the model turns the opposite way to the person.
+    invertHeading: false,
+
+    // Anchor filtering (One Euro filter: min cutoff in Hz, beta per unit/s).
+    positionMinCutoff: 1.0,
+    positionBeta: 8.0,
+    angleMinCutoff: 0.8,
+    angleBeta: 0.6,
+    sizeMinCutoff: 0.6,
+    sizeBeta: 1.0,
+    anchorLostMs: 500,
+
+    // Scale gesture.
     scaleMin: 0.2,
     scaleMax: 5.0,
-    yawGain: 2.0,
-    tiltGain: 2.0,
-    tiltMax: Math.PI / 2,
-    // Dead zones on the change from baseline.
-    spreadDeadzone: 0.04,    // fraction of the baseline ratio
-    angleDeadzone: 0.03,     // radians
+    spreadDeadzone: 0.04,     // fraction of the baseline spread
     smoothingTauMs: 80,
     engageGraceMs: 300,
     resetHoldMs: 1500,
 };
 
-export const DEFAULT_TRANSFORM = { scale: 1, yaw: 0, tilt: 0 };
+export const DEFAULT_TRANSFORM = { scale: 1 };
 
-function wrapAngle(a) {
+export function wrapAngle(a) {
     while (a > Math.PI) a -= 2 * Math.PI;
     while (a < -Math.PI) a += 2 * Math.PI;
     return a;
@@ -75,38 +91,99 @@ function visible(lm, minVisibility) {
     return lm !== undefined && (lm.visibility ?? 1) >= minVisibility;
 }
 
+/** Image point in display space, in units of image height (isotropic). */
+function displayPoint(landmarks, i, aspect, mirrored) {
+    return {
+        x: (mirrored ? 1 - landmarks[i].x : landmarks[i].x) * aspect,
+        y: landmarks[i].y,
+    };
+}
+
 /**
- * Reduce one pose to the few signals the gestures need.
+ * Where the person is, how big they appear, and which way their torso faces.
  *
  * @param landmarks       33 normalized image landmarks {x, y, z, visibility}
  * @param worldLandmarks  33 world landmarks in meters {x, y, z}
  * @param aspect          video width / height
- * @param mirrored        true if the video is displayed mirrored (front camera);
- *                        signals are then computed in display coordinates so
- *                        the model follows what the viewer sees on screen
- * @returns null if the upper body is not visible enough, else
- *          { handsRaised, handsOverHead, spread, twist, lean }
+ * @param mirrored        true if the video is displayed mirrored (front camera)
+ * @returns null if the shoulders are not visible, else
+ *   x, y             aorta anchor in normalized display coordinates (0..1)
+ *   heightPerMeter   image heights per real-world meter at the person
+ *   heading          torso rotation about vertical, radians; 0 = facing the
+ *                    camera, positive = Three.js rotation.y direction, as seen
+ *                    on screen
+ *   roll             shoulder-line tilt on screen, radians, counter-clockwise
+ *                    positive (Three.js rotation.z)
  */
-export function measurePose(landmarks, worldLandmarks, aspect, mirrored = false, options = DEFAULT_OPTIONS) {
+export function measureBody(landmarks, worldLandmarks, aspect, mirrored = false, options = DEFAULT_OPTIONS) {
+    if (!landmarks || !worldLandmarks) return null;
+    const o = options;
+    if (!visible(landmarks[LM.L_SHOULDER], o.minVisibility) || !visible(landmarks[LM.R_SHOULDER], o.minVisibility)) {
+        return null;
+    }
+
+    // Heading from world landmarks (metric, camera-aligned axes). MediaPipe
+    // z decreases toward the camera, Three.js z increases toward it, so
+    // atan2(z_mp, x) grows with a positive Three.js rotation.y. A mirrored
+    // display shows the mirror image, which turns the other way.
+    const wl = worldLandmarks[LM.L_SHOULDER], wr = worldLandmarks[LM.R_SHOULDER];
+    let heading = Math.atan2(wl.z - wr.z, wl.x - wr.x);
+    if (mirrored !== o.invertHeading) heading = wrapAngle(-heading);
+
+    const ls = displayPoint(landmarks, LM.L_SHOULDER, aspect, mirrored);
+    const rs = displayPoint(landmarks, LM.R_SHOULDER, aspect, mirrored);
+    const shoulderMid = { x: (ls.x + rs.x) / 2, y: (ls.y + rs.y) / 2 };
+    const shoulderPx = Math.hypot(ls.x - rs.x, ls.y - rs.y);
+    if (shoulderPx < 1e-6) return null;
+
+    // Shoulder line as seen on screen, oriented left to right, so the roll
+    // is the same whether the person faces toward or away from the camera.
+    let ux = (ls.x - rs.x) / shoulderPx, uy = (ls.y - rs.y) / shoulderPx;
+    if (ux < 0) { ux = -ux; uy = -uy; }
+    // Image y points down: negate so counter-clockwise on screen is positive.
+    const roll = -Math.atan2(uy, ux);
+
+    const hipsVisible = visible(landmarks[LM.L_HIP], o.minVisibility) && visible(landmarks[LM.R_HIP], o.minVisibility);
+    let heightPerMeter, anchor;
+    if (hipsVisible) {
+        const lh = displayPoint(landmarks, LM.L_HIP, aspect, mirrored);
+        const rh = displayPoint(landmarks, LM.R_HIP, aspect, mirrored);
+        const hipMid = { x: (lh.x + rh.x) / 2, y: (lh.y + rh.y) / 2 };
+        // Torso length does not shrink when the person turns.
+        heightPerMeter = Math.hypot(hipMid.x - shoulderMid.x, hipMid.y - shoulderMid.y) / o.torsoLengthM;
+        anchor = {
+            x: shoulderMid.x + o.aortaTorsoFraction * (hipMid.x - shoulderMid.x),
+            y: shoulderMid.y + o.aortaTorsoFraction * (hipMid.y - shoulderMid.y),
+        };
+    } else {
+        // Hips out of frame: use shoulder width, corrected for turning, and
+        // go down the torso perpendicular to the shoulder line.
+        const cos = Math.max(Math.abs(Math.cos(heading)), o.minHeadingCos);
+        heightPerMeter = shoulderPx / (o.shoulderWidthM * cos);
+        const down = o.aortaTorsoFraction * o.torsoLengthM * heightPerMeter;
+        anchor = { x: shoulderMid.x - uy * down, y: shoulderMid.y + ux * down };
+    }
+    if (!(heightPerMeter > 0)) return null;
+
+    return { x: anchor.x / aspect, y: anchor.y, heightPerMeter, heading, roll };
+}
+
+/**
+ * Hand signals for the scale gesture.
+ *
+ * @returns null if shoulders or wrists are not visible, else
+ *          { handsRaised, handsOverHead, spread }
+ */
+export function measureHands(landmarks, worldLandmarks, aspect, mirrored = false, options = DEFAULT_OPTIONS) {
     if (!landmarks || !worldLandmarks) return null;
     const minVis = options.minVisibility;
     const required = [LM.L_SHOULDER, LM.R_SHOULDER, LM.L_WRIST, LM.R_WRIST];
     if (!required.every((i) => visible(landmarks[i], minVis))) return null;
 
-    const sx = mirrored ? -1 : 1;
-    // Image points in display space, in units of image height (isotropic).
-    const img = (i) => ({
-        x: (mirrored ? 1 - landmarks[i].x : landmarks[i].x) * aspect,
-        y: landmarks[i].y,
-    });
-    const world = (i) => ({
-        x: worldLandmarks[i].x * sx,
-        y: worldLandmarks[i].y,
-        z: worldLandmarks[i].z,
-    });
-
-    const ls = img(LM.L_SHOULDER), rs = img(LM.R_SHOULDER);
-    const lw = img(LM.L_WRIST), rw = img(LM.R_WRIST);
+    const ls = displayPoint(landmarks, LM.L_SHOULDER, aspect, mirrored);
+    const rs = displayPoint(landmarks, LM.R_SHOULDER, aspect, mirrored);
+    const lw = displayPoint(landmarks, LM.L_WRIST, aspect, mirrored);
+    const rw = displayPoint(landmarks, LM.R_WRIST, aspect, mirrored);
     const shoulderY = (ls.y + rs.y) / 2;
     const shoulderWidthImg = Math.hypot(ls.x - rs.x, ls.y - rs.y);
 
@@ -114,7 +191,7 @@ export function measurePose(landmarks, worldLandmarks, aspect, mirrored = false,
     if (visible(landmarks[LM.L_HIP], minVis) && visible(landmarks[LM.R_HIP], minVis)) {
         hipY = (landmarks[LM.L_HIP].y + landmarks[LM.R_HIP].y) / 2;
     } else {
-        hipY = shoulderY + options.torsoToShoulderRatio * shoulderWidthImg;
+        hipY = shoulderY + (options.torsoLengthM / options.shoulderWidthM) * shoulderWidthImg;
     }
     // Image y grows downward: "above" means smaller y.
     const handsRaised = lw.y < hipY && rw.y < hipY;
@@ -125,30 +202,108 @@ export function measurePose(landmarks, worldLandmarks, aspect, mirrored = false,
         handsOverHead = lw.y < noseY && rw.y < noseY;
     }
 
-    // Scale signal: wrist spread in shoulder widths. World landmarks are
-    // metric and centered on the hips, so this is independent of how far
-    // the person stands from the camera.
-    const wls = world(LM.L_SHOULDER), wrs = world(LM.R_SHOULDER);
-    const wlw = world(LM.L_WRIST), wrw = world(LM.R_WRIST);
-    const shoulderWidth = Math.hypot(wls.x - wrs.x, wls.y - wrs.y, wls.z - wrs.z);
+    // Wrist spread in shoulder widths, from metric world landmarks, so it
+    // does not depend on distance to the camera.
+    const w = worldLandmarks;
+    const d = (a, b) => Math.hypot(w[a].x - w[b].x, w[a].y - w[b].y, w[a].z - w[b].z);
+    const shoulderWidth = d(LM.L_SHOULDER, LM.R_SHOULDER);
     if (shoulderWidth < 1e-6) return null;
-    const spread = Math.hypot(wlw.x - wrw.x, wlw.y - wrw.y, wlw.z - wrw.z) / shoulderWidth;
+    const spread = d(LM.L_WRIST, LM.R_WRIST) / shoulderWidth;
 
-    // Twist: heading of the shoulder line in the horizontal plane. MediaPipe
-    // z decreases toward the camera, Three.js z increases toward it, so
-    // atan2(z_mp, x) grows with a positive Three.js rotation.y.
-    const twist = Math.atan2(wls.z - wrs.z, wls.x - wrs.x);
+    return { handsRaised, handsOverHead, spread };
+}
 
-    // Lean: angle of the shoulder line on screen. Image y points down, so
-    // negate to make a counter-clockwise lean on screen positive, matching
-    // a positive Three.js rotation.z.
-    const lean = -Math.atan2(ls.y - rs.y, ls.x - rs.x);
+/** One Euro filter (Casiez et al. 2012): smooth at rest, responsive in motion. */
+export class OneEuroFilter {
+    constructor(minCutoff, beta, dCutoff = 1.0) {
+        this.minCutoff = minCutoff;
+        this.beta = beta;
+        this.dCutoff = dCutoff;
+        this.reset();
+    }
 
-    return { handsRaised, handsOverHead, spread, twist, lean };
+    reset() {
+        this._x = null;
+        this._dx = 0;
+        this._t = null;
+    }
+
+    filter(x, tSec) {
+        if (this._x === null) {
+            this._x = x;
+            this._t = tSec;
+            return x;
+        }
+        const dt = tSec - this._t;
+        if (dt <= 0) return this._x;
+        this._t = tSec;
+        const alpha = (cutoff) => 1 / (1 + 1 / (2 * Math.PI * cutoff * dt));
+        const dx = (x - this._x) / dt;
+        this._dx += alpha(this.dCutoff) * (dx - this._dx);
+        const cutoff = this.minCutoff + this.beta * Math.abs(this._dx);
+        this._x += alpha(cutoff) * (x - this._x);
+        return this._x;
+    }
 }
 
 /**
- * Turns a stream of pose measurements into a smoothed model transform.
+ * Filters measureBody() output over time and holds the last pose through
+ * short detection dropouts.
+ */
+export class BodyAnchor {
+    constructor(options = {}) {
+        this.options = { ...DEFAULT_OPTIONS, ...options };
+        const o = this.options;
+        this._fx = new OneEuroFilter(o.positionMinCutoff, o.positionBeta);
+        this._fy = new OneEuroFilter(o.positionMinCutoff, o.positionBeta);
+        this._fSize = new OneEuroFilter(o.sizeMinCutoff, o.sizeBeta);
+        this._fHeading = new OneEuroFilter(o.angleMinCutoff, o.angleBeta);
+        this._fRoll = new OneEuroFilter(o.angleMinCutoff, o.angleBeta);
+        this.reset();
+    }
+
+    reset() {
+        for (const f of [this._fx, this._fy, this._fSize, this._fHeading, this._fRoll]) f.reset();
+        this._lastSeenMs = -Infinity;
+        this._heading = null;   // unwrapped, so filtering never jumps at ±π
+        this._state = null;
+    }
+
+    /**
+     * @param body   result of measureBody(), or null
+     * @param nowMs  monotonic time in milliseconds
+     * @returns { visible, x, y, heightPerMeter, heading, roll }
+     */
+    update(body, nowMs) {
+        const o = this.options;
+        if (!body) {
+            if (this._state && nowMs - this._lastSeenMs <= o.anchorLostMs) {
+                return { visible: true, ...this._state };
+            }
+            this.reset();
+            return { visible: false };
+        }
+
+        this._lastSeenMs = nowMs;
+        const t = nowMs / 1000;
+        this._heading = this._heading === null
+            ? body.heading
+            : this._heading + wrapAngle(body.heading - this._heading);
+
+        this._state = {
+            x: this._fx.filter(body.x, t),
+            y: this._fy.filter(body.y, t),
+            // Filter size in log space so growing and shrinking behave alike.
+            heightPerMeter: Math.exp(this._fSize.filter(Math.log(body.heightPerMeter), t)),
+            heading: wrapAngle(this._fHeading.filter(this._heading, t)),
+            roll: this._fRoll.filter(body.roll, t),
+        };
+        return { visible: true, ...this._state };
+    }
+}
+
+/**
+ * Turns a stream of hand measurements into a smoothed scale multiplier.
  */
 export class GestureController {
     constructor(options = {}) {
@@ -158,7 +313,7 @@ export class GestureController {
         this._lastRaisedMs = -Infinity;
         this._lastSeenMs = -Infinity;
         this._lastUpdateMs = null;
-        this._smoothed = null;
+        this._smoothedSpread = null;
         this._baseline = null;
         this._overHeadSinceMs = null;
     }
@@ -167,21 +322,21 @@ export class GestureController {
     release() {
         this._engaged = false;
         this._baseline = null;
-        this._smoothed = null;
+        this._smoothedSpread = null;
         this._overHeadSinceMs = null;
     }
 
-    /** Drop the clutch and return the model to its default transform. */
+    /** Drop the clutch and return to the default transform. */
     reset() {
         this.release();
         this.transform = { ...DEFAULT_TRANSFORM };
     }
 
     /**
-     * @param m      result of measurePose(), or null when nobody is detected
+     * @param m      result of measureHands(), or null when hands are not visible
      * @param nowMs  monotonic time in milliseconds
      * @returns { status, transform, resetProgress }
-     *   status: 'no-person' | 'idle' | 'tracking' | 'resetting'
+     *   status: 'no-hands' | 'idle' | 'tracking' | 'resetting'
      *   resetProgress: 0..1 while hands are held over the head
      */
     update(m, nowMs) {
@@ -198,13 +353,9 @@ export class GestureController {
             this._overHeadSinceMs = null;
             const lost = nowMs - this._lastSeenMs > o.engageGraceMs;
             const lowered = nowMs - this._lastRaisedMs > o.engageGraceMs;
-            if (lost || lowered) {
-                this._engaged = false;
-                this._baseline = null;
-                this._smoothed = null;
-            }
+            if (lost || lowered) this.release();
             let status = 'idle';
-            if (lost) status = 'no-person';
+            if (lost) status = 'no-hands';
             else if (this._engaged) status = 'tracking';
             return { status, transform: { ...this.transform }, resetProgress: 0 };
         }
@@ -214,67 +365,38 @@ export class GestureController {
             if (this._overHeadSinceMs === null) this._overHeadSinceMs = nowMs;
             const progress = clamp((nowMs - this._overHeadSinceMs) / o.resetHoldMs, 0, 1);
             if (progress >= 1) {
-                this.transform = { ...DEFAULT_TRANSFORM };
-                this._overHeadSinceMs = null;
-                // Re-baseline once the hands come back down.
-                this._baseline = null;
-                this._smoothed = null;
-                this._engaged = false;
+                this.reset();
                 return { status: 'resetting', transform: { ...this.transform }, resetProgress: 1 };
             }
             // Freeze while the arms travel up, so raising them does not
-            // spin or scale the model on the way to a reset.
+            // scale the model on the way to a reset.
             return { status: 'resetting', transform: { ...this.transform }, resetProgress: progress };
         }
         if (this._overHeadSinceMs !== null) {
             // Hands came down before the reset finished: re-baseline so the
             // pose after lowering them does not cause a jump.
-            this._overHeadSinceMs = null;
-            this._baseline = null;
-            this._smoothed = null;
+            this.release();
         }
 
-        this._smooth(m, dt);
+        if (this._smoothedSpread === null) {
+            this._smoothedSpread = m.spread;
+        } else {
+            const a = 1 - Math.exp(-dt / o.smoothingTauMs);
+            this._smoothedSpread += a * (m.spread - this._smoothedSpread);
+        }
 
         if (!this._engaged || this._baseline === null) {
             this._engaged = true;
-            this._baseline = {
-                spread: this._smoothed.spread,
-                twist: this._smoothed.twist,
-                lean: this._smoothed.lean,
-                transform: { ...this.transform },
-            };
+            this._baseline = { spread: this._smoothedSpread, scale: this.transform.scale };
             return { status: 'tracking', transform: { ...this.transform }, resetProgress: 0 };
         }
 
         const b = this._baseline;
-        const s = this._smoothed;
-
-        let spreadRatio = 1;
+        let ratio = 1;
         if (b.spread > 1e-6) {
-            spreadRatio = 1 + applyDeadzone(s.spread / b.spread - 1, o.spreadDeadzone);
+            ratio = 1 + applyDeadzone(this._smoothedSpread / b.spread - 1, o.spreadDeadzone);
         }
-        const dTwist = applyDeadzone(wrapAngle(s.twist - b.twist), o.angleDeadzone);
-        const dLean = applyDeadzone(wrapAngle(s.lean - b.lean), o.angleDeadzone);
-
-        this.transform = {
-            scale: clamp(b.transform.scale * Math.max(spreadRatio, 0), o.scaleMin, o.scaleMax),
-            yaw: wrapAngle(b.transform.yaw + o.yawGain * dTwist),
-            tilt: clamp(b.transform.tilt + o.tiltGain * dLean, -o.tiltMax, o.tiltMax),
-        };
+        this.transform = { scale: clamp(b.scale * Math.max(ratio, 0), o.scaleMin, o.scaleMax) };
         return { status: 'tracking', transform: { ...this.transform }, resetProgress: 0 };
-    }
-
-    _smooth(m, dt) {
-        if (this._smoothed === null) {
-            this._smoothed = { spread: m.spread, twist: m.twist, lean: m.lean };
-            return;
-        }
-        const a = 1 - Math.exp(-dt / this.options.smoothingTauMs);
-        const s = this._smoothed;
-        s.spread += a * (m.spread - s.spread);
-        // Smooth angles along the shortest arc.
-        s.twist = wrapAngle(s.twist + a * wrapAngle(m.twist - s.twist));
-        s.lean = wrapAngle(s.lean + a * wrapAngle(m.lean - s.lean));
     }
 }
