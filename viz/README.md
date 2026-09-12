@@ -24,7 +24,7 @@ python -m viz.export_scene \
 python -m viz.serve --port 8080 --scene-dir viz/output/subject001
 ```
 
-Open http://localhost:8080/?scene=scenes/scene.json
+Open http://localhost:8080
 
 Click and drag to rotate, scroll to zoom, click a marker for details.
 
@@ -32,7 +32,7 @@ Click and drag to rotate, scroll to zoom, click a marker for details.
 
 1. Make sure your phone and laptop are on the **same Wi-Fi network**
 2. Start the server (same command above) — it prints your local IP
-3. On your Android phone, open **Chrome** and go to `http://<your-ip>:8080/?scene=scenes/scene.json`
+3. On your Android phone, open **Chrome** and go to `http://<your-ip>:8080`
 4. Tap **Start AR**
 5. Point your camera at a flat surface (table, desk, floor)
 6. Tap to place the model

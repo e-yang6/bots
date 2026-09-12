@@ -97,9 +97,7 @@ function init() {
     window.addEventListener('resize', onWindowResize);
 
     // Load scene data from URL params or default path
-    const params = new URLSearchParams(window.location.search);
-    const sceneUrl = params.get('scene') || 'scene.json';
-    loadScene(sceneUrl);
+    loadScene('scene.json');
 
     renderer.setAnimationLoop(animate);
 }
@@ -111,12 +109,10 @@ async function loadScene(sceneJsonUrl) {
     statusEl.textContent = 'Loading scene...';
 
     try {
-        const baseUrl = sceneJsonUrl.substring(0, sceneJsonUrl.lastIndexOf('/') + 1);
         const resp = await fetch(sceneJsonUrl);
         sceneData = await resp.json();
 
-        // Load aorta mesh
-        const meshUrl = baseUrl + sceneData.mesh_file;
+        const meshUrl = sceneData.mesh_file;
         const loader = new GLTFLoader();
         const gltf = await loader.loadAsync(meshUrl);
 
