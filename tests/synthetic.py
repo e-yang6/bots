@@ -35,6 +35,10 @@ def make_cylinder_with_stub(
     stub_z=45,
     stub_radius_mm=3.0,
     stub_length_mm=18.0,
+    stub_in_mask=True,
+    sub_stub=False,
+    sub_stub_radius_mm=1.5,
+    sub_stub_length_mm=10.0,
     noise_speck=True,
     second_segment=False,
     lumen_hu=300.0,
@@ -45,9 +49,11 @@ def make_cylinder_with_stub(
     - Main tube: a vertical cylinder from z_start to z_end. If
       taper_low_end, the low end narrows to a point (a natural closure);
       the high end is always a flat cut (a "cropped" end).
-    - stub: a smaller side branch attached partway up the tube (not used
-      for detection this session -- just gives the mask a non-trivial
-      principal axis / cross-section to exercise the geometry code).
+    - stub: a smaller side branch attached partway up the tube. With
+      stub_in_mask=False it appears in the image but NOT in the mask, which
+      is how the real task is posed (the supplied mask is aorta-only and the
+      daughters have to be found in the CT); with stub_in_mask=True it is in
+      both, which is only useful for exercising geometry code.
     - noise_speck: a handful of isolated foreground voxels far from the
       tube, to exercise connected-component noise filtering.
     - second_segment: an extra, substantial, separate tube segment placed
@@ -77,18 +83,31 @@ def make_cylinder_with_stub(
     tube = in_z & (dist2 <= local_r**2)
     mask[tube] = 1
 
+    stub_region = np.zeros(shape_zyx, dtype=bool)
     if stub:
+        # a true cylinder along +x, axis through (z=stub_z, y=cy), starting
+        # inside the tube so its lumen is continuous with the parent's
         stub_r_vox = stub_radius_mm / spacing[0]
         stub_len_vox = int(round(stub_length_mm / spacing[0]))
-        stub_z_lo = stub_z - 2
-        stub_z_hi = stub_z + 2
         stub_x_lo = cx + int(round(r_vox * 0.3))
         stub_x_hi = stub_x_lo + stub_len_vox
-        in_stub_z = (zz >= stub_z_lo) & (zz <= stub_z_hi)
-        in_stub_x = (xx >= stub_x_lo) & (xx <= stub_x_hi)
-        stub_dist2 = (yy - cy) ** 2
-        stub_region = in_stub_z & in_stub_x & (stub_dist2 <= stub_r_vox**2)
-        mask[stub_region] = 1
+        radial = (yy - cy) ** 2 + (zz - stub_z) ** 2
+        stub_region = (xx >= stub_x_lo) & (xx <= stub_x_hi) & (radial <= stub_r_vox**2)
+        if stub_in_mask:
+            mask[stub_region] = 1
+
+        if sub_stub:
+            # a smaller vessel leaving the STUB (not the aorta) partway along
+            # it, running in +y: a daughter-of-a-daughter, which must not be
+            # reported as a direct aortic daughter
+            sub_r_vox = sub_stub_radius_mm / spacing[0]
+            sub_len_vox = int(round(sub_stub_length_mm / spacing[0]))
+            sub_x = stub_x_lo + int(round(0.6 * stub_len_vox))
+            sub_y_lo = cy + int(round(stub_r_vox * 0.3))
+            sub_y_hi = sub_y_lo + sub_len_vox
+            sub_radial = (xx - sub_x) ** 2 + (zz - stub_z) ** 2
+            sub_region = (yy >= sub_y_lo) & (yy <= sub_y_hi) & (sub_radial <= sub_r_vox**2)
+            stub_region = stub_region | sub_region
 
     if noise_speck:
         speck_z, speck_y, speck_x = min(nz - 2, z_start + 3), 4, 4
@@ -102,8 +121,10 @@ def make_cylinder_with_stub(
         seg = (zz >= seg_z_start) & (zz <= seg_z_end) & (seg_dist2 <= r_vox**2)
         mask[seg] = 1
 
+    # The image is bright wherever there is lumen, which includes the stub
+    # even when the stub is deliberately absent from the mask.
     image_arr = np.full(shape_zyx, background_hu, dtype=np.float32)
-    image_arr[mask.astype(bool)] = lumen_hu
+    image_arr[mask.astype(bool) | stub_region] = lumen_hu
 
     image = sitk.GetImageFromArray(image_arr.astype(np.int16))
     mask_img = sitk.GetImageFromArray(mask)
