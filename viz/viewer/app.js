@@ -77,6 +77,11 @@ function init() {
         });
     }
 
+    // AR taps come through as 'select' on the controller, not DOM pointerdown
+    renderer.xr.addEventListener('sessionstart', () => {
+        const session = renderer.xr.getSession();
+        session.addEventListener('select', onARSelect);
+    });
     renderer.domElement.addEventListener('pointerdown', onPointerDown);
     window.addEventListener('resize', onWindowResize);
 
@@ -136,13 +141,22 @@ function fitCameraToModel() {
     controls.update();
 }
 
-function onPointerDown() {
-    if (isARActive && !modelPlaced && reticle.visible) {
+function placeModel() {
+    if (!modelPlaced && reticle.visible) {
         modelGroup.position.setFromMatrixPosition(reticle.matrix);
         modelGroup.visible = true;
         modelPlaced = true;
+        reticle.visible = false;
         document.getElementById('status').textContent = '';
     }
+}
+
+function onARSelect() {
+    if (isARActive) placeModel();
+}
+
+function onPointerDown() {
+    if (isARActive) placeModel();
 }
 
 function onXRFrame(timestamp, frame) {
