@@ -296,8 +296,13 @@ function getTouchCenter(t1, t2) {
     return { x: (t1.clientX + t2.clientX) / 2, y: (t1.clientY + t2.clientY) / 2 };
 }
 
+function canTouch() {
+    // Touch controls work in AR (after placement), gesture mode, and desktop
+    return modelPlaced || isGestureActive || (!isARActive && !isGestureActive);
+}
+
 function onTouchStart(e) {
-    if (!modelPlaced) return;
+    if (!canTouch()) return;
     for (const t of e.changedTouches) {
         touches[t.identifier] = t;
     }
@@ -312,7 +317,7 @@ function onTouchStart(e) {
 }
 
 function onTouchMove(e) {
-    if (!modelPlaced) return;
+    if (!canTouch()) return;
     for (const t of e.changedTouches) {
         touches[t.identifier] = t;
     }
@@ -337,7 +342,7 @@ function onTouchMove(e) {
         modelGroup.rotation.y += deltaAngle;
         prevTouchAngle = angle;
 
-        // Two-finger drag to move
+        // Two-finger drag to move (AR only)
         const center = getTouchCenter(t1, t2);
         if (isARActive) {
             const dx = (center.x - prevTouchCenter.x) * 0.0005;
