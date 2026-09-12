@@ -1,17 +1,14 @@
 /**
- * WebXR AR viewer for aorta visualization with gesture control.
+ * WebXR AR viewer for aorta visualization.
  *
- * AR mode: place model on surface, then control scale with body gestures.
- * Raise both arms above shoulders → bigger.
- * Lower both arms below hips → smaller.
- * Arms at rest → hold current size.
+ * AR mode: place model on a surface via hit-test, tap to place.
+ * Desktop: orbit controls.
  */
 
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { ARButton } from 'three/addons/webxr/ARButton.js';
-import { initPoseDetection, processXRFrame, processVideoFrame, applyGestures, getGestureState } from './gesture.js';
 
 let scene, camera, renderer, controls;
 let modelGroup;
@@ -20,11 +17,6 @@ let hitTestSource = null;
 let hitTestSourceRequested = false;
 let modelPlaced = false;
 let isARActive = false;
-
-let gestureReady = false;
-let cameraAccessAvailable = false;
-let fallbackVideo = null;
-let currentScale = 0.001; // mm to meters
 
 function init() {
     scene = new THREE.Scene();
@@ -45,7 +37,7 @@ function init() {
     scene.add(dirLight);
 
     modelGroup = new THREE.Group();
-    modelGroup.scale.setScalar(currentScale);
+    modelGroup.scale.setScalar(0.001);
     scene.add(modelGroup);
 
     const reticleGeo = new THREE.RingGeometry(0.03, 0.04, 32);
@@ -62,7 +54,7 @@ function init() {
     if ('xr' in navigator) {
         const arButton = ARButton.createButton(renderer, {
             requiredFeatures: ['hit-test'],
-            optionalFeatures: ['dom-overlay', 'camera-access'],
+            optionalFeatures: ['dom-overlay'],
             domOverlay: { root: document.getElementById('overlay') },
         });
         document.getElementById('ar-button-container').appendChild(arButton);
@@ -72,17 +64,13 @@ function init() {
             modelPlaced = false;
             modelGroup.visible = false;
             controls.enabled = false;
-            startGestureDetection();
         });
         renderer.xr.addEventListener('sessionend', () => {
             isARActive = false;
             modelGroup.visible = true;
             modelGroup.position.set(0, 0, 0);
             modelGroup.quaternion.identity();
-            currentScale = 0.001;
-            modelGroup.scale.setScalar(currentScale);
             controls.enabled = true;
-            stopFallbackVideo();
         });
     }
 
@@ -95,43 +83,6 @@ function init() {
 
     loadScene('scene.json');
     renderer.setAnimationLoop(animate);
-}
-
-async function startGestureDetection() {
-    if (gestureReady) return;
-    document.getElementById('status').textContent = 'Loading gesture detection...';
-    try {
-        await initPoseDetection();
-        gestureReady = true;
-        document.getElementById('status').textContent = '';
-    } catch (err) {
-        console.warn('Pose detection init failed:', err);
-        document.getElementById('status').textContent = '';
-    }
-}
-
-function startFallbackVideo() {
-    if (fallbackVideo) return;
-    // Use front camera since back camera is locked by WebXR
-    navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user', width: 320, height: 240 }
-    }).then(stream => {
-        fallbackVideo = document.createElement('video');
-        fallbackVideo.srcObject = stream;
-        fallbackVideo.setAttribute('playsinline', '');
-        fallbackVideo.play();
-        document.getElementById('status').textContent = 'Front camera active — stand in front of phone';
-    }).catch(err => {
-        console.warn('Could not open fallback camera:', err);
-        document.getElementById('status').textContent = 'Camera unavailable for gestures';
-    });
-}
-
-function stopFallbackVideo() {
-    if (fallbackVideo && fallbackVideo.srcObject) {
-        fallbackVideo.srcObject.getTracks().forEach(t => t.stop());
-        fallbackVideo = null;
-    }
 }
 
 async function loadScene(sceneJsonUrl) {
@@ -186,9 +137,7 @@ function placeModel() {
         modelGroup.visible = true;
         modelPlaced = true;
         reticle.visible = false;
-        document.getElementById('status').textContent = gestureReady
-            ? 'Raise arms to grow, lower to shrink'
-            : '';
+        document.getElementById('status').textContent = '';
     }
 }
 
@@ -201,82 +150,28 @@ function onPointerDown() {
 }
 
 function onXRFrame(timestamp, frame) {
-    if (!isARActive) return;
+    if (!isARActive || modelPlaced) return;
 
-    if (!modelPlaced) {
-        const session = renderer.xr.getSession();
-        const refSpace = renderer.xr.getReferenceSpace();
-        if (!hitTestSourceRequested) {
-            session.requestReferenceSpace('viewer').then((viewerSpace) => {
-                session.requestHitTestSource({ space: viewerSpace }).then((source) => {
-                    hitTestSource = source;
-                });
+    const session = renderer.xr.getSession();
+    const refSpace = renderer.xr.getReferenceSpace();
+
+    if (!hitTestSourceRequested) {
+        session.requestReferenceSpace('viewer').then((viewerSpace) => {
+            session.requestHitTestSource({ space: viewerSpace }).then((source) => {
+                hitTestSource = source;
             });
-            hitTestSourceRequested = true;
-        }
-        if (hitTestSource) {
-            const results = frame.getHitTestResults(hitTestSource);
-            if (results.length > 0) {
-                const pose = results[0].getPose(refSpace);
-                reticle.visible = true;
-                reticle.matrix.fromArray(pose.transform.matrix);
-            } else {
-                reticle.visible = false;
-            }
-        }
-        return;
+        });
+        hitTestSourceRequested = true;
     }
 
-    // Gesture detection
-    if (gestureReady) {
-        let usedXRCamera = false;
-
-        // Try XR camera-access first
-        if (!cameraAccessAvailable) {
-            try {
-                processXRFrame(renderer, frame);
-                if (getGestureState().personDetected) {
-                    usedXRCamera = true;
-                    cameraAccessAvailable = true;
-                }
-            } catch (e) {
-                // Not available, will fall back
-            }
+    if (hitTestSource) {
+        const results = frame.getHitTestResults(hitTestSource);
+        if (results.length > 0) {
+            const pose = results[0].getPose(refSpace);
+            reticle.visible = true;
+            reticle.matrix.fromArray(pose.transform.matrix);
         } else {
-            try {
-                processXRFrame(renderer, frame);
-                usedXRCamera = true;
-            } catch (e) {}
-        }
-
-        // Fallback: front camera
-        if (!cameraAccessAvailable) {
-            if (!fallbackVideo) {
-                startFallbackVideo();
-            } else if (fallbackVideo.readyState >= 2) {
-                processVideoFrame(fallbackVideo);
-            }
-        }
-
-        const state = getGestureState();
-        const statusEl = document.getElementById('status');
-        if (state.personDetected) {
-            currentScale = applyGestures(modelGroup, currentScale);
-            if (state.action === 'up') {
-                statusEl.textContent = 'GROWING | arms up detected';
-            } else if (state.action === 'down') {
-                statusEl.textContent = 'SHRINKING | arms down detected';
-            } else {
-                statusEl.textContent = 'Person detected | raise or lower arms';
-            }
-        } else {
-            if (cameraAccessAvailable) {
-                statusEl.textContent = 'No person detected (back camera)';
-            } else if (fallbackVideo) {
-                statusEl.textContent = 'No person detected (front camera)';
-            } else {
-                statusEl.textContent = 'Starting camera...';
-            }
+            reticle.visible = false;
         }
     }
 }
