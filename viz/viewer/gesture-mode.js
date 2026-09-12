@@ -4,6 +4,9 @@
  * BodyAnchor) and their hands control its scale (see GestureController).
  *
  * MediaPipe is imported lazily so desktop and AR users never download it.
+ *
+ * Supports an external video source (e.g. from AR.js) via
+ * start({ externalVideo }) — skips opening/closing its own camera.
  */
 
 import {
@@ -25,11 +28,12 @@ const STATUS_TEXT = {
 
 export class GestureMode {
     /**
-     * @param video     <video> element used as the background
+     * @param video     <video> element used as the background (own camera)
      * @param skeleton  <canvas> drawn over the video for the optional skeleton
      * @param onStatus  called with a short status string
      */
     constructor({ video, skeleton, onStatus }) {
+        this._ownVideo = video;
         this.video = video;
         this.skeleton = skeleton;
         this.onStatus = onStatus;
@@ -40,6 +44,7 @@ export class GestureMode {
         this.mirrored = false;
         this.facingMode = 'environment';
         this._stream = null;
+        this._useExternalVideo = false;
         this._landmarker = null;
         this._landmarkerPromise = null;
         this._lastVideoTime = -1;
@@ -48,27 +53,43 @@ export class GestureMode {
         this._lastLandmarks = null;
     }
 
-    async start() {
+    /**
+     * Start gesture detection.
+     * @param {Object} [options]
+     * @param {HTMLVideoElement} [options.externalVideo] — use this video
+     *        element instead of opening a camera (e.g. AR.js's video).
+     *        The caller owns the stream; stop() will not close it.
+     */
+    async start({ externalVideo } = {}) {
         this.active = true;
         this.controller.reset();
         this.anchor.reset();
-        this._setStatus('Starting camera...');
 
-        if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
-            this._setStatus('Camera needs HTTPS (or localhost)');
-            return false;
-        }
-        try {
-            await this._openCamera();
-        } catch (err) {
-            console.error(err);
-            this._setStatus(err.name === 'NotAllowedError' ? 'Camera access denied' : 'Camera error: ' + err.message);
-            return false;
-        }
-        if (!this.active) {
-            // Exited while the permission prompt was open.
-            this._closeCamera();
-            return false;
+        if (externalVideo) {
+            this._useExternalVideo = true;
+            this.video = externalVideo;
+            this.mirrored = false; // external sources use environment camera
+            this._lastVideoTime = -1;
+        } else {
+            this._useExternalVideo = false;
+            this.video = this._ownVideo;
+            this._setStatus('Starting camera...');
+
+            if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+                this._setStatus('Camera needs HTTPS (or localhost)');
+                return false;
+            }
+            try {
+                await this._openCamera();
+            } catch (err) {
+                console.error(err);
+                this._setStatus(err.name === 'NotAllowedError' ? 'Camera access denied' : 'Camera error: ' + err.message);
+                return false;
+            }
+            if (!this.active) {
+                this._closeCamera();
+                return false;
+            }
         }
 
         this._setStatus('Loading pose model...');
@@ -84,7 +105,11 @@ export class GestureMode {
 
     stop() {
         this.active = false;
-        this._closeCamera();
+        if (!this._useExternalVideo) {
+            this._closeCamera();
+        }
+        this._useExternalVideo = false;
+        this.video = this._ownVideo;
         this._lastLandmarks = null;
         this._clearSkeleton();
         this._setStatus('');
@@ -92,6 +117,7 @@ export class GestureMode {
     }
 
     async flipCamera() {
+        if (this._useExternalVideo) return; // can't flip external camera
         this.facingMode = this.facingMode === 'environment' ? 'user' : 'environment';
         this._closeCamera();
         // Mirroring may change, which flips the signals: re-baseline.
@@ -138,7 +164,8 @@ export class GestureMode {
      *          transform is { scale }, or null if there is nothing new
      */
     tick() {
-        if (!this.active || !this._landmarker || !this._stream) return null;
+        if (!this.active || !this._landmarker) return null;
+        if (!this._useExternalVideo && !this._stream) return null;
         const video = this.video;
         if (video.readyState < 2 || video.currentTime === this._lastVideoTime) return null;
         this._lastVideoTime = video.currentTime;

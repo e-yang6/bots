@@ -21,13 +21,17 @@
 
         <div id="mode-bar">
             <div id="mode-buttons">
-                <div id="ar-button-container"></div>
+                <button id="ar-button" type="button" hidden>AR mode</button>
                 <button id="gesture-button" type="button">Gesture mode</button>
             </div>
             <div id="gesture-controls" hidden>
                 <button id="flip-camera-button" type="button">Flip camera</button>
                 <button id="skeleton-button" type="button" aria-pressed="false">Skeleton</button>
-                <button id="exit-gesture-button" type="button">Exit</button>
+                <button id="exit-gesture-button" type="button">Exit gesture</button>
+            </div>
+            <div id="ar-controls" hidden>
+                <button id="ar-gesture-button" type="button">Gesture</button>
+                <button id="exit-ar-button" type="button">Exit AR</button>
             </div>
         </div>
     </div>
