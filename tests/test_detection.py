@@ -1,432 +1,293 @@
-"""Detection/tracing/parentage tests against a phantom with known geometry.
+"""Candidates, rejections, origin splitting and tracing on phantoms with known
+geometry.
 
-The phantom puts the daughter stub in the IMAGE but not in the MASK, which is
-how the real task is posed -- the supplied mask is aorta-only.
+Phantoms put daughters in the IMAGE but not in the MASK, which is how the real
+task is posed -- the supplied mask is aorta-only. Unless stated otherwise the
+aorta is a vertical cylinder of radius 8mm about (x=32, y=32), so its wall on
+the +x side is at x=40.
 """
 
 import numpy as np
 import pytest
-from scipy.spatial import cKDTree
 
-from src.candidates import build_evidence, find_candidate_ostia, lumen_likeness
-from src.geometry import compute_centerline, compute_surface_normals, crop_to_mask_bbox, flag_end_caps
-from src.intensity import lumen_stats
-from src.parentage import check_branch_of_branch
-from src.tracing import (
-    cross_section,
-    detect_bifurcation,
-    estimate_ostium_candidates,
-    extract_seed_direction_radius,
-    trace_branch,
-    truncate_trace,
-)
-from tests.synthetic import make_cylinder_with_stub
+from run import analyze_volumes
+from src.candidates import compute_exit_voxels
+from src.parentage import watershed_basins
+from tests.synthetic import make_capsule_phantom
 
-STUB_RADIUS_MM = 3.0
+WALL_X = 40.0
 
 
-def build_phantom(**overrides):
-    settings = dict(
-        shape_zyx=(90, 60, 60), radius_mm=8.0, z_start=10, z_end=80,
-        stub=True, stub_in_mask=False, stub_z=45, stub_radius_mm=STUB_RADIUS_MM,
-        stub_length_mm=18.0, noise_speck=False, taper_low_end=False,
-        lumen_hu=300.0, background_hu=40.0,
-    )
-    settings.update(overrides)
-    return make_cylinder_with_stub(**settings)
+def stub(z=45.0, length_beyond_wall=18.0, radius=3.0, y=32.0):
+    return {"start": (36.0, y, z), "end": (WALL_X + length_beyond_wall, y, z), "radius": radius}
 
 
-def analyze_phantom(image, mask, margin_mm=8):
-    cropped_image, cropped_mask = crop_to_mask_bbox(image, mask, margin_mm)
-    stats = lumen_stats(cropped_image, cropped_mask)
-    evidence = build_evidence(cropped_image, cropped_mask, stats)
-    centerline = compute_centerline(cropped_mask)
-    surface = compute_surface_normals(cropped_mask)
-    caps = flag_end_caps(cropped_mask, surface, centerline)
-    candidates, evidence = find_candidate_ostia(
-        cropped_image, cropped_mask, stats, surface, caps, evidence=evidence
-    )
-    return {
-        "image": cropped_image, "mask": cropped_mask, "evidence": evidence,
-        "surface": surface, "caps": caps, "candidates": candidates,
-        "sampler": evidence["sampler"], "lumen_threshold": evidence["lumen_threshold"],
-        "surface_tree": cKDTree(surface[0]),
-    }
+def analyze(**phantom):
+    image, mask = make_capsule_phantom(**phantom)
+    return analyze_volumes(image, mask)
 
 
-def trace_candidate(context, candidate):
-    trace = trace_branch(
-        context["sampler"], candidate["ostium_patch_centroid_mm"],
-        candidate["outward_direction"], context["lumen_threshold"],
-    )
-    bifurcation = detect_bifurcation(trace)
-    if bifurcation["bifurcation_index"] is not None:
-        trace = truncate_trace(trace, bifurcation["bifurcation_index"])
-    ostium = estimate_ostium_candidates(
-        context["sampler"], candidate, trace, context["lumen_threshold"],
-        context["surface_tree"], context["surface"][0],
-    )
-    seed = extract_seed_direction_radius(
-        context["sampler"], trace, ostium["consensus_mm"], context["lumen_threshold"]
-    )
-    return trace, ostium, seed
+def rejected(context, rule):
+    return [c for c in context["detection"]["components"] if c["rejected_by"] == rule]
 
 
-def test_lumen_likeness_rejects_calcium_and_accepts_lumen():
-    # the whole point of the band: bone/calcium far above lumen HU must not
-    # score higher than lumen itself
-    values = np.array([0.0, 0.5, 1.0, 1.3, 2.5, 4.0])
-    likeness = lumen_likeness(values)
-    assert likeness[0] == 0.0            # background tissue
-    assert likeness[2] == pytest.approx(1.0)  # lumen
-    assert likeness[3] == pytest.approx(1.0)  # slightly brighter lumen
-    assert likeness[4] == 0.0            # calcium
-    assert likeness[5] == 0.0            # bone
-
-
-def test_finds_the_single_stub_and_nothing_else():
-    context = analyze_phantom(*build_phantom())
+def test_single_stub_is_one_candidate_and_one_instance():
+    context = analyze(branches=[stub()])
     assert len(context["candidates"]) == 1
+    assert len(context["instances"]) == 1
 
     candidate = context["candidates"][0]
-    assert candidate["peak_score"] > 1.0
-    # the stub leaves along +x, so the ostium's outward direction must too
-    assert candidate["outward_direction"][0] > 0.9
+    assert candidate["direction_estimate"][0] > 0.9
+    assert candidate["max_distance_mm"] >= 15.0
+    assert context["instances"][0]["split"] == "none"
+    assert rejected(context, "end_cap") == [] and rejected(context, "aortic_continuation") == []
 
 
-def test_no_candidates_on_a_plain_tube_with_no_branch():
-    context = analyze_phantom(*build_phantom(stub=False))
+def test_plain_tube_has_no_candidates():
+    context = analyze()
+    assert context["detection"]["components"] == []
+    assert context["instances"] == []
+
+
+def test_contact_patch_is_the_stub_mouth_on_the_aorta_wall():
+    context = analyze(branches=[stub()])
+    instance = context["instances"][0]
+    centroid = instance["patch_centroid_mm"]
+    assert centroid == pytest.approx([WALL_X + 1.0, 32.0, 45.0], abs=1.2)
+    # the mouth of a 3mm-radius stub is ~28mm2; the patch must be that mouth,
+    # not the whole wall and not a stray voxel or two
+    assert 15.0 < instance["patch_area_mm2"] < 90.0
+
+
+def test_trace_seed_direction_and_radius_of_a_straight_stub():
+    context = analyze(branches=[stub()])
+    trace = context["traces"][0]
+    seed = context["seed_estimates"][0]
+
+    assert trace["truncated_by"] == "max_length"
+    assert trace["traced_length_mm"] == pytest.approx(10.0, abs=0.6)
+    assert trace["arc_lengths_mm"][0] == 0.0
+    assert np.all(np.diff(trace["arc_lengths_mm"]) == pytest.approx(0.5))
+
+    # 5mm of geodesic distance beyond the lumen voxel at x=40
+    assert seed["reached_seed_distance"] is True
+    assert seed["seed_mm"] == pytest.approx([45.0, 32.0, 45.0], abs=1.0)
+
+    direction = seed["direction_xyz"]
+    assert np.linalg.norm(direction) == pytest.approx(1.0)
+    assert direction[0] > 0.97
+
+    assert seed["radius_from_distance_transform_mm"] == pytest.approx(3.0, abs=0.6)
+    assert seed["radius_from_frontier_mm"] == pytest.approx(3.0, abs=1.0)
+    assert seed["radius_disagreement_flag"] is False
+
+
+def test_ostium_estimates_land_on_the_mouth_and_agree():
+    context = analyze(branches=[stub()])
+    ostium = context["ostium_estimates"][0]
+    assert ostium["primary"] == "patch_centroid_mm"
+    assert set(ostium["estimates"]) == {"patch_centroid_mm", "traced_projection_mm", "max_gradient_mm"}
+    assert ostium["ostium_mm"] == pytest.approx([WALL_X, 32.0, 45.0], abs=1.5)
+    assert ostium["max_disagreement_mm"] < 4.0
+    assert len(ostium["pairwise_distances_mm"]) == 3
+
+
+def test_aorta_continuing_past_a_cut_mask_face_is_rejected_as_end_cap():
+    # the image aorta runs to z=85 but the mask stops flat at z=60
+    context = analyze(aorta_z_mm=(10.0, 85.0), mask_z_mm=(10.0, 60.0), branches=[stub(z=35.0)])
+    caps = rejected(context, "end_cap")
+    assert len(caps) == 1
+    assert caps[0]["cap_face_fraction"] >= 0.5
+    # and the real branch lower down still survives
+    assert len(context["candidates"]) == 1
+    assert context["candidates"][0]["patch_centroid_mm"][2] == pytest.approx(35.0, abs=2.0)
+
+
+def test_aorta_continuing_past_a_tapered_mask_end_is_rejected_as_continuation():
+    # the mask narrows over its last 8mm while the real aorta stays full width
+    # and continues: the flood leaves through the tapering side wall, not the
+    # end face, so it is the continuation rule that must catch it
+    context = analyze(aorta_z_mm=(10.0, 85.0), mask_z_mm=(10.0, 60.0), mask_taper_mm=8.0)
+    continuation = rejected(context, "aortic_continuation")
+    assert len(continuation) == 1
+    assert continuation[0]["cap_face_fraction"] < 0.5
+    assert continuation[0]["radius_ratio"] > 0.4 or continuation[0]["angle_to_centerline_deg"] <= 25.0
     assert context["candidates"] == []
 
 
-def test_trace_follows_the_stub_and_recovers_direction_and_radius():
-    context = analyze_phantom(*build_phantom())
+def test_small_perpendicular_branch_beside_a_cap_is_not_a_continuation():
+    context = analyze(mask_z_mm=(10.0, 80.0), branches=[stub(z=77.0, radius=2.0)])
+    assert len(context["candidates"]) == 1
     candidate = context["candidates"][0]
-    trace, ostium, seed = trace_candidate(context, candidate)
-
-    assert trace["traced_length_mm"] >= 5.0
-    assert seed["reached_seed_arc_length"] is True
-
-    direction = seed["direction_xyz"]
-    assert np.isclose(np.linalg.norm(direction), 1.0, atol=1e-6)
-    assert direction[0] > 0.95  # the stub runs along +x
-
-    # the ellipse cross-check should recover the true radius closely; the
-    # distance-transform reading is lower because excluding the aorta cuts
-    # the stub's lumen near the junction
-    assert seed["radius_from_ellipse_mm"] == pytest.approx(STUB_RADIUS_MM, abs=0.7)
-    assert 1.0 < seed["radius_mm"] < 2.0 * STUB_RADIUS_MM
-
-
-def test_trace_keeps_length_continuous_rather_than_snapping_to_5mm():
-    context = analyze_phantom(*build_phantom(stub_length_mm=18.0))
-    trace, _ostium, _seed = trace_candidate(context, context["candidates"][0])
-    # no 5mm quantization anywhere: the eligibility rule belongs downstream
-    assert trace["traced_length_mm"] % 5.0 != 0.0 or trace["traced_length_mm"] > 5.0
-    assert trace["arc_lengths_mm"][0] == 0.0
-    assert np.all(np.diff(trace["arc_lengths_mm"]) > 0)
-
-
-def test_ostium_estimates_agree_for_a_clean_branch():
-    context = analyze_phantom(*build_phantom())
-    _trace, ostium, _seed = trace_candidate(context, context["candidates"][0])
-
-    assert set(ostium["estimates"]) == {
-        "patch_centroid_mm", "traced_projection_mm", "max_gradient_mm"
-    }
-    assert len(ostium["pairwise_distances_mm"]) == 3
-    assert ostium["max_disagreement_mm"] >= ostium["mean_disagreement_mm"]
-    # patch centroid and the back-projected trace describe the same opening
-    patch = ostium["estimates"]["patch_centroid_mm"]
-    projected = ostium["estimates"]["traced_projection_mm"]
-    assert np.linalg.norm(patch - projected) < 4.0
-
-
-def test_cross_section_excluding_aorta_measures_the_branch_not_the_aorta():
-    context = analyze_phantom(*build_phantom())
-    candidate = context["candidates"][0]
-    trace, _ostium, _seed = trace_candidate(context, candidate)
-    # a plane taken close to the origin is the case that matters: far enough
-    # out, the plane misses the aorta entirely and the two agree
-    point = trace["points_mm"][1]
-    direction = trace["directions"][1]
-
-    with_aorta = cross_section(
-        context["sampler"], point, direction, context["lumen_threshold"], exclude_aorta=False
-    )
-    without_aorta = cross_section(
-        context["sampler"], point, direction, context["lumen_threshold"], exclude_aorta=True
-    )
-    # including the aorta merges the two lumens and inflates the measurement
-    assert without_aorta["area_mm2"] < with_aorta["area_mm2"]
-    assert without_aorta["equivalent_radius_mm"] == pytest.approx(STUB_RADIUS_MM, abs=1.2)
-
-
-def test_detect_bifurcation_truncates_at_a_split():
-    # a synthetic trace whose front stays steady, then splits in two
-    steps = 24
-    trace = {
-        "arc_lengths_mm": np.arange(steps) * 0.5,
-        "areas_mm2": np.full(steps, 12.0),
-        "n_components": np.ones(steps, dtype=int),
-        "points_mm": np.stack([np.arange(steps) * 0.5, np.zeros(steps), np.zeros(steps)], axis=1),
-        "directions": np.tile(np.array([1.0, 0.0, 0.0]), (steps, 1)),
-        "radii_mm": np.full(steps, 2.0),
-        "lumen": np.ones(steps),
-        "vesselness": np.ones(steps),
-        "traced_length_mm": (steps - 1) * 0.5,
-        "status": "max_length",
-        "start_direction": np.array([1.0, 0.0, 0.0]),
-    }
-    trace["n_components"][16:] = 2
-
-    result = detect_bifurcation(trace)
-    assert result["bifurcation_index"] == 16
-    assert result["reason"] == "bimodal_front"
-
-    truncated = truncate_trace(trace, result["bifurcation_index"])
-    assert truncated["status"] == "bifurcation"
-    assert truncated["traced_length_mm"] == pytest.approx(8.0)
-    assert len(truncated["points_mm"]) == 17
-
-
-def test_detect_bifurcation_ignores_a_single_flickering_frame():
-    steps = 24
-    trace = {
-        "arc_lengths_mm": np.arange(steps) * 0.5,
-        "areas_mm2": np.full(steps, 12.0),
-        "n_components": np.ones(steps, dtype=int),
-        "traced_length_mm": (steps - 1) * 0.5,
-    }
-    trace["n_components"][14] = 2  # one frame only
-
-    assert detect_bifurcation(trace)["bifurcation_index"] is None
-
-
-def test_detect_bifurcation_on_a_sustained_area_jump():
-    steps = 24
-    areas = np.full(steps, 10.0)
-    areas[15:] = 30.0
-    trace = {
-        "arc_lengths_mm": np.arange(steps) * 0.5,
-        "areas_mm2": areas,
-        "n_components": np.ones(steps, dtype=int),
-        "traced_length_mm": (steps - 1) * 0.5,
-    }
-    result = detect_bifurcation(trace)
-    assert result["reason"] == "area_jump"
-    assert result["bifurcation_index"] == 15
-
-
-def _straight_trace(start, direction, length_mm=16.0, radius_mm=3.0, step_mm=0.5):
-    n = int(length_mm / step_mm) + 1
-    arc = np.arange(n) * step_mm
-    direction = np.asarray(direction, dtype=float)
-    points = np.asarray(start, dtype=float) + np.outer(arc, direction)
-    return {
-        "points_mm": points,
-        "directions": np.tile(direction, (n, 1)),
-        "radii_mm": np.full(n, radius_mm),
-        "arc_lengths_mm": arc,
-        "traced_length_mm": float(arc[-1]),
-        "status": "max_length",
-        "start_direction": direction,
-    }
-
-
-def test_branch_of_branch_flagged_when_ostium_sits_on_another_branch_wall():
-    # aorta surface is the plane x = 0; the parent branch runs out along +x
-    aorta_surface = np.stack(
-        np.meshgrid(np.zeros(1), np.linspace(-10, 10, 21), np.linspace(-10, 10, 21), indexing="ij"),
-        axis=-1,
-    ).reshape(-1, 3)
-    tree = cKDTree(aorta_surface)
-
-    parent = _straight_trace(start=(0, 0, 0), direction=(1, 0, 0), radius_mm=3.0)
-    child = _straight_trace(start=(10, 3.0, 0), direction=(0, 1, 0), radius_mm=1.0)
-
-    ostia = [np.array([0.0, 0.0, 0.0]), np.array([10.0, 3.0, 0.0])]
-    results = check_branch_of_branch([None, None], [parent, child], tree, ostium_points_mm=ostia)
-
-    direct, sub = results
-    # the parent's own origin is on the aorta wall -> a direct daughter
-    assert direct["distance_to_aorta_surface_mm"] == pytest.approx(0.0, abs=1e-6)
-    assert direct["is_branch_of_branch"] is False
-
-    # the child's origin sits exactly on the parent's lumen surface (axis
-    # distance 3.0 == the parent's radius there) and well off the aorta
-    assert sub["is_branch_of_branch"] is True
-    assert sub["parent_candidate_index"] == 0
-    assert sub["distance_to_parent_surface_mm"] == pytest.approx(0.0, abs=0.3)
-    assert sub["distance_to_parent_axis_mm"] == pytest.approx(3.0, abs=0.3)
-    assert sub["parent_radius_at_contact_mm"] == pytest.approx(3.0, abs=1e-6)
-    assert sub["distance_to_aorta_surface_mm"] > 2.5
-
-
-def test_parallel_neighbouring_branches_are_not_called_parent_and_child():
-    """Two aortic daughters running side by side must both stay direct.
-
-    This is exactly what raw path-to-path distance gets wrong: their axes
-    pass within a few mm of each other, but neither origin lies on the
-    other's wall.
-    """
-    aorta_surface = np.stack(
-        np.meshgrid(np.zeros(1), np.linspace(-20, 20, 41), np.linspace(-20, 20, 41), indexing="ij"),
-        axis=-1,
-    ).reshape(-1, 3)
-    tree = cKDTree(aorta_surface)
-
-    first = _straight_trace(start=(0, 0, 0), direction=(1, 0, 0), radius_mm=2.0)
-    second = _straight_trace(start=(0, 6.0, 0), direction=(1, 0, 0), radius_mm=2.0)
-
-    ostia = [np.array([0.0, 0.0, 0.0]), np.array([0.0, 6.0, 0.0])]
-    results = check_branch_of_branch([None, None], [first, second], tree, ostium_points_mm=ostia)
-
-    for result in results:
-        assert result["is_branch_of_branch"] is False
-        assert result["distance_to_aorta_surface_mm"] == pytest.approx(0.0, abs=1e-6)
-
-
-def test_parentage_measures_surface_gap_not_axis_distance():
-    aorta_surface = np.array([[0.0, y, 0.0] for y in np.linspace(-10, 10, 21)])
-    tree = cKDTree(aorta_surface)
-
-    # a fat parent: its wall reaches out to 5mm, so an ostium 5mm off its
-    # axis is ON it, even though 5mm of raw axis distance sounds far
-    parent = _straight_trace(start=(0, 0, 0), direction=(1, 0, 0), radius_mm=5.0)
-    child = _straight_trace(start=(12, 5.0, 0), direction=(0, 1, 0), radius_mm=1.0)
-
-    ostia = [np.array([0.0, 0.0, 0.0]), np.array([12.0, 5.0, 0.0])]
-    results = check_branch_of_branch([None, None], [parent, child], tree, ostium_points_mm=ostia)
-
-    sub = results[1]
-    assert sub["distance_to_parent_axis_mm"] == pytest.approx(5.0, abs=0.3)
-    assert sub["distance_to_parent_surface_mm"] < sub["distance_to_parent_axis_mm"]
-    assert sub["is_branch_of_branch"] is True
-
-
-def test_phantom_direct_daughter_is_not_flagged_as_branch_of_branch():
-    context = analyze_phantom(*build_phantom())
-    candidates = context["candidates"]
-    traces, ostia = [], []
-    for candidate in candidates:
-        trace, ostium, _seed = trace_candidate(context, candidate)
-        traces.append(trace)
-        ostia.append(ostium["consensus_mm"])
-
-    results = check_branch_of_branch(candidates, traces, context["surface_tree"], ostium_points_mm=ostia)
-    assert len(results) == len(candidates)
-    assert all(not result["is_branch_of_branch"] for result in results)
-
-
-def test_adaptive_band_leaves_clean_cases_alone():
-    from src.candidates import LUMEN_BAND, adaptive_lumen_band
-
-    # a clean case: noise is a small fraction of the contrast span, and the
-    # reference sits far above the contrast threshold
-    band, tightening = adaptive_lumen_band(
-        background_noise_hu=40.0, contrast_span_hu=400.0, reference_hu=450.0,
-        contrast_threshold_hu=80.0,
-    )
-    assert tightening == 0.0
-    assert band == LUMEN_BAND
-
-
-def test_adaptive_band_tightens_when_noise_rivals_the_contrast_span():
-    from src.candidates import LUMEN_BAND, MAX_BAND_TIGHTENING, adaptive_lumen_band
-
-    # subject024-like: background noise larger than the whole span
-    band, tightening = adaptive_lumen_band(
-        background_noise_hu=163.0, contrast_span_hu=146.0, reference_hu=84.0,
-        contrast_threshold_hu=80.0,
-    )
-    assert tightening == pytest.approx(1.0)
-    assert band[0] == pytest.approx(LUMEN_BAND[0] + MAX_BAND_TIGHTENING)
-    assert band[1] == pytest.approx(LUMEN_BAND[1] + MAX_BAND_TIGHTENING)
-    # the upper shoulders reject calcium and must not move with contrast
-    assert band[2] == LUMEN_BAND[2]
-    assert band[3] == LUMEN_BAND[3]
-
-
-def test_adaptive_band_tightens_for_a_case_that_barely_clears_the_contrast_gate():
-    from src.candidates import adaptive_lumen_band
-
-    # low noise, but the reference only just clears the 80 HU threshold
-    _band, tightening = adaptive_lumen_band(
-        background_noise_hu=20.0, contrast_span_hu=200.0, reference_hu=90.0,
-        contrast_threshold_hu=80.0,
-    )
-    assert tightening > 0.5
-
-
-def test_adaptive_band_never_gates_a_case_into_silence():
-    from src.candidates import adaptive_lumen_band
-
-    # even absurd noise must leave the band usable rather than rejecting
-    # everything: emitting nothing is worse than emitting filterable noise
-    band, tightening = adaptive_lumen_band(
-        background_noise_hu=5000.0, contrast_span_hu=10.0, reference_hu=81.0,
-        contrast_threshold_hu=80.0,
-    )
-    assert tightening <= 1.0
-    assert band[0] < band[1] < band[2] < band[3]
-    assert band[1] < 1.0  # lumen itself still scores as lumen
-
-
-def test_trace_containment_detects_a_path_running_inside_another_tube():
-    from src.parentage import trace_containment
-
-    host = _straight_trace(start=(0, 0, 0), direction=(1, 0, 0), radius_mm=3.0)
-    # a second path running down the middle of the host
-    inner = _straight_trace(start=(2, 0.5, 0), direction=(1, 0, 0), length_mm=8.0, radius_mm=1.0)
-    fraction, _gap, axis_distance = trace_containment(inner, host)
-    assert fraction == pytest.approx(1.0)
-    assert axis_distance == pytest.approx(0.5, abs=0.2)
-
-    # and one running well outside it
-    outside = _straight_trace(start=(2, 9.0, 0), direction=(1, 0, 0), length_mm=8.0, radius_mm=1.0)
-    fraction_outside, _gap, axis_outside = trace_containment(outside, host)
-    assert fraction_outside == 0.0
-    assert axis_outside > 3.0
-
-
-def test_two_detections_of_one_vessel_collapse_to_one_independent_origin():
-    aorta_surface = np.array([[0.0, y, 0.0] for y in np.linspace(-10, 10, 41)])
-    tree = cKDTree(aorta_surface)
-
-    # same vessel found twice from adjacent wall patches: the paths converge
-    longer = _straight_trace(start=(0, 0, 0), direction=(1, 0, 0), length_mm=10.0, radius_mm=2.0)
-    shorter = _straight_trace(start=(0, 0.8, 0), direction=(1, 0, 0), length_mm=6.0, radius_mm=2.0)
-
-    ostia = [np.array([0.0, 0.0, 0.0]), np.array([0.0, 0.8, 0.0])]
-    results = check_branch_of_branch([None, None], [longer, shorter], tree, ostium_points_mm=ostia)
-
-    # only the shorter one is demoted, so the vessel survives exactly once
-    assert results[0]["is_independent_origin"] is True
-    assert results[1]["is_independent_origin"] is False
-    assert results[1]["shares_vessel_with"] == 0
-    assert results[1]["containment_fraction"] >= 0.6
-
-
-def test_two_nearby_but_separate_origins_are_both_kept():
-    """The challenge requires two nearby origins to stay two instances.
-
-    An overestimated radius can make one branch's tube swallow a neighbour,
-    so containment alone must not collapse them -- the paths have to actually
-    converge.
-    """
-    aorta_surface = np.array([[0.0, y, 0.0] for y in np.linspace(-10, 10, 41)])
-    tree = cKDTree(aorta_surface)
-
-    # a fat branch whose tube nominally reaches the neighbour, but the two
-    # paths stay 4mm apart throughout
-    fat = _straight_trace(start=(0, 0, 0), direction=(1, 0, 0), length_mm=10.0, radius_mm=5.0)
-    neighbour = _straight_trace(start=(0, 4.0, 0), direction=(1, 0, 0), length_mm=8.0, radius_mm=1.0)
-
-    ostia = [np.array([0.0, 0.0, 0.0]), np.array([0.0, 4.0, 0.0])]
-    results = check_branch_of_branch([None, None], [fat, neighbour], tree, ostium_points_mm=ostia)
-
-    assert results[1]["containment_fraction"] >= 0.6  # the tube does contain it
-    assert results[1]["trace_convergence_mm"] > 2.0   # but they never meet
-    assert results[1]["shares_vessel_with"] is None
-    assert all(result["is_independent_origin"] for result in results)
+    assert candidate["touches_cap"] is True
+    assert candidate["angle_to_centerline_deg"] > 60.0
+
+
+def test_stub_shorter_than_5mm_is_rejected_as_too_short():
+    # capsule ends are hemispherical: an axis ending at the wall with a 3mm
+    # radius puts the vessel tip 3mm beyond it
+    context = analyze(branches=[stub(length_beyond_wall=0.0)])
+    assert len(rejected(context, "too_short")) == 1
+    assert context["candidates"] == []
+
+
+def test_common_trunk_is_one_origin_truncated_at_its_bifurcation():
+    # a 6mm trunk dividing into two diverging daughters
+    trunk_end = (WALL_X + 6.0, 32.0, 45.0)
+    context = analyze(branches=[
+        {"start": (36.0, 32.0, 45.0), "end": trunk_end, "radius": 2.5},
+        {"start": trunk_end, "end": (WALL_X + 18.0, 32.0, 57.0), "radius": 2.0},
+        {"start": trunk_end, "end": (WALL_X + 18.0, 32.0, 33.0), "radius": 2.0},
+    ])
+    assert len(context["instances"]) == 1
+    bifurcation = context["bifurcations"][0]
+    assert bifurcation["distance_mm"] == pytest.approx(7.5, abs=2.5)
+    trace = context["traces"][0]
+    assert trace["truncated_by"] == "bifurcation"
+    assert trace["traced_length_mm"] <= bifurcation["distance_mm"] + 1e-6
+    assert context["seed_estimates"][0]["reached_seed_distance"] is True
+
+
+def test_division_beyond_10mm_is_truncated_at_10mm_not_at_the_division():
+    trunk_end = (WALL_X + 10.5, 32.0, 45.0)
+    context = analyze(branches=[
+        {"start": (36.0, 32.0, 45.0), "end": trunk_end, "radius": 2.5},
+        {"start": trunk_end, "end": (WALL_X + 20.0, 32.0, 53.0), "radius": 2.0},
+        {"start": trunk_end, "end": (WALL_X + 20.0, 32.0, 37.0), "radius": 2.0},
+    ])
+    assert context["bifurcations"][0]["distance_mm"] > 10.0
+    assert context["traces"][0]["truncated_by"] == "max_length"
+
+
+def test_straight_stub_has_no_bifurcation():
+    context = analyze(branches=[stub()])
+    assert context["bifurcations"][0]["distance_mm"] is None
+
+
+def test_two_separate_origins_are_two_instances():
+    context = analyze(branches=[stub(z=30.0), stub(z=60.0)])
+    assert len(context["instances"]) == 2
+    assert all(instance["shares_vessel_with"] == [] for instance in context["instances"])
+    heights = sorted(instance["patch_centroid_mm"][2] for instance in context["instances"])
+    assert heights == pytest.approx([30.0, 60.0], abs=2.0)
+
+
+def test_mouths_fused_at_the_wall_are_split_into_two_origins_by_watershed():
+    # two parallel 4mm vessels 7mm apart: their lumens overlap by 1mm all
+    # along, so the flood sees one component with one dumbbell-shaped patch
+    # (at 1mm voxels, smaller mouths than this have no resolvable waist)
+    context = analyze(branches=[stub(z=41.0, radius=4.0), stub(z=48.0, radius=4.0)])
+    assert len(context["candidates"]) == 1
+    instances = context["instances"]
+    assert len(instances) == 2
+    assert {instance["split"] for instance in instances} == {"watershed"}
+    heights = sorted(instance["patch_centroid_mm"][2] for instance in instances)
+    assert heights == pytest.approx([41.0, 48.0], abs=1.5)
+    assert instances[0]["shares_vessel_with"] == [instances[1]["instance_id"]]
+
+
+def test_disjoint_origins_whose_vessels_join_are_kept_but_share_a_vessel():
+    # a U-shaped vessel leaving the aorta at z=36 and z=52, joined 5mm out:
+    # the loop's far point is 5 + 8 = 13mm of vessel from either mouth, inside
+    # the 15mm flood budget
+    loop_x = WALL_X + 5.0
+    context = analyze(branches=[
+        {"start": (36.0, 32.0, 36.0), "end": (loop_x, 32.0, 36.0), "radius": 2.5},
+        {"start": (36.0, 32.0, 52.0), "end": (loop_x, 32.0, 52.0), "radius": 2.5},
+        {"start": (loop_x, 32.0, 36.0), "end": (loop_x, 32.0, 52.0), "radius": 2.5},
+    ])
+    assert len(context["candidates"]) == 1
+    instances = context["instances"]
+    assert len(instances) == 2
+    assert all("disjoint_patches" in instance["split"] for instance in instances)
+    first, second = instances
+    assert first["shares_vessel_with"] == [second["instance_id"]]
+    # they meet only out at the loop, never at the wall
+    assert first["vessel_join_mm"][second["instance_id"]] > 8.0
+
+
+def test_vessel_grazing_the_wall_downstream_is_still_one_origin():
+    # leaves the aorta at z=60, then turns back down along it and brushes the
+    # wall around z=40: the graze is a separate, narrow contact spot
+    bend = (WALL_X + 7.0, 32.0, 57.0)
+    context = analyze(branches=[
+        {"start": (36.0, 32.0, 60.0), "end": bend, "radius": 3.0},
+        {"start": bend, "end": (WALL_X + 4.0, 32.0, 40.0), "radius": 3.0},
+    ])
+    assert len(context["candidates"]) == 1
+    instances = context["instances"]
+    assert len(instances) == 1
+    assert instances[0]["absorbed_narrow_pieces"] >= 1
+    assert instances[0]["patch_centroid_mm"][2] > 52.0
+
+
+def test_watershed_keeps_a_deep_saddle_and_merges_a_shallow_one():
+    region = np.ones((1, 1, 13), dtype=bool)
+    deep = np.array([[[1, 2, 3, 2.5, 2, 1.5, 1, 1.5, 2, 2.5, 3, 2, 1]]], dtype=float)
+    labels, basins = watershed_basins(region, deep)
+    assert len(basins) == 2
+    assert labels[0, 0, 2] != labels[0, 0, 10]
+
+    shallow = np.array([[[1, 2, 3, 2.8, 2.6, 2.5, 2.4, 2.5, 2.6, 2.8, 3, 2, 1]]], dtype=float)
+    _labels, basins = watershed_basins(region, shallow)
+    assert len(basins) == 1
+
+
+def _flat_sheet_patch(inside):
+    """A one-voxel-thick flat 'aortic surface' sheet with a patch on it."""
+    size = 40
+    yy, xx = np.meshgrid(np.arange(size), np.arange(size), indexing="ij")
+    shell = np.ones((1, size, size), dtype=bool)
+    patch = inside(yy, xx)[None, :, :]
+    patch_flat = np.flatnonzero(patch)
+    return patch_flat, shell
+
+
+def _basins_of(patch_flat, shell):
+    from src.parentage import patch_distance_transform
+
+    low, closed, distance = patch_distance_transform(patch_flat, shell, shell.shape, (1.0, 1.0, 1.0))
+    return watershed_basins(closed, distance)[1]
+
+
+def test_dumbbell_patch_on_the_surface_splits_into_two_basins():
+    def two_discs(yy, xx):
+        return ((yy - 20) ** 2 + (xx - 15) ** 2 <= 16) | ((yy - 20) ** 2 + (xx - 22) ** 2 <= 16)
+
+    assert len(_basins_of(*_flat_sheet_patch(two_discs))) == 2
+
+
+def test_elongated_single_mouth_is_not_split():
+    def ellipse(yy, xx):
+        return ((yy - 20) / 3.5) ** 2 + ((xx - 20) / 7.5) ** 2 <= 1.0
+
+    assert len(_basins_of(*_flat_sheet_patch(ellipse))) == 1
+
+
+def test_exit_voxels_follow_parents_back_to_the_aorta():
+    shape = (1, 1, 6)
+    aorta = np.zeros(shape, dtype=bool)
+    aorta[0, 0, 0] = True
+    reachable = ~aorta
+    parent = np.array([[[-1, 0, 1, 2, 3, 4]]], dtype=np.int32)
+    exits = compute_exit_voxels(parent, reachable, aorta)
+    assert exits[0, 0, 0] == -1
+    assert np.all(exits[0, 0, 1:] == 1)
+
+
+def test_analyze_case_runs_end_to_end_from_nifti_files(tmp_path):
+    import SimpleITK as sitk
+
+    from run import analyze_case
+
+    image, mask = make_capsule_phantom(branches=[stub()])
+    case_dir = tmp_path / "subject900"
+    case_dir.mkdir()
+    sitk.WriteImage(image, str(case_dir / "orig.nii.gz"))
+    sitk.WriteImage(mask, str(case_dir / "mask.nii.gz"))
+
+    # crop + 0.8mm resampling, exactly as real cases
+    context = analyze_case(str(case_dir / "orig.nii.gz"), str(case_dir / "mask.nii.gz"))
+    assert len(context["instances"]) == 1
+    assert context["seed_estimates"][0]["direction_xyz"][0] > 0.95
+    assert context["ostium_estimates"][0]["ostium_mm"] == pytest.approx([WALL_X, 32.0, 45.0], abs=1.5)

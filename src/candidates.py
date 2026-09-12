@@ -1,635 +1,518 @@
-"""Candidate ostium detection: score every eligible aorta-surface point on
-"does a vessel leave in this direction", then cluster the local maxima into
-candidate branch origins.
+"""Candidate daughter vessels: connected components of the geodesic flood.
 
-Nothing here decides whether a candidate is real -- that is a later stage.
-The job here is recall plus rich per-candidate evidence.
+Every direct daughter artery is continuous with the aortic lumen through
+contrast, so the set the flood reaches outside the aorta,
+    reachable = (dist <= budget) & ~aorta_mask,
+already contains every daughter and very little else. Candidates are its
+connected components (26-connectivity), each with the contact patch through
+which it leaves the aorta.
+
+Components are formed only from reachable voxels further than NECK_MM beyond
+the mask, not from all of `reachable`. The supplied masks sit ~2 voxels inside
+the bright lumen (floodfill's module docstring, point 1), so the first ~2mm of
+reachable is a sleeve of real lumen wrapping the whole aorta, and it joins
+every branch into one component: labelling `reachable` directly gives a
+single component holding 97-99% of all reachable voxels on subject001 and
+subject010 (1 eligible component), against 5-8 eligible components once the
+sleeve is left out -- a count that holds steady for any cut from 2.0 to
+3.0mm.
+
+Each component is then given back its stem through the neck: the neck voxels
+lying on a shortest path between the aortic lumen and that component (see
+component_stems). Its contact patch is, as it would have been without the
+neck, the component voxels adjacent to the aorta mask surface -- but now only
+those of its own stem, not the whole sleeve.
+
+Rejections, applied in order and counted separately:
+  a. end_cap              the component leaves through a mask end face
+  b. aortic_continuation  it touches an end cap and is aorta-sized or runs
+                          along the aorta's own axis
+  c. too_short            its maximum geodesic distance is under 5mm
+(plus no_contact_patch, a guard for a component whose stem never reaches the
+wall; it has not fired on any of the 20 dev cases).
+
+Nothing here decides a candidate is real; that is a later stage.
 """
+
+import sys
 
 import numpy as np
 import SimpleITK as sitk
 from scipy import ndimage
 from scipy.spatial import cKDTree
 
-from src.geometry import _direction_matrix, _mm_to_voxel_radius
-from src.intensity import DEFAULT_CONTRAST_HU_THRESHOLD
+from src.floodfill import SLEEVE_MM, _flood, lumen_reference_hu, robust_flood
+from src.geometry import _connected_components_filtered, _indices_to_physical
 
-# Multi-scale vesselness sigmas in mm, covering small daughters (~1mm radius,
-# e.g. a lumbar/inferior mesenteric) up to large ones (~5mm, e.g. the SMA).
+NECK_MM = SLEEVE_MM
+MIN_ELIGIBLE_LENGTH_MM = 5.0
+
+# Aortic-continuation discriminators (rule b). The same numbers
+# geometry.flag_end_caps uses for its own cap features.
+CONTINUATION_RADIUS_FRACTION = 0.4
+CONTINUATION_ANGLE_DEG = 25.0
+
+# Fraction of a contact patch lying beyond a mask component's extreme slice
+# at which the component counts as leaving through the end face (rule a).
+CAP_FACE_FRACTION = 0.5
+
+# Width of the distance window a frontier cross-section is measured over.
+# Geodesic distances on a voxel grid are quantized (on a 0.8mm grid the only
+# values below 2mm are 0.8, 1.13, 1.39, 1.6 and 1.93), so a single 0.5mm
+# band can hold one voxel layer or two and its count jumps by ~2x from band
+# to band. Averaging over 2mm smooths that out.
+RADIUS_WINDOW_MM = 2.0
+DIRECTION_FIT_MM = 10.0
+
+# Detour allowed, in longest voxel edges, for a neck voxel to count as on a
+# shortest path into a component (see component_stems). One edge absorbs the
+# grid's tie-breaking without reaching sideways along the sleeve.
+STEM_SLACK_EDGES = 1.0
+
 VESSELNESS_SIGMAS_MM = (0.8, 1.2, 1.8, 2.6, 3.6)
+# Calibrated on ideal bright cylinders at 0.8mm spacing: the sigma^2-normalized
+# ObjectnessMeasure response peaks at sigma = r / 1.67-2.0 for r = 1-5mm.
+VESSELNESS_RADIUS_PER_SIGMA = 1.85
 
-# Lumen-likeness band, in units of normalized intensity where 0 is
-# perivascular background and 1 is the aortic lumen reference. Contrast-filled
-# daughter lumen sits near 1 (partial volume drags small vessels down, hence
-# the low shoulder), while anything far ABOVE the aortic lumen is calcified
-# plaque, bone or a metal artefact -- not a vessel. Without the upper
-# shoulder those dominate every measure here: raw normalized intensity makes
-# a 900 HU calcification look 3.7x more "lumen" than lumen, and Frangi run on
-# that field reports calcified plaque as the brightest tube in the volume.
-LUMEN_BAND = (0.35, 0.60, 1.35, 2.00)
+REJECTION_RULES = ("no_contact_patch", "end_cap", "aortic_continuation", "too_short")
 
-# Lumen-likeness at or above which a voxel counts as vessel for binarization
-# (distance transform, shell components, cross-sections, ray-cast radius).
-LUMEN_THRESHOLD = 0.5
-
-# How far the band's low shoulders may be pushed up when a case's own
-# statistics say its contrast is poor. See adaptive_lumen_band.
-MAX_BAND_TIGHTENING = 0.25
-
-# Perivascular noise (as a fraction of the contrast span) at which tightening
-# starts and at which it saturates. Measured across the 25 dev cases: clean
-# cases sit at 0.10-0.25, while the two that blow up sit at 0.84 and 1.12 --
-# i.e. their background noise is comparable to or larger than the entire
-# lumen-to-tissue contrast span.
-NOISE_RATIO_CLEAN = 0.20
-NOISE_RATIO_SATURATED = 0.60
+_FULL = np.ones((3, 3, 3), dtype=bool)
 
 
-def adaptive_lumen_band(background_noise_hu, contrast_span_hu, reference_hu,
-                        contrast_threshold_hu, band=LUMEN_BAND):
-    """Raise the band's low shoulders for cases with poor contrast.
+def flat_to_zyx(flat_indices, shape):
+    return np.stack(np.unravel_index(np.asarray(flat_indices, dtype=np.int64), shape), axis=1)
 
-    A fixed lower shoulder admits noise in exactly the cases that can least
-    afford it: where perivascular noise is a large fraction of the whole
-    lumen-to-tissue span, ordinary tissue fluctuation reaches into the band
-    and the surface fills with spurious local maxima.
 
-    Two per-case statistics drive it, and the stronger one wins:
-      - noise_ratio: background MAD over contrast span. This is the sharper
-        discriminator on the dev set (0.10-0.25 for clean cases; 0.84 and
-        1.12 for the two that produce hundreds of candidates).
-      - contrast margin: how far the same reference intensity that
-        is_contrast_enhanced tests sits above its threshold. A case that
-        only just clears that bar gets tightened even if its noise looks
-        unremarkable.
+def flat_to_mm(flat_indices, reference_image, shape):
+    """(N,) flat indices into a (z, y, x) array -> (N, 3) physical mm."""
+    zyx = flat_to_zyx(flat_indices, shape)
+    return _indices_to_physical(zyx[:, ::-1].astype(np.float64), reference_image)
 
-    Only the low shoulders move; the upper ones reject calcium and have
-    nothing to do with contrast quality. Tightening is capped so a case can
-    never be gated into producing no candidates at all -- silently emitting
-    nothing is worse than emitting noise a later stage can filter.
 
-    Returns (band, tightening) with tightening in [0, 1] for logging.
+def voxel_volume_mm3(reference_image):
+    return float(np.prod(reference_image.GetSpacing()))
+
+
+def frontier_radius_mm(distances_mm, voxel_volume, at_mm, window_mm=RADIUS_WINDOW_MM):
+    """Equivalent radius sqrt(area / pi) of the flood frontier at at_mm.
+
+    The voxels whose geodesic distance falls in a window of width w form a
+    slab across the vessel of volume area * w, so area = count * V / w.
     """
-    noise_ratio = background_noise_hu / max(contrast_span_hu, 1e-6)
-    span = max(NOISE_RATIO_SATURATED - NOISE_RATIO_CLEAN, 1e-6)
-    from_noise = np.clip((noise_ratio - NOISE_RATIO_CLEAN) / span, 0.0, 1.0)
-
-    margin_ratio = (reference_hu - contrast_threshold_hu) / max(abs(reference_hu), 1e-6)
-    from_margin = np.clip(1.0 - margin_ratio / 0.5, 0.0, 1.0)
-
-    tightening = float(max(from_noise, from_margin))
-    shift = tightening * MAX_BAND_TIGHTENING
-    zero_low, full_low, full_high, zero_high = band
-    return (zero_low + shift, full_low + shift, full_high, zero_high), tightening
+    distances_mm = np.asarray(distances_mm)
+    low, high = at_mm - 0.5 * window_mm, at_mm + 0.5 * window_mm
+    count = int(np.count_nonzero((distances_mm >= low) & (distances_mm < high)))
+    area_mm2 = count * voxel_volume / window_mm
+    return float(np.sqrt(area_mm2 / np.pi))
 
 
-def lumen_likeness(relative_intensity, band=LUMEN_BAND):
-    """Map normalized intensity to [0, 1] with a trapezoid over LUMEN_BAND."""
-    zero_low, full_low, full_high, zero_high = band
-    rising = np.clip((relative_intensity - zero_low) / max(full_low - zero_low, 1e-6), 0.0, 1.0)
-    falling = np.clip((zero_high - relative_intensity) / max(zero_high - full_high, 1e-6), 0.0, 1.0)
-    return np.minimum(rising, falling)
+def fit_line_direction(points_mm, outward_reference=None):
+    """Unit principal direction of a point set, oriented along outward_reference."""
+    points_mm = np.asarray(points_mm, dtype=np.float64)
+    if points_mm.shape[0] < 2:
+        return None
+    centred = points_mm - points_mm.mean(axis=0)
+    _u, _s, vh = np.linalg.svd(centred, full_matrices=False)
+    direction = vh[0]
+    if outward_reference is not None and np.dot(direction, outward_reference) < 0:
+        direction = -direction
+    return direction / np.linalg.norm(direction)
 
 
-class VolumeSampler:
-    """Trilinear sampling of named volumes at physical (mm) points.
+def compute_exit_voxels(parent, reachable, aorta_mask):
+    """For each reachable voxel, the flat index of the voxel through which its
+    shortest path left the aorta: the first voxel on its parent chain whose
+    own parent lies inside the aorta mask. -1 outside `reachable`.
 
-    Holds one image's geometry and any number of co-registered arrays in
-    (z, y, x) order. Physical -> continuous index uses the image's own
-    direction matrix, so this stays correct for oblique cases.
+    Vectorized by pointer jumping: every voxel points at its parent, exits
+    point at themselves, and repeatedly replacing each pointer with its
+    pointer's pointer converges in log2(longest path) rounds.
     """
+    exit_volume = np.full(parent.shape, -1, dtype=np.int32)
+    flat = np.flatnonzero(reachable)
+    if flat.size == 0:
+        return exit_volume
 
-    def __init__(self, reference_image):
-        self.origin = np.array(reference_image.GetOrigin(), dtype=np.float64)
-        self.spacing = np.array(reference_image.GetSpacing(), dtype=np.float64)
-        self.direction = _direction_matrix(reference_image)
-        self.size_xyz = np.array(reference_image.GetSize(), dtype=np.float64)
-        self._arrays = {}
+    parents = parent.ravel()[flat]
+    is_exit = (parents < 0) | aorta_mask.ravel()[np.maximum(parents, 0)]
+    position = np.clip(np.searchsorted(flat, parents), 0, flat.size - 1)
+    links_within = ~is_exit & (flat[position] == parents)
 
-    def add(self, name, array_zyx):
-        self._arrays[name] = np.ascontiguousarray(np.asarray(array_zyx, dtype=np.float32))
+    pointer = np.arange(flat.size)
+    pointer[links_within] = position[links_within]
+    while True:
+        jumped = pointer[pointer]
+        if np.array_equal(jumped, pointer):
+            break
+        pointer = jumped
 
-    def has(self, name):
-        return name in self._arrays
+    exit_volume.ravel()[flat] = flat[pointer]
+    return exit_volume
 
-    def array(self, name):
-        return self._arrays[name]
 
-    def to_index(self, points_mm):
-        points_mm = np.atleast_2d(np.asarray(points_mm, dtype=np.float64))
-        return ((points_mm - self.origin) @ self.direction) / self.spacing
+def aortic_shell(mask_arr):
+    """Voxels just outside the aorta mask (26-adjacent): where contact patches live."""
+    return ndimage.binary_dilation(mask_arr, structure=_FULL) & ~mask_arr
 
-    def to_physical(self, index_xyz):
-        index_xyz = np.atleast_2d(np.asarray(index_xyz, dtype=np.float64))
-        return (index_xyz * self.spacing) @ self.direction.T + self.origin
 
-    def sample(self, name, points_mm, cval=0.0, order=1):
-        index_xyz = self.to_index(points_mm)
-        coords_zyx = index_xyz[:, ::-1].T
-        return ndimage.map_coordinates(
-            self._arrays[name], coords_zyx, order=order, mode="constant", cval=float(cval)
+def component_stems(neck, core_labels, dist, spacing, slack_edges=STEM_SLACK_EDGES):
+    """Assign neck voxels to the component whose vessel they lead into.
+
+    A neck voxel belongs to component k's stem when it lies on a near-shortest
+    path between the aortic lumen and k's core:
+        dist(v) + d_core(v) - dist(f) <= slack,
+    where d_core(v) is v's geodesic distance (through the neck) to the nearest
+    core face voxel f, and f belongs to k. Voxels off to the side in the
+    partial-volume sleeve need a detour to reach any core and are left out.
+
+    Why not simply the voxels on the flood's own parent chains: shortest paths
+    tie constantly on a voxel grid, and Dijkstra breaks every tie the same
+    way, so a 12mm2 mouth is fed through as few as one or two exit voxels. The
+    geodesic-tube test keeps every voxel that is on *a* shortest path, not just
+    the one Dijkstra happened to record.
+
+    Returns (stem_flat, stem_label).
+    """
+    core = core_labels > 0
+    face = core & ndimage.binary_dilation(neck, structure=_FULL)
+    if not face.any() or not neck.any():
+        return np.zeros(0, dtype=np.int64), np.zeros(0, dtype=np.int32)
+
+    edge_mm = float(np.linalg.norm(np.asarray(spacing, dtype=np.float64)))
+    slack_mm = slack_edges * edge_mm
+    face_depth = float(dist[face].max())
+    d_core, _parent, _frontier, nearest = _flood(
+        neck | face, face, np.zeros_like(neck), spacing, face_depth + slack_mm + edge_mm,
+        return_nearest_source=True,
+    )
+
+    candidates = np.flatnonzero(neck & np.isfinite(d_core))
+    source = nearest.ravel()[candidates]
+    detour = dist.ravel()[candidates] + d_core.ravel()[candidates] - dist.ravel()[source]
+    keep = detour <= slack_mm
+    return candidates[keep].astype(np.int64), core_labels.ravel()[source[keep]]
+
+
+def _centerline_tangent_lookup(centerline):
+    points, tangents = [], []
+    for component in centerline.get("kept", []):
+        if len(component["points_mm"]):
+            points.append(component["points_mm"])
+            tangents.append(component["tangents_mm"])
+    if not points:
+        return None, None
+    return cKDTree(np.vstack(points)), np.vstack(tangents)
+
+
+def _mask_component_z_ranges(mask_image):
+    cc_arr, _volumes, kept, _dropped = _connected_components_filtered(mask_image)
+    ranges = {}
+    for label in kept:
+        z_indices = np.where((cc_arr == label).any(axis=(1, 2)))[0]
+        ranges[int(label)] = (int(z_indices.min()), int(z_indices.max()))
+    return ranges
+
+
+def _cap_features(component, caps, z_ranges, shape, tangent_tree, tangents):
+    """Which end cap (if any) the contact patch touches, how much of the patch
+    lies on its end face, and the local aortic radius / centerline tangent the
+    continuation rule compares against.
+    """
+    patch = component["patch_flat"]
+    features = {
+        "touches_cap": False, "cap_component_label": None, "cap_end": None,
+        "cap_face_fraction": 0.0, "local_aortic_radius_mm": None,
+        "radius_ratio": None, "angle_to_centerline_deg": None,
+    }
+
+    if tangent_tree is not None and component["direction_estimate"] is not None:
+        _d, nearest = tangent_tree.query(component["patch_centroid_mm"], k=1)
+        tangent = tangents[int(nearest)]
+        norm = np.linalg.norm(tangent)
+        if norm > 0:
+            cos_angle = abs(float(np.dot(component["direction_estimate"], tangent / norm)))
+            features["angle_to_centerline_deg"] = float(np.degrees(np.arccos(min(cos_angle, 1.0))))
+
+    best_cap, best_count = None, 0
+    for cap in caps:
+        count = int(np.count_nonzero(cap["cap_region_mask"].ravel()[patch]))
+        if count > best_count:
+            best_cap, best_count = cap, count
+    if best_cap is None:
+        return features
+
+    patch_z = flat_to_zyx(patch, shape)[:, 0]
+    z_min, z_max = z_ranges.get(best_cap["component_label"], (None, None))
+    if z_min is not None:
+        beyond = patch_z > z_max if best_cap["end"] == "high" else patch_z < z_min
+        features["cap_face_fraction"] = float(np.count_nonzero(beyond)) / patch.size
+
+    local_radius = best_cap["local_aortic_radius_mm"]
+    features.update(
+        touches_cap=True,
+        cap_component_label=best_cap["component_label"],
+        cap_end=best_cap["end"],
+        local_aortic_radius_mm=local_radius,
+    )
+    if local_radius and component["radius_estimate_mm"] is not None:
+        features["radius_ratio"] = component["radius_estimate_mm"] / local_radius
+    return features
+
+
+def _radius_estimate(core_dist, voxel_volume, neck_mm, max_distance_mm):
+    """Median frontier radius over the component's first few mm past the neck."""
+    half = 0.5 * RADIUS_WINDOW_MM
+    stop = min(MIN_ELIGIBLE_LENGTH_MM, max_distance_mm - half)
+    positions = np.arange(neck_mm + half, stop + 1e-9, 0.5)
+    if positions.size == 0:
+        span = max(max_distance_mm - neck_mm, 1e-6)
+        return frontier_radius_mm(core_dist, voxel_volume, neck_mm + 0.5 * span, window_mm=span)
+    return float(np.median([frontier_radius_mm(core_dist, voxel_volume, p) for p in positions]))
+
+
+def _reject(component, min_length_mm):
+    if component["n_patch_voxels"] == 0:
+        return "no_contact_patch", "empty contact patch"
+
+    if component["touches_cap"] and component["cap_face_fraction"] >= CAP_FACE_FRACTION:
+        return "end_cap", (
+            f"{component['cap_face_fraction']:.0%} of patch on the {component['cap_end']} end face"
         )
 
-    def in_bounds(self, points_mm):
-        index_xyz = self.to_index(points_mm)
-        return np.all((index_xyz >= 0) & (index_xyz <= self.size_xyz - 1), axis=1)
+    if component["touches_cap"]:
+        ratio = component["radius_ratio"]
+        angle = component["angle_to_centerline_deg"]
+        too_wide = ratio is not None and ratio > CONTINUATION_RADIUS_FRACTION
+        aligned = angle is not None and angle <= CONTINUATION_ANGLE_DEG
+        if too_wide or aligned:
+            reasons = []
+            if too_wide:
+                reasons.append(f"radius {ratio:.2f}x local aorta")
+            if aligned:
+                reasons.append(f"{angle:.0f}deg from centerline")
+            return "aortic_continuation", ", ".join(reasons)
+
+    if component["max_distance_mm"] < min_length_mm:
+        return "too_short", f"max distance {component['max_distance_mm']:.1f}mm"
+
+    return None, None
 
 
-def perpendicular_basis(directions):
-    """Two unit vectors spanning the plane perpendicular to each direction."""
-    directions = np.atleast_2d(directions)
-    helper = np.tile(np.array([1.0, 0.0, 0.0]), (directions.shape[0], 1))
-    nearly_parallel = np.abs(directions[:, 0]) > 0.9
-    helper[nearly_parallel] = np.array([0.0, 1.0, 0.0])
+def compute_vesselness(hu_array, component, reference_image, lumen_reference, sigmas_mm=VESSELNESS_SIGMAS_MM):
+    """Multi-scale Frangi objectness in a crop around one component only.
 
-    u = np.cross(directions, helper)
-    u /= np.maximum(np.linalg.norm(u, axis=1, keepdims=True), 1e-12)
-    v = np.cross(directions, u)
-    v /= np.maximum(np.linalg.norm(v, axis=1, keepdims=True), 1e-12)
-    return u, v
+    Run over the whole volume this dominates the runtime budget; restricted to
+    each surviving component's bounding box (plus enough margin for the
+    largest Gaussian) it is a few hundred thousand voxels at most. It is a
+    reported feature and a radius cross-check, never a gate.
 
+    Intensity is divided by the lumen reference and clipped to [-0.2, 1], so
+    bone and calcium read as a flat plateau at lumen level instead of as the
+    brightest tubes in the volume.
 
-def _multiscale_vesselness(normalized_image, sigmas_mm=VESSELNESS_SIGMAS_MM):
-    """Frangi-style tubular objectness, maxed over scales.
-
-    Run on the per-case normalized intensity field (background ~0, lumen ~1)
-    rather than raw HU, so the response is comparable across cases with
-    different contrast timing.
+    Returns {"offset_zyx", "response", "sigma_mm"} crops (response is
+    sigma^2-normalized so scales compare) plus summary features.
     """
-    best = None
+    shape = hu_array.shape
+    spacing = np.asarray(reference_image.GetSpacing(), dtype=np.float64)
+    margin = int(np.ceil(2.0 * max(sigmas_mm) / spacing.min()))
+    zyx = flat_to_zyx(component["voxels_flat"], shape)
+    low = np.maximum(zyx.min(axis=0) - margin, 0)
+    high = np.minimum(zyx.max(axis=0) + margin + 1, shape)
+    crop = hu_array[low[0]:high[0], low[1]:high[1], low[2]:high[2]].astype(np.float32)
+
+    normalized = np.clip(crop / max(float(lumen_reference), 1.0), -0.2, 1.0)
+    image = sitk.GetImageFromArray(normalized)
+    image.SetSpacing(tuple(spacing.tolist()))
+
+    best = np.zeros(crop.shape, dtype=np.float32)
+    best_sigma = np.zeros(crop.shape, dtype=np.float32)
     for sigma in sigmas_mm:
-        smoothed = sitk.SmoothingRecursiveGaussian(normalized_image, float(sigma))
-        response = sitk.ObjectnessMeasure(
-            smoothed,
-            alpha=0.5,
-            beta=0.5,
-            gamma=5.0,
-            scaleObjectnessMeasure=True,
-            objectDimension=1,
-            brightObject=True,
-        )
-        best = response if best is None else sitk.Maximum(best, response)
-    return best
+        smoothed = sitk.SmoothingRecursiveGaussian(image, float(sigma))
+        response = sitk.GetArrayFromImage(
+            sitk.ObjectnessMeasure(
+                smoothed, alpha=0.5, beta=0.5, gamma=5.0, scaleObjectnessMeasure=True,
+                objectDimension=1, brightObject=True,
+            )
+        ) * float(sigma) ** 2
+        better = response > best
+        best[better] = response[better]
+        best_sigma[better] = sigma
 
-
-def build_evidence(image, mask, lumen_stats, shell_mm=4.0):
-    """Precompute the volumes candidate scoring and tracing both sample from.
-
-    Returns a dict with a VolumeSampler ("sampler") carrying:
-      hu          raw intensity
-      rel         (HU - background) / (lumen - background); ~0 tissue, ~1 lumen
-      vesselness  multi-scale tubular objectness, normalized to its own p99
-      mask        aorta mask as float
-      vessel_dt   signed distance (mm) inside the thresholded vessel binary
-    plus the per-case reference HU values and the dilated-shell components.
-    """
-    image_f = sitk.Cast(image, sitk.sitkFloat32)
-    mask_u8 = sitk.Cast(mask, sitk.sitkUInt8)
-    mask_arr = sitk.GetArrayFromImage(mask_u8).astype(bool)
-    hu_arr = sitk.GetArrayFromImage(image_f)
-
-    # Skewed lumens (thrombus + contrast) read low at the median, so reuse the
-    # same p75-vs-median choice intensity.is_contrast_enhanced makes.
-    iqr = lumen_stats["p75"] - lumen_stats["p25"]
-    lumen_reference_hu = lumen_stats["p75"] if iqr > 150.0 else lumen_stats["median"]
-
-    # Perivascular tissue reference: a shell standing off the aorta wall, so
-    # it samples surrounding fat/muscle rather than the lumen itself.
-    spacing = mask.GetSpacing()
-    near = sitk.BinaryDilate(mask_u8, _mm_to_voxel_radius(3.0, spacing), sitk.sitkBall)
-    far = sitk.BinaryDilate(mask_u8, _mm_to_voxel_radius(12.0, spacing), sitk.sitkBall)
-    background_region = sitk.GetArrayFromImage(far).astype(bool) & ~sitk.GetArrayFromImage(near).astype(bool)
-    if background_region.any():
-        background_values = hu_arr[background_region]
-        background_reference_hu = float(np.median(background_values))
-        background_noise_hu = float(np.median(np.abs(background_values - background_reference_hu)))
-    else:
-        background_reference_hu = float(np.percentile(hu_arr, 40))
-        background_noise_hu = float(np.percentile(hu_arr, 60) - background_reference_hu)
-
-    contrast_span = max(lumen_reference_hu - background_reference_hu, 1.0)
-    band, band_tightening = adaptive_lumen_band(
-        background_noise_hu, contrast_span, lumen_reference_hu, DEFAULT_CONTRAST_HU_THRESHOLD
-    )
-
-    rel_arr = (hu_arr - background_reference_hu) / contrast_span
-    lumen_arr = lumen_likeness(rel_arr, band=band)
-
-    # Kill the partial-volume rim around bone and calcium. A voxel on the edge
-    # of a vertebra ramps from soft tissue to ~1500 HU, so it necessarily
-    # passes through the lumen band on the way and reads as perfect lumen.
-    # Only the immediate rim is suppressed (one voxel), so a genuine branch
-    # running past a calcified plaque survives.
-    hyperdense = rel_arr > band[3]
-    if hyperdense.any():
-        rim = ndimage.binary_dilation(hyperdense, iterations=1) & ~hyperdense
-        lumen_arr[rim] = 0.0
-
-    # Vesselness is computed on the intensity field clipped to the top of the
-    # lumen band, so calcium and bone read as a flat plateau rather than as
-    # the brightest tubes in the volume.
-    clipped_arr = np.clip(rel_arr, -0.2, band[2])
-    clipped_image = sitk.GetImageFromArray(clipped_arr)
-    clipped_image.CopyInformation(image_f)
-    vesselness_arr = sitk.GetArrayFromImage(_multiscale_vesselness(clipped_image))
-
-    roi = sitk.GetArrayFromImage(far).astype(bool)
-    scale = float(np.percentile(vesselness_arr[roi], 99)) if roi.any() else 0.0
-    if scale > 0:
-        vesselness_arr = vesselness_arr / scale
-
-    # The aorta itself is excluded from the vessel binary the radius distance
-    # transform is built on. A daughter lumen is continuous with the aortic
-    # lumen, so without this the distance transform near the junction reports
-    # the aorta's own half-width (~5mm) as the daughter's radius.
-    vessel_binary = ((lumen_arr >= LUMEN_THRESHOLD) & ~mask_arr).astype(np.uint8)
-    vessel_binary_image = sitk.GetImageFromArray(vessel_binary)
-    vessel_binary_image.CopyInformation(mask_u8)
-    vessel_dt = sitk.SignedMaurerDistanceMap(
-        vessel_binary_image, insideIsPositive=True, squaredDistance=False, useImageSpacing=True
-    )
-
-    sampler = VolumeSampler(image_f)
-    sampler.add("hu", hu_arr)
-    sampler.add("rel", rel_arr)
-    sampler.add("lumen", lumen_arr)
-    sampler.add("vesselness", vesselness_arr)
-    sampler.add("mask", mask_arr.astype(np.float32))
-    sampler.add("vessel_dt", sitk.GetArrayFromImage(vessel_dt))
-
-    shell = _shell_components(mask_u8, vessel_binary.astype(bool), shell_mm, spacing)
-
+    local = flat_to_zyx(component["core_flat"], shape) - low
+    within = component["core_dist"] <= DIRECTION_FIT_MM
+    values = best[local[within, 0], local[within, 1], local[within, 2]]
+    sigmas = best_sigma[local[within, 0], local[within, 1], local[within, 2]]
     return {
-        "sampler": sampler,
-        "lumen_reference_hu": lumen_reference_hu,
-        "background_reference_hu": background_reference_hu,
-        "vessel_hu_threshold": background_reference_hu + band[0] * contrast_span,
-        "background_noise_hu": background_noise_hu,
-        "noise_ratio": background_noise_hu / contrast_span,
-        "lumen_band": band,
-        "band_tightening": band_tightening,
-        "lumen_threshold": LUMEN_THRESHOLD,
-        "shell": shell,
-        "reference_image": image_f,
+        "offset_zyx": low,
+        "response": best,
+        "sigma_mm": best_sigma,
+        "median_response": float(np.median(values)) if values.size else 0.0,
+        "median_radius_mm": float(np.median(sigmas)) * VESSELNESS_RADIUS_PER_SIGMA if sigmas.size else 0.0,
     }
 
 
-def _shell_components(mask_u8, vessel_binary, shell_mm, spacing, inner_offset_mm=1.6):
-    """Bright connected components in a thin shell standing off the aorta.
-
-    The shell starts inner_offset_mm outside the mask, not at the wall: the
-    supplied mask sits slightly inside the true bright lumen, so a shell
-    flush with it just picks up the partial-volume sleeve, which wraps the
-    whole aorta and fuses every branch stub into one component (observed:
-    a single 6885mm3 blob covering everything).
-
-    This is the crude "something sticks out here" signal. It is kept as
-    supporting evidence attached to candidates rather than used as a detector
-    on its own: the shell also lights up for adjacent unrelated vessels (e.g.
-    a vein running alongside) and for calcified wall, so it cannot decide
-    what is a branch, only corroborate a surface-scored candidate.
-    """
-    outer = sitk.GetArrayFromImage(
-        sitk.BinaryDilate(mask_u8, _mm_to_voxel_radius(shell_mm, spacing), sitk.sitkBall)
-    ).astype(bool)
-    inner = sitk.GetArrayFromImage(
-        sitk.BinaryDilate(mask_u8, _mm_to_voxel_radius(inner_offset_mm, spacing), sitk.sitkBall)
-    ).astype(bool)
-    shell_region = outer & ~inner & vessel_binary
-
-    labels, n_labels = ndimage.label(shell_region)
-    voxel_volume = float(np.prod(spacing))
-    components = []
-    if n_labels:
-        sizes = ndimage.sum(np.ones_like(labels), labels, index=range(1, n_labels + 1))
-        for label_id, size in zip(range(1, n_labels + 1), sizes):
-            components.append({"label": int(label_id), "volume_mm3": float(size) * voxel_volume})
-    return {"labels": labels, "components": components, "voxel_volume_mm3": voxel_volume}
-
-
-def _surface_points_outside_caps(surface_points_mm, surface_normals, caps, mask, sampler):
-    """Drop surface points lying in a flagged end-cap region.
-
-    Cap faces are where the aorta was cut by the mask/FOV, not anatomy; a
-    vessel "leaving" through a cap face is the parent aorta continuing, so
-    those points must not be scored as branch origins.
-    """
-    if surface_points_mm.shape[0] == 0:
-        return surface_points_mm, surface_normals, np.zeros(0, dtype=bool)
-
-    cap_union = None
-    for cap in caps:
-        region = cap["cap_region_mask"]
-        cap_union = region.copy() if cap_union is None else (cap_union | region)
-
-    if cap_union is None:
-        keep = np.ones(surface_points_mm.shape[0], dtype=bool)
-        return surface_points_mm, surface_normals, keep
-
-    sampler.add("_cap", cap_union.astype(np.float32))
-    in_cap = sampler.sample("_cap", surface_points_mm, cval=0.0) > 0.5
-    keep = ~in_cap
-    return surface_points_mm[keep], surface_normals[keep], keep
-
-
-def score_surface_points(
-    sampler,
-    points_mm,
-    normals,
-    probe_start_mm=0.8,
-    probe_end_mm=5.0,
-    probe_step_mm=0.6,
-    ring_radius_mm=3.5,
-    ring_samples=8,
-    lumen_threshold=LUMEN_THRESHOLD,
-):
-    """Score each surface point on whether a vessel leaves along its normal.
-
-    Probes outward along the normal and combines three independent pieces of
-    evidence, so no single one can carry a candidate on its own:
-      continuity  - sustained (not one-off) bright lumen along the probe,
-      vesselness  - Frangi tubular response along the probe,
-      contrast    - probe brighter than a ring of surrounding tissue,
-    minus a penalty for probes that just re-enter the aorta (concavities).
-    """
-    n_points = points_mm.shape[0]
-    if n_points == 0:
-        empty = np.zeros(0)
-        return {"score": empty, "continuity": empty, "vesselness": empty,
-                "contrast": empty, "inside_fraction": empty}
-
-    distances = np.arange(probe_start_mm, probe_end_mm + 1e-9, probe_step_mm)
-    u, v = perpendicular_basis(normals)
-    angles = np.linspace(0.0, 2.0 * np.pi, ring_samples, endpoint=False)
-
-    lumen_probe = np.zeros((n_points, distances.size))
-    vesselness_probe = np.zeros((n_points, distances.size))
-    inside_probe = np.zeros((n_points, distances.size))
-    ring_lumen = np.zeros((n_points, distances.size))
-
-    for di, distance in enumerate(distances):
-        probe = points_mm + normals * distance
-        lumen_probe[:, di] = sampler.sample("lumen", probe, cval=0.0)
-        vesselness_probe[:, di] = sampler.sample("vesselness", probe, cval=0.0)
-        inside_probe[:, di] = sampler.sample("mask", probe, cval=0.0)
-
-        ring_accumulator = np.zeros(n_points)
-        for angle in angles:
-            offset = ring_radius_mm * (np.cos(angle) * u + np.sin(angle) * v)
-            ring_accumulator += sampler.sample("lumen", probe + offset, cval=0.0)
-        ring_lumen[:, di] = ring_accumulator / ring_samples
-
-    continuity = np.mean(lumen_probe >= lumen_threshold, axis=1)
-    vesselness = np.mean(vesselness_probe, axis=1)
-    contrast = np.mean(np.clip(lumen_probe - ring_lumen, -1.0, 2.0), axis=1)
-    inside_fraction = np.mean(inside_probe > 0.5, axis=1)
-
-    score = (
-        1.0 * continuity
-        + 0.8 * np.clip(vesselness, 0.0, 1.5)
-        + 0.6 * np.clip(contrast, 0.0, 1.5)
-        - 1.5 * inside_fraction
-    )
-
-    return {
-        "score": score,
-        "continuity": continuity,
-        "vesselness": vesselness,
-        "contrast": contrast,
-        "inside_fraction": inside_fraction,
-        "lumen_probe": lumen_probe,
-        "distances": distances,
-    }
-
-
-def _local_maxima(points_mm, scores, radius_mm, score_threshold):
-    tree = cKDTree(points_mm)
-    neighbours = tree.query_ball_point(points_mm, r=radius_mm)
-    maxima = []
-    for i, neighbour_idx in enumerate(neighbours):
-        if scores[i] < score_threshold:
-            continue
-        if scores[i] >= scores[neighbour_idx].max() - 1e-12:
-            maxima.append(i)
-    return np.array(maxima, dtype=int)
-
-
-def _single_linkage_groups(coordinates, cutoff):
-    """Single-linkage grouping without pulling in scipy.cluster: union-find
-    over pairs closer than cutoff. Fine at these point counts (tens).
-    """
-    n = coordinates.shape[0]
-    parent = list(range(n))
-
-    def find(a):
-        while parent[a] != a:
-            parent[a] = parent[parent[a]]
-            a = parent[a]
-        return a
-
-    def union(a, b):
-        ra, rb = find(a), find(b)
-        if ra != rb:
-            parent[rb] = ra
-
-    tree = cKDTree(coordinates)
-    for a, b in tree.query_pairs(r=cutoff):
-        union(a, b)
-
-    groups = {}
-    for i in range(n):
-        groups.setdefault(find(i), []).append(i)
-    return list(groups.values())
-
-
-def cluster_maxima(points_mm, normals, scores, maxima_idx, link_mm=3.5, split_angle_deg=45.0):
-    """Group local maxima into candidate ostia.
-
-    Two stages, because position alone is too blunt: maxima are first linked
-    by proximity, then any group whose outward directions fall into
-    separated bundles (> split_angle_deg apart) is split again. Two genuinely
-    separate origins a few mm apart on the wall -- an accessory renal beside
-    the main renal, say -- stay separate instead of merging into one.
-    """
-    if maxima_idx.size == 0:
-        return []
-
-    maxima_points = points_mm[maxima_idx]
-    maxima_normals = normals[maxima_idx]
-
-    clusters = []
-    for group in _single_linkage_groups(maxima_points, link_mm):
-        group = np.asarray(group, dtype=int)
-        chord_cutoff = 2.0 * np.sin(np.radians(split_angle_deg) / 2.0)
-        for direction_group in _single_linkage_groups(maxima_normals[group], chord_cutoff):
-            clusters.append(maxima_idx[group[np.asarray(direction_group, dtype=int)]])
-
-    clusters.sort(key=lambda idx: -scores[idx].max())
-    return clusters
-
-
-def _nearest_cap_features(point_mm, caps, sampler):
-    """Distance from a point to the nearest flagged cap, plus that cap's
-    radius/angle discriminators from geometry.flag_end_caps.
-    """
-    if not caps:
-        return {
-            "distance_to_cap_mm": None,
-            "cap_component_label": None,
-            "cap_end": None,
-            "cap_radius_ratio": None,
-            "cap_tangent_alignment_deg": None,
-            "cap_likely_partial_coverage_edge": None,
-        }
-
-    best = None
-    for cap in caps:
-        if "_cap_points_mm" not in cap:
-            idx_zyx = np.argwhere(cap["cap_region_mask"])
-            cap["_cap_points_mm"] = sampler.to_physical(idx_zyx[:, ::-1].astype(np.float64))
-        cap_points = cap["_cap_points_mm"]
-        if cap_points.shape[0] == 0:
-            continue
-        distance = float(np.min(np.linalg.norm(cap_points - point_mm, axis=1)))
-        if best is None or distance < best[0]:
-            best = (distance, cap)
-
-    if best is None:
-        return _nearest_cap_features(point_mm, [], sampler)
-
-    distance, cap = best
-    return {
-        "distance_to_cap_mm": distance,
-        "cap_component_label": cap["component_label"],
-        "cap_end": cap["end"],
-        "cap_radius_ratio": cap["radius_ratio"],
-        "cap_tangent_alignment_deg": cap["tangent_alignment_deg"],
-        "cap_likely_partial_coverage_edge": cap["likely_partial_coverage_edge"],
-    }
-
-
-def _shell_support(candidate_point_mm, patch_points_mm, patch_normals, shell, sampler,
-                   probe_distances_mm=(1.0, 2.0, 3.0, 4.0)):
-    """Largest bright shell component this candidate's patch points into.
-
-    The shell lives strictly outside the mask, so probing has to step outward
-    along the patch normals -- sampling at the patch points themselves would
-    only ever land back inside the aorta.
-    """
-    labels = shell["labels"]
-    if labels.max() == 0:
-        return {"shell_component_label": None, "shell_volume_mm3": 0.0}
-
-    probes = [candidate_point_mm[None, :]]
-    for distance in probe_distances_mm:
-        probes.append(patch_points_mm + patch_normals * distance)
-    probe_points = np.vstack(probes)
-    index_xyz = np.rint(sampler.to_index(probe_points)).astype(int)
-    shape_zyx = labels.shape
-    index_zyx = index_xyz[:, ::-1]
-    valid = np.all((index_zyx >= 0) & (index_zyx < np.array(shape_zyx)), axis=1)
-    index_zyx = index_zyx[valid]
-    if index_zyx.shape[0] == 0:
-        return {"shell_component_label": None, "shell_volume_mm3": 0.0}
-
-    found = labels[index_zyx[:, 0], index_zyx[:, 1], index_zyx[:, 2]]
-    found = found[found > 0]
-    if found.size == 0:
-        return {"shell_component_label": None, "shell_volume_mm3": 0.0}
-
-    volumes = {c["label"]: c["volume_mm3"] for c in shell["components"]}
-    best_label = max(set(found.tolist()), key=lambda l: volumes.get(l, 0.0))
-    return {"shell_component_label": int(best_label), "shell_volume_mm3": float(volumes.get(best_label, 0.0))}
-
-
-def find_candidate_ostia(
+def find_candidates(
     image,
     mask,
     lumen_stats,
-    surface,
+    centerline,
     caps,
-    evidence=None,
-    score_threshold=0.55,
-    maxima_radius_mm=2.5,
-    patch_radius_mm=3.0,
-    cluster_link_mm=3.5,
-    split_angle_deg=45.0,
+    flood=None,
+    neck_mm=NECK_MM,
+    min_length_mm=MIN_ELIGIBLE_LENGTH_MM,
+    compute_vesselness_features=True,
+    verbose=False,
+    file=sys.stderr,
 ):
-    """Find candidate branch origins on the aorta surface.
+    """Flood, split into components, apply rejections a-c.
 
     Arguments:
-      surface: the (points_mm, normals) tuple from geometry.compute_surface_normals.
-      caps:    the list from geometry.flag_end_caps (cap regions are excluded
-               from scoring, and cap proximity is reported per candidate).
+      image, mask: SimpleITK images on the same grid (the resampled pair).
+      centerline:  geometry.compute_centerline(mask), for local tangents.
+      caps:        geometry.flag_end_caps(...), for rules a and b.
+      flood:       floodfill.robust_flood result; computed if None.
 
-    Returns (candidates, evidence). Each candidate carries its contact-patch
-    centroid and point set, the evidence values behind it, the shell
-    supporting signal, and the nearest cap's radius/angle features.
+    Returns a detection dict:
+      flood, neck_mm, shape, reference_image, mask_image,
+      aortic_shell  bool volume of voxels 26-adjacent to the mask,
+      exit_voxels   int32 volume (see compute_exit_voxels),
+      core_labels   int32 volume of component labels (voxels beyond the neck),
+      components    every component, each with "rejected_by" (None or a rule),
+      candidates    the components that survived,
+      rejections    {rule: count}.
     """
-    if evidence is None:
-        evidence = build_evidence(image, mask, lumen_stats)
-    sampler = evidence["sampler"]
+    hu = sitk.GetArrayFromImage(image)
+    mask_arr = sitk.GetArrayFromImage(mask).astype(bool)
+    shape = mask_arr.shape
+    if flood is None:
+        flood = robust_flood(image, mask, lumen_stats, verbose=verbose, file=file)
 
-    surface_points_mm, surface_normals = surface
-    eligible_points, eligible_normals, _keep = _surface_points_outside_caps(
-        surface_points_mm, surface_normals, caps, mask, sampler
-    )
+    dist = flood["dist"]
+    budget = flood["budget_mm"]
+    voxel_volume = voxel_volume_mm3(image)
+    voxel_area = voxel_volume ** (2.0 / 3.0)
 
-    scored = score_surface_points(
-        sampler, eligible_points, eligible_normals,
-        lumen_threshold=evidence["lumen_threshold"],
-    )
-    scores = scored["score"]
+    reachable = np.isfinite(dist) & (dist <= budget) & ~mask_arr
+    core = reachable & (dist > neck_mm)
+    exit_voxels = compute_exit_voxels(flood["parent"], reachable, mask_arr)
+    core_labels, _count = ndimage.label(core, structure=_FULL)
+    core_labels = core_labels.astype(np.int32)
 
-    maxima_idx = _local_maxima(eligible_points, scores, maxima_radius_mm, score_threshold)
-    clusters = cluster_maxima(
-        eligible_points, eligible_normals, scores, maxima_idx,
-        link_mm=cluster_link_mm, split_angle_deg=split_angle_deg,
-    )
+    dist_flat = dist.ravel()
+    shell = aortic_shell(mask_arr)
+    shell_flat = shell.ravel()
 
-    patch_tree = cKDTree(eligible_points) if eligible_points.shape[0] else None
+    objects = ndimage.find_objects(core_labels)
+    core_by_label = {}
+    for label_id, bbox in enumerate(objects, start=1):
+        if bbox is None:
+            continue
+        local = np.argwhere(core_labels[bbox] == label_id) + np.array([s.start for s in bbox])
+        core_by_label[label_id] = np.ravel_multi_index(local.T, shape)
 
-    candidates = []
-    for cluster_idx in clusters:
-        peak_score = float(scores[cluster_idx].max())
-        patch_members = set()
-        for i in cluster_idx:
-            for j in patch_tree.query_ball_point(eligible_points[i], r=patch_radius_mm):
-                if scores[j] >= 0.5 * peak_score:
-                    patch_members.add(j)
-        patch_members = np.array(sorted(patch_members), dtype=int)
-        if patch_members.size == 0:
-            patch_members = cluster_idx
+    stem_flat, stem_label = component_stems(reachable & ~core, core_labels, dist, image.GetSpacing())
+    order = np.argsort(stem_label, kind="stable")
+    stem_flat, stem_label = stem_flat[order], stem_label[order]
+    boundaries = np.searchsorted(stem_label, np.arange(len(objects) + 2))
 
-        patch_points = eligible_points[patch_members]
-        patch_normals = eligible_normals[patch_members]
-        weights = np.clip(scores[patch_members], 1e-6, None)
-        centroid = np.average(patch_points, axis=0, weights=weights)
+    tangent_tree, tangents = _centerline_tangent_lookup(centerline)
+    z_ranges = _mask_component_z_ranges(mask)
 
-        mean_normal = np.average(patch_normals, axis=0, weights=weights)
-        norm = np.linalg.norm(mean_normal)
-        mean_normal = mean_normal / norm if norm > 0 else patch_normals[0]
+    components = []
+    for label_id, core_flat in core_by_label.items():
+        core_dist = dist_flat[core_flat]
+        stem = stem_flat[boundaries[label_id]:boundaries[label_id + 1]]
+        voxels = np.concatenate([stem, core_flat])
+        patch = np.sort(stem[shell_flat[stem]])
 
-        candidate = {
-            "ostium_patch_centroid_mm": centroid,
-            "patch_points_mm": patch_points,
-            "patch_normals": patch_normals,
-            "patch_scores": scores[patch_members],
-            "outward_direction": mean_normal,
-            "peak_score": peak_score,
-            "n_patch_points": int(patch_members.size),
-            "patch_area_mm2": float(patch_members.size) * float(np.prod(mask.GetSpacing()) ** (2.0 / 3.0)),
-            "evidence": {
-                "continuity": float(scored["continuity"][patch_members].mean()),
-                "vesselness": float(scored["vesselness"][patch_members].mean()),
-                "contrast": float(scored["contrast"][patch_members].mean()),
-                "inside_fraction": float(scored["inside_fraction"][patch_members].mean()),
-            },
+        max_distance = float(core_dist.max())
+        patch_mm = flat_to_mm(patch, image, shape) if patch.size else np.zeros((0, 3))
+        patch_centroid = patch_mm.mean(axis=0) if patch.size else None
+
+        radius = _radius_estimate(core_dist, voxel_volume, neck_mm, max_distance)
+        near = core_dist <= min(DIRECTION_FIT_MM, max_distance)
+        near_mm = flat_to_mm(core_flat[near], image, shape)
+        outward = near_mm.mean(axis=0) - patch_centroid if patch_centroid is not None else None
+        direction = fit_line_direction(near_mm, outward)
+        if direction is None and outward is not None and np.linalg.norm(outward) > 0:
+            direction = outward / np.linalg.norm(outward)
+
+        component = {
+            "label": int(label_id),
+            "shape": shape,
+            "neck_mm": float(neck_mm),
+            "core_flat": core_flat,
+            "core_dist": core_dist,
+            "voxels_flat": voxels,
+            "voxels_dist": dist_flat[voxels],
+            "patch_flat": patch,
+            "n_patch_voxels": int(patch.size),
+            "patch_mm": patch_mm,
+            "patch_centroid_mm": patch_centroid,
+            "patch_area_mm2": float(patch.size) * voxel_area,
+            "n_core_voxels": int(core_flat.size),
+            "volume_mm3": float(voxels.size) * voxel_volume,
+            "max_distance_mm": max_distance,
+            "radius_estimate_mm": radius,
+            "direction_estimate": direction,
         }
-        candidate.update(_nearest_cap_features(centroid, caps, sampler))
-        candidate.update(
-            _shell_support(centroid, patch_points, patch_normals, evidence["shell"], sampler)
-        )
-        candidates.append(candidate)
+        if patch.size:
+            component.update(_cap_features(component, caps, z_ranges, shape, tangent_tree, tangents))
+        else:
+            component.update({"touches_cap": False, "cap_face_fraction": 0.0})
 
-    return candidates, evidence
+        rule, detail = _reject(component, min_length_mm)
+        component["rejected_by"] = rule
+        component["rejection_detail"] = detail
+        components.append(component)
+
+    candidates = [c for c in components if c["rejected_by"] is None]
+    candidates.sort(key=lambda c: -c["volume_mm3"])
+
+    if compute_vesselness_features:
+        reference = lumen_reference_hu(lumen_stats)
+        for candidate in candidates:
+            candidate["vesselness"] = compute_vesselness(hu, candidate, image, reference)
+
+    rejections = {rule: 0 for rule in REJECTION_RULES}
+    for component in components:
+        if component["rejected_by"] is not None:
+            rejections[component["rejected_by"]] += 1
+
+    detection = {
+        "flood": flood,
+        "neck_mm": float(neck_mm),
+        "shape": shape,
+        "reference_image": image,
+        "mask_image": mask,
+        "aortic_shell": shell,
+        "exit_voxels": exit_voxels,
+        "core_labels": core_labels,
+        "components": components,
+        "candidates": candidates,
+        "rejections": rejections,
+    }
+    if verbose:
+        log_candidates(detection, file=file)
+    return detection
+
+
+def log_candidates(detection, file=sys.stderr):
+    rejections = detection["rejections"]
+    print(
+        f"components={len(detection['components'])} candidates={len(detection['candidates'])} "
+        f"neck={detection['neck_mm']:.1f}mm rejected: "
+        + " ".join(f"{rule}={count}" for rule, count in rejections.items()),
+        file=file,
+    )
+    # Short fragments are the bulk of the rejections and say nothing; the cap
+    # rules are the ones worth seeing one by one.
+    for component in detection["components"]:
+        if component["rejected_by"] in ("end_cap", "aortic_continuation"):
+            print(
+                f"  rejected {component['rejected_by']}: label={component['label']} "
+                f"len={component['max_distance_mm']:.1f}mm r~{component['radius_estimate_mm']:.1f}mm "
+                f"({component['rejection_detail']})",
+                file=file,
+            )

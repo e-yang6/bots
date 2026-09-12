@@ -1,465 +1,476 @@
-"""Trace a candidate branch outward from the aorta wall, and derive the
-reported geometry (ostium, seed, direction, radius) from that trace.
+"""Trace each instance through the flood's own shortest-path tree, and derive
+the reported geometry -- ostium, seed, direction, radius -- from it.
 
-Traced length is kept continuous here -- the 5mm eligibility rule is a
-scoring/filtering decision for a later stage, not something to bake into
-the tracer, which would throw away the evidence needed to make that call.
+There is no step-by-step tracer any more. The flood already holds, for every
+voxel of a vessel, its geodesic distance from the aortic lumen and the
+predecessor on its shortest path there. A branch centerline is one such path
+followed backwards, and a bifurcation is where the flood front splits.
+
+Geodesic distance is arc length from the aortic lumen by construction, so it
+is used as the trace's arc-length parameter directly: the seed "5mm along the
+vessel" is the path point at distance 5.0, never a re-measured Euclidean
+distance from the ostium.
 """
 
+import sys
+
 import numpy as np
+import SimpleITK as sitk
+from scipy import ndimage
+from scipy.ndimage import gaussian_filter1d
 
-from src.candidates import perpendicular_basis as _perpendicular_basis
+from src.candidates import (
+    RADIUS_WINDOW_MM,
+    VESSELNESS_RADIUS_PER_SIGMA,
+    fit_line_direction,
+    flat_to_mm,
+    flat_to_zyx,
+    frontier_radius_mm,
+    voxel_volume_mm3,
+)
+from src.geometry import _direction_matrix
+from src.lumen_evidence import perpendicular_basis
 
-DEFAULT_MAX_LENGTH_MM = 10.0
-SEED_ARC_LENGTH_MM = 5.0
+MAX_TRACE_MM = 10.0
+SEED_DISTANCE_MM = 5.0
+TRACE_STEP_MM = 0.5
+BAND_MM = 0.5
+
+# A slab blob only counts toward a split if it is at least this fraction of
+# the slab's largest blob (and a few voxels). The common-trunk rule is about
+# a vessel dividing into comparable daughters; without this, a 1-voxel twig or
+# a partial-volume nub on the wall would "bifurcate" nearly every trunk within
+# a couple of mm and leave nothing to put the 5mm seed on.
+BIFURCATION_MIN_BLOB_FRACTION = 0.25
+BIFURCATION_MIN_BLOB_VOXELS = 4
+BIFURCATION_PERSISTENCE = 2
+
+# SimpleITK's signed Maurer map measures inside distances to the centres of
+# the object's own boundary voxels, so at a tube's centre it reads about one
+# voxel short of the true radius: 1.13mm for r=2mm and 2.26mm for r=3mm on a
+# 0.8mm grid. One voxel (of the grid the map is computed on) is added back.
+MAURER_CORRECTION_VOXELS = 1.0
+MAURER_UPSAMPLE = 2
+
+RADIUS_DISAGREEMENT_LOG_FRACTION = 0.5
+OSTIUM_OPENING_WINDOW_MM = 1.0
+OSTIUM_OPENING_EXTENT_MM = 6.0
 
 
-def _unit(vector):
-    norm = np.linalg.norm(vector)
-    return vector / norm if norm > 0 else vector
+def _crop_of(component, volume=None, margin=1):
+    """Bounding-box crop around an instance's voxels.
 
-
-def _cone_directions(direction, max_turn_deg, n_rings=2, n_per_ring=8):
-    """Candidate step directions inside a cone around `direction`."""
-    direction = _unit(np.asarray(direction, dtype=np.float64))
-    u, v = _perpendicular_basis(direction[None, :])
-    u, v = u[0], v[0]
-
-    directions = [direction]
-    for ring in range(1, n_rings + 1):
-        tilt = np.radians(max_turn_deg) * ring / n_rings
-        for angle in np.linspace(0.0, 2.0 * np.pi, n_per_ring, endpoint=False):
-            offset = np.tan(tilt) * (np.cos(angle) * u + np.sin(angle) * v)
-            directions.append(_unit(direction + offset))
-    return np.array(directions)
-
-
-def cross_section(sampler, point_mm, direction, lumen_threshold, extent_mm=6.0, step_mm=0.4,
-                  exclude_aorta=True, neighbourhood_mm=4.0):
-    """Sample the lumen cross-section in the plane perpendicular to `direction`.
-
-    Returns the area of the vessel component containing the centre, how many
-    other comparable components share the plane (bimodality, i.e. a split),
-    the intensity-weighted centroid of the central component, and its
-    second-moment ellipse semi-axes.
-
-    exclude_aorta drops voxels inside the aorta mask before labelling. A
-    daughter's lumen is continuous with the aortic lumen, so a plane taken
-    anywhere near the origin otherwise merges the two into one component and
-    reports the aorta's cross-section (~4-5mm equivalent radius) as the
-    daughter's.
+    Returns (low_zyx, member_crop, volume_crop).
     """
-    from scipy import ndimage
+    shape = component["shape"]
+    zyx = flat_to_zyx(component["voxels_flat"], shape)
+    low = np.maximum(zyx.min(axis=0) - margin, 0)
+    high = np.minimum(zyx.max(axis=0) + margin + 1, shape)
+    member = np.zeros(tuple(high - low), dtype=bool)
+    local = zyx - low
+    member[local[:, 0], local[:, 1], local[:, 2]] = True
+    cropped = None
+    if volume is not None:
+        cropped = volume[low[0]:high[0], low[1]:high[1], low[2]:high[2]]
+    return low, member, cropped
 
-    direction = _unit(np.asarray(direction, dtype=np.float64))
-    u, v = _perpendicular_basis(direction[None, :])
-    u, v = u[0], v[0]
 
-    axis = np.arange(-extent_mm, extent_mm + 1e-9, step_mm)
-    grid_u, grid_v = np.meshgrid(axis, axis, indexing="ij")
-    offsets = grid_u[..., None] * u + grid_v[..., None] * v
-    plane_points = point_mm + offsets.reshape(-1, 3)
+def _longest_edge_mm(spacing):
+    return float(np.linalg.norm(np.asarray(spacing, dtype=np.float64)))
 
-    lumen = sampler.sample("lumen", plane_points, cval=0.0).reshape(grid_u.shape)
-    binary = lumen >= lumen_threshold
-    if exclude_aorta:
-        in_aorta = sampler.sample("mask", plane_points, cval=0.0).reshape(grid_u.shape) > 0.5
-        binary = binary & ~in_aorta
 
-    labels, n_labels = ndimage.label(binary)
-    centre = (labels.shape[0] // 2, labels.shape[1] // 2)
-    centre_label = labels[centre]
+def detect_bifurcation_by_frontier(component, dist, spacing=(1.0, 1.0, 1.0), band_mm=BAND_MM,
+                                   start_mm=None, stop_mm=None,
+                                   min_blob_fraction=BIFURCATION_MIN_BLOB_FRACTION,
+                                   min_blob_voxels=BIFURCATION_MIN_BLOB_VOXELS,
+                                   persistence=BIFURCATION_PERSISTENCE):
+    """First distance at which the flood front through this vessel splits.
 
-    if centre_label == 0:
-        # centre fell outside the lumen; fall back to the component whose
-        # voxels come closest to the centre
-        if n_labels == 0:
-            return {
-                "area_mm2": 0.0, "n_components": 0, "centroid_mm": point_mm.copy(),
-                "semi_axes_mm": (0.0, 0.0), "equivalent_radius_mm": 0.0, "valid": False,
-            }
-        filled = np.argwhere(labels > 0)
-        offsets = filled - np.array(centre)
-        nearest = filled[np.argmin(np.einsum("ij,ij->i", offsets, offsets))]
-        centre_label = int(labels[nearest[0], nearest[1]])
+    Walks outward in band_mm steps. At each step the vessel's voxels within a
+    slab of distances are labelled (26-connectivity); the first slab holding
+    two or more comparable, disconnected blobs is the bifurcation. That is an
+    exact statement of "the vessel divided here", and it gives the brief's
+    common-trunk rule directly: a coeliac trunk that divides 15mm out has one
+    aortic origin and is truncated at its division.
 
-    component = labels == centre_label
-    pixel_area = step_mm * step_mm
-    area_mm2 = float(component.sum()) * pixel_area
+    The slab is band_mm wide or one longest voxel edge, whichever is wider.
+    Adjacent voxels differ in geodesic distance by up to one full edge
+    (sqrt(3) * 0.8 = 1.39mm on the resampled grid), so a thinner slab can miss
+    a whole layer of a straight tube on one side and cut a single vessel into
+    rings -- a split that is pure quantization.
 
-    # Count only components that are both comparable in size to the central
-    # one AND close to it. Excluding the aorta leaves unrelated lumen
-    # elsewhere in the plane (the far aortic wall, the IVC, a neighbouring
-    # branch), which must not be mistaken for this vessel splitting.
-    comparable = 0
-    for label_id in range(1, n_labels + 1):
-        member = labels == label_id
-        member_area = float(member.sum()) * pixel_area
-        if member_area < 0.3 * area_mm2:
+    The walk starts one slab beyond the instance's neck unless start_mm says
+    otherwise: a slab overlapping the neck's inner face picks up the ragged
+    edge of the partial-volume sleeve, whose nubs read as extra blobs. A split
+    must also hold for `persistence` consecutive steps -- daughters that have
+    genuinely divided stay divided, while quantization flickers.
+
+    Returns {"distance_mm", "n_blobs", "blob_sizes", "slab_mm"}; distance_mm
+    is None when the front never splits.
+    """
+    low, member, dist_crop = _crop_of(component, dist)
+    values = np.where(member, dist_crop, np.inf)
+    slab_mm = max(band_mm, _longest_edge_mm(spacing))
+    start = component.get("neck_mm", 0.0) + slab_mm if start_mm is None else start_mm
+    stop = float(np.max(component["voxels_dist"])) if stop_mm is None else stop_mm
+
+    result = {"distance_mm": None, "n_blobs": 1, "blob_sizes": [], "slab_mm": slab_mm}
+    run_start, run_length = None, 0
+    for position in np.arange(start, stop, band_mm):
+        slab = (values >= position) & (values < position + slab_mm)
+        labels, count = ndimage.label(slab, structure=np.ones((3, 3, 3), dtype=bool))
+        significant = np.zeros(0, dtype=np.int64)
+        if count >= 2:
+            sizes = np.bincount(labels.ravel())[1:]
+            significant = sizes[(sizes >= min_blob_voxels) & (sizes >= min_blob_fraction * sizes.max())]
+
+        if significant.size < 2:
+            run_start, run_length = None, 0
             continue
-        offsets_to_centre = np.argwhere(member) - np.array(centre)
-        nearest_mm = float(np.sqrt(np.min(np.einsum("ij,ij->i", offsets_to_centre, offsets_to_centre)))) * step_mm
-        if nearest_mm <= neighbourhood_mm:
-            comparable += 1
+        if run_start is None:
+            run_start = float(position)
+            result.update(n_blobs=int(significant.size), blob_sizes=sorted(significant.tolist(), reverse=True))
+        run_length += 1
+        if run_length >= persistence:
+            result["distance_mm"] = run_start
+            return result
 
-    weights = np.clip(lumen, 0.0, None) * component
-    total_weight = weights.sum()
-    if total_weight > 0:
-        centroid_u = float((weights * grid_u).sum() / total_weight)
-        centroid_v = float((weights * grid_v).sum() / total_weight)
-    else:
-        centroid_u = centroid_v = 0.0
-    centroid_mm = point_mm + centroid_u * u + centroid_v * v
+    result.update(n_blobs=1, blob_sizes=[])
+    return result
 
-    coords_u = grid_u[component] - centroid_u
-    coords_v = grid_v[component] - centroid_v
-    if coords_u.size >= 3:
-        covariance = np.cov(np.vstack([coords_u, coords_v]))
-        eigenvalues = np.clip(np.linalg.eigvalsh(covariance), 0.0, None)
-        semi_axes = tuple(float(2.0 * np.sqrt(value)) for value in np.sort(eigenvalues)[::-1])
-    else:
-        semi_axes = (0.0, 0.0)
-    equivalent_radius = float(np.sqrt(max(semi_axes[0] * semi_axes[1], 0.0)))
+
+def trace_branch(component, dist, parent, reference_image, bifurcation=None,
+                 max_length_mm=MAX_TRACE_MM, step_mm=TRACE_STEP_MM, smoothing_mm=1.0):
+    """Centerline of an instance from the aortic lumen out to its truncation.
+
+    Truncates at the bifurcation or max_length_mm, whichever comes first.
+    The end point is a voxel of maximum geodesic distance within the truncated
+    region; among the voxels within one band of that maximum, the one deepest
+    inside the lumen is taken, since the single most distant voxel usually
+    sits against the vessel wall and its shortest path hugs that wall. The
+    centerline follows `parent` back from there to the aortic lumen,
+    Gaussian-smoothed, then resampled at step_mm of geodesic distance.
+
+    Returns a dict with points_mm / arc_lengths_mm (resampled; arc length is
+    geodesic distance), raw_path_flat / raw_path_mm / raw_dist_mm,
+    traced_length_mm and truncated_by ("bifurcation", "max_length" or
+    "vessel_end").
+    """
+    shape = component["shape"]
+    spacing = reference_image.GetSpacing()
+    vessel_end = float(np.max(component["voxels_dist"]))
+
+    limit, truncated_by = max_length_mm, "max_length"
+    if bifurcation is not None and bifurcation.get("distance_mm") is not None \
+            and bifurcation["distance_mm"] < limit:
+        limit, truncated_by = bifurcation["distance_mm"], "bifurcation"
+    if vessel_end <= limit:
+        limit, truncated_by = vessel_end, "vessel_end"
+
+    low, member, dist_crop = _crop_of(component, dist)
+    within = member & (dist_crop <= limit)
+    depth = ndimage.distance_transform_edt(member, sampling=np.asarray(spacing)[::-1])
+
+    reached = dist_crop[within].max()
+    near_end = within & (dist_crop >= reached - BAND_MM)
+    candidates_zyx = np.argwhere(near_end)
+    best = candidates_zyx[np.argmax(depth[near_end])]
+    end_flat = int(np.ravel_multi_index(tuple(best + low), shape))
+
+    path = [end_flat]
+    parent_flat = parent.ravel()
+    while parent_flat[path[-1]] >= 0:
+        path.append(int(parent_flat[path[-1]]))
+    path = np.array(path[::-1], dtype=np.int64)
+
+    path_dist = dist.ravel()[path].astype(np.float64)
+    path_mm = flat_to_mm(path, reference_image, shape)
+    mean_step = max(float(np.mean(np.diff(path_dist))) if path.size > 1 else step_mm, 1e-6)
+    smoothed = gaussian_filter1d(path_mm, sigma=smoothing_mm / mean_step, axis=0, mode="nearest") \
+        if path.size > 2 else path_mm
+
+    arc = np.arange(0.0, path_dist[-1] + 1e-9, step_mm)
+    points = np.stack([np.interp(arc, path_dist, smoothed[:, axis]) for axis in range(3)], axis=1)
 
     return {
-        "area_mm2": area_mm2,
-        "n_components": comparable,
-        "centroid_mm": centroid_mm,
-        "semi_axes_mm": semi_axes,
-        "equivalent_radius_mm": equivalent_radius,
-        "valid": True,
+        "points_mm": points,
+        "arc_lengths_mm": arc,
+        "raw_path_flat": path,
+        "raw_path_mm": path_mm,
+        "raw_dist_mm": path_dist,
+        "traced_length_mm": float(path_dist[-1]),
+        "truncation_mm": float(limit),
+        "truncated_by": truncated_by,
     }
 
 
-def _radius_by_ray_casting(sampler, point_mm, direction, lumen_threshold, max_radius_mm=6.0, step_mm=0.25, n_rays=12):
-    """Local lumen radius: cast rays perpendicular to `direction` and take the
-    median distance at which intensity drops out of the lumen.
+def _point_at_arc(trace, arc_mm):
+    arc = trace["arc_lengths_mm"]
+    points = trace["points_mm"]
+    reached = arc_mm <= arc[-1] + 1e-9
+    target = min(arc_mm, arc[-1])
+    point = np.array([np.interp(target, arc, points[:, axis]) for axis in range(3)])
+    return point, bool(reached)
+
+
+def _tangent_at_arc(trace, arc_mm, half_window_mm=1.0):
+    arc = trace["arc_lengths_mm"]
+    if arc.size < 2:
+        return None
+    before, _ = _point_at_arc(trace, max(arc_mm - half_window_mm, 0.0))
+    after, _ = _point_at_arc(trace, min(arc_mm + half_window_mm, arc[-1]))
+    tangent = after - before
+    norm = np.linalg.norm(tangent)
+    return tangent / norm if norm > 0 else None
+
+
+def estimate_ostium_candidates(component, trace, reference_image, surface_points_mm, surface_tree,
+                               opening_window_mm=OSTIUM_OPENING_WINDOW_MM,
+                               opening_extent_mm=OSTIUM_OPENING_EXTENT_MM):
+    """Three independent ostium estimates and their pairwise disagreement.
+
+    patch_centroid_mm (primary)
+        The contact patch centroid, projected onto the aortic surface. The
+        patch is exactly the set of wall voxels the vessel is fed through, so
+        this is the mouth itself. The component centroid would be biased
+        several mm outward, and ostium localisation is 25% of the score.
+    traced_projection_mm
+        The traced centerline extended back along its own first 3mm until it
+        meets the aortic surface.
+    max_gradient_mm
+        The lumen opening: walking out along the trace, where the vessel's
+        frontier cross-section narrows fastest -- the funnel of the mouth
+        closing down to the vessel. Unprojected, so a mouth that opens well
+        off the wall shows up as disagreement.
+
+    For a real branch leaving a wall these land within a mm or two of each
+    other; disagreement is itself a false-positive signal.
     """
-    direction = _unit(np.asarray(direction, dtype=np.float64))
-    u, v = _perpendicular_basis(direction[None, :])
-    u, v = u[0], v[0]
+    patch_centroid = np.asarray(component["patch_centroid_mm"], dtype=np.float64)
+    _d, nearest = surface_tree.query(patch_centroid, k=1)
+    patch_projection = surface_points_mm[int(nearest)]
 
-    distances = np.arange(step_mm, max_radius_mm + 1e-9, step_mm)
-    hits = []
-    for angle in np.linspace(0.0, 2.0 * np.pi, n_rays, endpoint=False):
-        ray = np.cos(angle) * u + np.sin(angle) * v
-        ray_points = point_mm + np.outer(distances, ray)
-        samples = sampler.sample("lumen", ray_points, cval=0.0)
-        # a ray that runs into the aorta has left this vessel, same as one
-        # that runs out of lumen -- otherwise rays fired near the ostium
-        # traverse the whole aortic lumen and report its radius
-        in_aorta = sampler.sample("mask", ray_points, cval=0.0) > 0.5
-        outside = np.where((samples < lumen_threshold) | in_aorta)[0]
-        hits.append(distances[outside[0]] if outside.size else max_radius_mm)
-    return float(np.median(hits))
-
-
-def trace_branch(
-    sampler,
-    start_point_mm,
-    start_direction,
-    lumen_threshold,
-    max_length_mm=DEFAULT_MAX_LENGTH_MM,
-    step_mm=0.5,
-    max_turn_deg=35.0,
-    min_lumen=None,
-    min_vesselness=0.05,
-    radius_jump_tolerance=0.6,
-    wall_grace_mm=1.5,
-    patience=2,
-):
-    """Cone-search outward from a candidate's contact patch.
-
-    At each step the next direction is chosen from a cone around the current
-    one, scored by lumen intensity and vesselness and penalised for turning
-    sharply, drifting backward relative to the original outward direction, or
-    jumping implausibly in radius. Stops on running out of evidence, on
-    re-entering the aorta, on leaving the volume, or at max_length_mm.
-
-    Two allowances keep real branches from being abandoned on the doorstep.
-    Within wall_grace_mm the evidence test is suspended: crossing the aortic
-    wall genuinely dips dark from partial volume, and without this almost
-    every trace died after one or two steps. Beyond that, `patience`
-    consecutive weak steps are tolerated before giving up, since single dark
-    voxels from noise are common inside small vessels.
-    """
-    if min_lumen is None:
-        min_lumen = 0.75 * lumen_threshold
-
-    start_direction = _unit(np.asarray(start_direction, dtype=np.float64))
-    point = np.asarray(start_point_mm, dtype=np.float64).copy()
-    direction = start_direction.copy()
-
-    points = [point.copy()]
-    directions = [direction.copy()]
-    radii = [_radius_by_ray_casting(sampler, point, direction, lumen_threshold)]
-    lumen_values = [float(sampler.sample("lumen", point[None, :], cval=0.0)[0])]
-    vesselness_values = [float(sampler.sample("vesselness", point[None, :], cval=0.0)[0])]
-    areas = [cross_section(sampler, point, direction, lumen_threshold)["area_mm2"]]
-    arc_lengths = [0.0]
-    n_components = [1]
-
-    status = "max_length"
-    left_aorta = False
-    weak_steps = 0
-
-    while arc_lengths[-1] < max_length_mm:
-        options = _cone_directions(direction, max_turn_deg)
-        forward = options @ start_direction > 0.0  # no doubling back on the origin
-        options = options[forward] if forward.any() else options[:1]
-
-        next_points = point + step_mm * options
-        lumen_next = sampler.sample("lumen", next_points, cval=0.0)
-        vesselness_next = sampler.sample("vesselness", next_points, cval=0.0)
-        turn_cos = np.clip(options @ direction, -1.0, 1.0)
-
-        scores = (
-            1.0 * np.clip(lumen_next, 0.0, 1.5)
-            + 0.8 * np.clip(vesselness_next, 0.0, 1.5)
-            - 1.0 * (1.0 - turn_cos)
-        )
-
-        best = int(np.argmax(scores))
-        candidate_point = next_points[best]
-        candidate_direction = _unit(options[best])
-
-        if not sampler.in_bounds(candidate_point[None, :])[0]:
-            status = "out_of_bounds"
-            break
-
-        inside_aorta = sampler.sample("mask", candidate_point[None, :], cval=0.0)[0] > 0.5
-        if not inside_aorta:
-            left_aorta = True
-        elif left_aorta:
-            status = "reentered_aorta"
-            break
-
-        weak = lumen_next[best] < min_lumen and vesselness_next[best] < min_vesselness
-        if weak and arc_lengths[-1] >= wall_grace_mm:
-            weak_steps += 1
-            if weak_steps > patience:
-                status = "low_evidence"
-                break
-        elif not weak:
-            weak_steps = 0
-
-        candidate_radius = _radius_by_ray_casting(
-            sampler, candidate_point, candidate_direction, lumen_threshold
-        )
-        # Radius is meaningless while still crossing the wall -- rays fired
-        # from a point on the aorta surface immediately run into the aorta and
-        # measure ~0 -- so the jump test only applies past the grace distance,
-        # and its denominator is floored to keep a near-zero previous radius
-        # from making every subsequent step look like a huge jump.
-        previous_radius = radii[-1]
-        if arc_lengths[-1] >= wall_grace_mm:
-            relative_jump = abs(candidate_radius - previous_radius) / max(previous_radius, 0.5)
-            if relative_jump > radius_jump_tolerance and candidate_radius > previous_radius:
-                status = "radius_jump"
-                break
-
-        section = cross_section(sampler, candidate_point, candidate_direction, lumen_threshold)
-
-        point = candidate_point
-        direction = candidate_direction
-        points.append(point.copy())
-        directions.append(direction.copy())
-        radii.append(candidate_radius)
-        lumen_values.append(float(lumen_next[best]))
-        vesselness_values.append(float(vesselness_next[best]))
-        areas.append(section["area_mm2"])
-        n_components.append(section["n_components"])
-        arc_lengths.append(arc_lengths[-1] + step_mm)
-
-    return {
-        "points_mm": np.array(points),
-        "directions": np.array(directions),
-        "radii_mm": np.array(radii),
-        "lumen": np.array(lumen_values),
-        "vesselness": np.array(vesselness_values),
-        "areas_mm2": np.array(areas),
-        "n_components": np.array(n_components),
-        "arc_lengths_mm": np.array(arc_lengths),
-        "traced_length_mm": float(arc_lengths[-1]),
-        "status": status,
-        "start_direction": start_direction,
-    }
-
-
-def detect_bifurcation(trace, area_jump_ratio=1.8, min_arc_mm=3.0, min_area_mm2=0.5,
-                       persistence=2):
-    """Find where the growth front splits, so a common trunk counts once.
-
-    Two signals on the cross-sectional area of the front: a sudden jump
-    relative to the running median (the two daughters still merged into one
-    fat section), or the front resolving into two comparable components
-    (already separated). The trace is truncated there -- a celiac trunk then
-    contributes one origin, not two.
-
-    Both signals must hold for `persistence` consecutive steps, and only
-    past min_arc_mm. A real split stays split, whereas a single frame of
-    two components is usually the near-origin cross-section fragmenting
-    against the aortic wall.
-    """
-    areas = trace["areas_mm2"]
-    components = trace["n_components"]
-    arcs = trace["arc_lengths_mm"]
-
-    split_run = 0
-    jump_run = 0
-    for index in range(len(areas)):
-        if arcs[index] < min_arc_mm:
-            continue
-
-        previous = areas[max(0, index - 5):index]
-        running_median = float(np.median(previous)) if previous.size else 0.0
-
-        split_run = split_run + 1 if components[index] >= 2 else 0
-        if split_run >= persistence:
-            start = index - persistence + 1
-            return {"bifurcation_index": start, "reason": "bimodal_front",
-                    "arc_length_mm": float(arcs[start])}
-
-        is_jump = running_median >= min_area_mm2 and areas[index] > area_jump_ratio * running_median
-        jump_run = jump_run + 1 if is_jump else 0
-        if jump_run >= persistence:
-            start = index - persistence + 1
-            return {"bifurcation_index": start, "reason": "area_jump",
-                    "arc_length_mm": float(arcs[start])}
-
-    return {"bifurcation_index": None, "reason": None, "arc_length_mm": None}
-
-
-def truncate_trace(trace, index):
-    """Cut a trace at `index` (inclusive), keeping all per-step arrays aligned."""
-    if index is None or index >= len(trace["arc_lengths_mm"]):
-        return trace
-
-    truncated = dict(trace)
-    for key in ("points_mm", "directions", "radii_mm", "lumen", "vesselness",
-                "areas_mm2", "n_components", "arc_lengths_mm"):
-        truncated[key] = trace[key][: index + 1]
-    truncated["traced_length_mm"] = float(truncated["arc_lengths_mm"][-1])
-    truncated["status"] = "bifurcation"
-    return truncated
-
-
-def estimate_ostium_candidates(sampler, candidate, trace, lumen_threshold, aorta_surface_tree,
-                               aorta_surface_points_mm, search_mm=4.0, step_mm=0.25):
-    """Three independent estimates of the ostium, plus their disagreement.
-
-    Large disagreement between them is itself a false-positive signal: for a
-    real branch leaving a wall they should land within a millimetre or two of
-    each other, whereas for noise they scatter.
-    """
-    patch_centroid = np.asarray(candidate["ostium_patch_centroid_mm"], dtype=np.float64)
-    outward = _unit(np.asarray(candidate["outward_direction"], dtype=np.float64))
-
-    # 2. the traced path walked back onto the aorta surface
-    if trace["points_mm"].shape[0] >= 2:
-        back_direction = _unit(trace["points_mm"][0] - trace["points_mm"][min(4, len(trace["points_mm"]) - 1)])
+    arc = trace["arc_lengths_mm"]
+    points = trace["points_mm"]
+    early = points[arc <= min(3.0, arc[-1])]
+    outward = points[-1] - points[0]
+    direction = fit_line_direction(early, outward) if early.shape[0] >= 2 else None
+    if direction is None:
+        traced_projection = surface_points_mm[int(surface_tree.query(points[0], k=1)[1])]
     else:
-        back_direction = -outward
-    walk = trace["points_mm"][0] + np.outer(np.arange(0.0, search_mm + 1e-9, step_mm), back_direction)
-    inside = sampler.sample("mask", walk, cval=0.0) > 0.5
-    entry = walk[np.argmax(inside)] if inside.any() else trace["points_mm"][0]
-    _distance, nearest = aorta_surface_tree.query(entry[None, :], k=1)
-    traced_projection = aorta_surface_points_mm[int(nearest[0])]
+        walk = early[-1][None, :] - np.outer(np.arange(0.0, 6.0 + 1e-9, 0.25), direction)
+        gaps, indices = surface_tree.query(walk, k=1)
+        traced_projection = surface_points_mm[int(indices[int(np.argmin(gaps))])]
 
-    # 3. the lumen opening: strongest intensity gradient along the outward ray
-    ray_offsets = np.arange(-search_mm, search_mm + 1e-9, step_mm)
-    ray = patch_centroid + np.outer(ray_offsets, outward)
-    lumen_along_ray = sampler.sample("lumen", ray, cval=0.0)
-    gradient = np.abs(np.gradient(lumen_along_ray, step_mm))
-    max_gradient_point = ray[int(np.argmax(gradient))]
+    voxel_volume = voxel_volume_mm3(reference_image)
+    stop = min(opening_extent_mm, float(arc[-1]))
+    positions = np.arange(0.5 * opening_window_mm, stop + 1e-9, TRACE_STEP_MM)
+    if positions.size >= 3:
+        areas = np.array([
+            np.pi * frontier_radius_mm(component["voxels_dist"], voxel_volume, p, opening_window_mm) ** 2
+            for p in positions
+        ])
+        opening_arc = float(positions[int(np.argmin(np.gradient(areas, TRACE_STEP_MM)))])
+    else:
+        opening_arc = 0.0
+    max_gradient_point, _ = _point_at_arc(trace, opening_arc)
 
     estimates = {
-        "patch_centroid_mm": patch_centroid,
+        "patch_centroid_mm": patch_projection,
         "traced_projection_mm": traced_projection,
         "max_gradient_mm": max_gradient_point,
     }
     keys = list(estimates)
-    pairwise = {}
-    for i in range(len(keys)):
-        for j in range(i + 1, len(keys)):
-            distance = float(np.linalg.norm(estimates[keys[i]] - estimates[keys[j]]))
-            pairwise[f"{keys[i]}__{keys[j]}"] = distance
-
+    pairwise = {
+        f"{keys[i]}__{keys[j]}": float(np.linalg.norm(estimates[keys[i]] - estimates[keys[j]]))
+        for i in range(len(keys)) for j in range(i + 1, len(keys))
+    }
     values = np.array(list(pairwise.values()))
     return {
+        "ostium_mm": patch_projection,
+        "primary": "patch_centroid_mm",
         "estimates": estimates,
+        "opening_arc_mm": opening_arc,
         "pairwise_distances_mm": pairwise,
-        "max_disagreement_mm": float(values.max()) if values.size else 0.0,
-        "mean_disagreement_mm": float(values.mean()) if values.size else 0.0,
-        "consensus_mm": np.mean(np.array(list(estimates.values())), axis=0),
+        "max_disagreement_mm": float(values.max()),
+        "mean_disagreement_mm": float(values.mean()),
     }
 
 
-def _interpolate_along_trace(trace, target_arc_mm):
-    arc = trace["arc_lengths_mm"]
-    points = trace["points_mm"]
-    if arc[-1] <= 0:
-        return points[0].copy(), trace["start_direction"].copy(), False
+def _recentre_on_lumen(sampler, point_mm, direction, threshold_hu, ceiling_hu, extent_mm=5.0, step_mm=0.25):
+    """Intensity-weighted centroid of the lumen cross-section through point_mm
+    in the plane normal to direction.
 
-    reached = target_arc_mm <= arc[-1]
-    target = min(target_arc_mm, arc[-1])
-    index = int(np.searchsorted(arc, target))
-    index = min(max(index, 1), len(arc) - 1)
-
-    span = arc[index] - arc[index - 1]
-    weight = 0.0 if span <= 0 else (target - arc[index - 1]) / span
-    point = points[index - 1] + weight * (points[index] - points[index - 1])
-    direction = trace["directions"][index]
-    return point, direction, reached
-
-
-def extract_seed_direction_radius(sampler, trace, ostium_mm, lumen_threshold,
-                                  seed_arc_mm=SEED_ARC_LENGTH_MM, fit_length_mm=5.0,
-                                  radius_disagreement_threshold=0.4):
-    """Seed point, outward direction and radius for one traced branch.
-
-    Seed sits at seed_arc_mm along the trace, re-centred to the
-    intensity-weighted centroid of the cross-section normal to the local
-    direction. Direction comes from a PCA line fit over the first
-    fit_length_mm (robust to the tracer's step-to-step wobble). Radius is
-    read from the signed distance transform at the re-centred seed and
-    cross-checked against the cross-section's equivalent-area ellipse.
+    The cross-section is the flood's own traversal volume (the opened binary
+    the vessel was found in) with the aorta removed, so neither a plane near
+    the wall nor bright tissue touching the vessel in-plane can pull the
+    blob outward. Weights are HU above threshold clipped at the lumen
+    reference: unclipped, one calcified voxel in the plane outweighs the whole
+    lumen and drags the centroid onto the vessel wall.
     """
-    seed_point, local_direction, reached_full_length = _interpolate_along_trace(trace, seed_arc_mm)
+    u, v = perpendicular_basis(direction[None, :])
+    u, v = u[0], v[0]
+    axis = np.arange(-extent_mm, extent_mm + 1e-9, step_mm)
+    grid_u, grid_v = np.meshgrid(axis, axis, indexing="ij")
+    plane = point_mm + grid_u[..., None] * u + grid_v[..., None] * v
+    flat_plane = plane.reshape(-1, 3)
 
-    section = cross_section(sampler, seed_point, local_direction, lumen_threshold)
-    recentred_seed = section["centroid_mm"] if section["valid"] else seed_point
-
-    within_fit = trace["arc_lengths_mm"] <= fit_length_mm
-    fit_points = trace["points_mm"][within_fit]
-    if fit_points.shape[0] >= 3:
-        centred = fit_points - fit_points.mean(axis=0)
-        _u, _s, vh = np.linalg.svd(centred, full_matrices=False)
-        direction = _unit(vh[0])
+    hu = sampler.sample("hu", flat_plane, cval=-1e4).reshape(grid_u.shape)
+    in_aorta = sampler.sample("mask", flat_plane, cval=0.0, order=0).reshape(grid_u.shape) > 0.5
+    if sampler.has("traversal"):
+        bright = sampler.sample("traversal", flat_plane, cval=0.0, order=0).reshape(grid_u.shape) > 0.5
     else:
-        direction = _unit(trace["start_direction"])
+        bright = hu >= threshold_hu
+    lumen = bright & ~in_aorta
 
-    outward_reference = recentred_seed - np.asarray(ostium_mm, dtype=np.float64)
-    if np.dot(direction, outward_reference) < 0:
+    labels, count = ndimage.label(lumen)
+    if count == 0:
+        return point_mm.copy(), 0.0, False
+    centre = (grid_u.shape[0] // 2, grid_u.shape[1] // 2)
+    label = labels[centre]
+    if label == 0:
+        filled = np.argwhere(labels > 0)
+        nearest = filled[np.argmin(np.sum((filled - np.array(centre)) ** 2, axis=1))]
+        label = labels[nearest[0], nearest[1]]
+    blob = labels == label
+
+    weights = np.clip(hu - threshold_hu, 0.0, max(ceiling_hu - threshold_hu, 1.0)) * blob
+    total = weights.sum()
+    if total <= 0:
+        weights, total = blob.astype(np.float64), float(blob.sum())
+    offset_u = float((weights * grid_u).sum() / total)
+    offset_v = float((weights * grid_v).sum() / total)
+    area_mm2 = float(blob.sum()) * step_mm * step_mm
+    return point_mm + offset_u * u + offset_v * v, area_mm2, True
+
+
+def _maurer_radius_at(point_mm, reference_image, hu_array, mask_arr, threshold_hu,
+                      half_width_mm=8.0, upsample=MAURER_UPSAMPLE):
+    """Signed Maurer distance (useImageSpacing=True) at a point, inside the
+    lumen with the aorta removed, plus the boundary correction.
+
+    Computed on a crop around the point, upsampled `upsample` times with the
+    lumen re-thresholded from linearly interpolated HU. On the 0.8mm working
+    grid a 1mm-radius daughter is two or three voxels across, so every voxel
+    of it is a boundary voxel and the map reads 0 throughout -- which is what
+    most small instances on the dev cases returned before this.
+
+    Returns (raw_mm, corrected_mm); corrected is 0 when the point is outside
+    the lumen.
+    """
+    spacing = np.asarray(reference_image.GetSpacing(), dtype=np.float64)
+    origin = np.asarray(reference_image.GetOrigin(), dtype=np.float64)
+    direction = _direction_matrix(reference_image)
+    index_zyx = (((np.asarray(point_mm) - origin) @ direction) / spacing)[::-1]
+    shape = np.array(hu_array.shape)
+    half = np.ceil(half_width_mm / spacing[::-1]).astype(int)
+    centre = np.floor(index_zyx).astype(int)
+    low = np.maximum(centre - half, 0)
+    high = np.minimum(centre + half + 1, shape)
+    if np.any(high - low < 2):
+        return 0.0, 0.0
+
+    region = tuple(slice(l, h) for l, h in zip(low, high))
+    fine = upsample * (high - low - 1) + 1
+    grid = [np.linspace(l, h - 1, n) for l, h, n in zip(low, high, fine)]
+    coords = np.stack(np.meshgrid(*[g - l for g, l in zip(grid, low)], indexing="ij"))
+    hu_fine = ndimage.map_coordinates(hu_array[region].astype(np.float32), coords, order=1)
+    mask_fine = ndimage.map_coordinates(mask_arr[region].astype(np.float32), coords, order=0) > 0.5
+    lumen_fine = (hu_fine >= threshold_hu) & ~mask_fine
+
+    fine_spacing = spacing / upsample
+    image = sitk.GetImageFromArray(lumen_fine.astype(np.uint8))
+    image.SetSpacing(tuple(fine_spacing.tolist()))
+    signed = sitk.GetArrayFromImage(
+        sitk.SignedMaurerDistanceMap(image, insideIsPositive=True, squaredDistance=False,
+                                     useImageSpacing=True)
+    )
+    point_fine = (index_zyx - low) * upsample
+    raw = float(ndimage.map_coordinates(signed, point_fine[:, None], order=1, mode="nearest")[0])
+    fine_voxel = float(fine_spacing.mean())
+    if raw <= -0.5 * fine_voxel:
+        return raw, 0.0
+    return raw, max(raw, 0.0) + MAURER_CORRECTION_VOXELS * fine_voxel
+
+
+def extract_seed_direction_radius(component, trace, ostium_mm, reference_image, sampler, flood,
+                                  mask_arr, seed_distance_mm=SEED_DISTANCE_MM,
+                                  fit_length_mm=SEED_DISTANCE_MM, verbose=False, file=sys.stderr):
+    """Seed point, outward direction and radius for one traced instance.
+
+    Seed: the trace point at geodesic distance seed_distance_mm, re-centred to
+    the intensity-weighted centroid of the lumen cross-section in the plane
+    normal to the local direction.
+    Direction: PCA line fit over trace points from 0 to fit_length_mm,
+    oriented outward (away from the ostium), unit length.
+    Radius: signed Maurer distance transform at the re-centred seed, cross-
+    checked against sqrt(frontier_area / pi) over the same distance band.
+    Disagreements over 50% are logged. The vesselness scale at the seed is
+    reported as a third reading when the candidate carries vesselness.
+
+    sampler: a lumen_evidence.VolumeSampler holding "hu" and "mask" (and
+    ideally "traversal"); flood: the floodfill.robust_flood result.
+    """
+    threshold_hu = flood["threshold_hu"]
+    seed_point, reached = _point_at_arc(trace, seed_distance_mm)
+    seed_arc = min(seed_distance_mm, float(trace["arc_lengths_mm"][-1]))
+
+    fit_points = trace["points_mm"][trace["arc_lengths_mm"] <= fit_length_mm + 1e-9]
+    outward = seed_point - np.asarray(ostium_mm, dtype=np.float64)
+    direction = fit_line_direction(fit_points, outward)
+    if direction is None:
+        norm = np.linalg.norm(outward)
+        direction = outward / norm if norm > 0 else np.array([0.0, 0.0, 1.0])
+
+    local_direction = _tangent_at_arc(trace, seed_arc)
+    if local_direction is None:
+        local_direction = direction
+    seed, section_area_mm2, recentred = _recentre_on_lumen(
+        sampler, seed_point, local_direction, threshold_hu, flood["lumen_reference_hu"]
+    )
+
+    # re-orient on the final seed: the fit is over the path, the sign is not
+    if np.dot(direction, seed - np.asarray(ostium_mm)) < 0:
         direction = -direction
 
-    radius_from_distance = float(sampler.sample("vessel_dt", recentred_seed[None, :], cval=0.0)[0])
-    radius_from_distance = max(radius_from_distance, 0.0)
-    radius_from_ellipse = float(section["equivalent_radius_mm"]) if section["valid"] else 0.0
+    raw_dt, radius_dt = _maurer_radius_at(
+        seed, reference_image, sampler.array("hu"), mask_arr, threshold_hu
+    )
+    radius_frontier = frontier_radius_mm(
+        component["voxels_dist"], voxel_volume_mm3(reference_image), seed_arc, RADIUS_WINDOW_MM
+    )
+    largest = max(radius_dt, radius_frontier)
+    disagreement = abs(radius_dt - radius_frontier) / largest if largest > 0 else 0.0
+    flagged = disagreement > RADIUS_DISAGREEMENT_LOG_FRACTION
 
-    largest = max(radius_from_distance, radius_from_ellipse)
-    disagreement = abs(radius_from_distance - radius_from_ellipse) / largest if largest > 0 else 0.0
+    radius_vesselness = None
+    vesselness = component.get("vesselness")
+    if vesselness is not None:
+        index = np.rint(sampler.to_index(seed)[0][::-1]).astype(int) - vesselness["offset_zyx"]
+        if np.all(index >= 0) and np.all(index < vesselness["sigma_mm"].shape):
+            sigma = float(vesselness["sigma_mm"][tuple(index)])
+            radius_vesselness = sigma * VESSELNESS_RADIUS_PER_SIGMA if sigma > 0 else None
+
+    if flagged and verbose:
+        print(
+            f"  radius disagreement {disagreement:.0%} on instance {component.get('instance_id')}: "
+            f"distance transform {radius_dt:.2f}mm vs frontier {radius_frontier:.2f}mm",
+            file=file,
+        )
 
     return {
-        "seed_mm": recentred_seed,
+        "seed_mm": seed,
         "seed_before_recentring_mm": seed_point,
-        "reached_seed_arc_length": bool(reached_full_length),
+        "recentred": recentred,
+        "reached_seed_distance": reached,
+        "seed_arc_mm": seed_arc,
         "direction_xyz": direction,
-        "radius_mm": radius_from_distance if radius_from_distance > 0 else radius_from_ellipse,
-        "radius_from_distance_transform_mm": radius_from_distance,
-        "radius_from_ellipse_mm": radius_from_ellipse,
+        "radius_mm": radius_dt if radius_dt > 0 else radius_frontier,
+        "radius_from_distance_transform_mm": radius_dt,
+        "radius_distance_transform_raw_mm": raw_dt,
+        "radius_from_frontier_mm": radius_frontier,
+        "radius_from_vesselness_mm": radius_vesselness,
         "radius_disagreement": float(disagreement),
-        "radius_disagreement_flag": bool(disagreement > radius_disagreement_threshold),
-        "cross_section_area_mm2": float(section["area_mm2"]),
-        "cross_section_semi_axes_mm": section["semi_axes_mm"],
+        "radius_disagreement_flag": bool(flagged),
+        "cross_section_area_mm2": section_area_mm2,
     }

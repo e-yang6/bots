@@ -1,0 +1,11 @@
+{
+  "case_id": "subject001",
+  "mesh_file": "aorta.glb",
+  "centroid_mm": [
+    14.727519822049283,
+    34.73969755589605,
+    -1014.3969223686535
+  ],
+  "branches": [],
+  "scale_note": "Coordinates in mm, centered at aorta centroid"
+}

@@ -136,3 +136,87 @@ def make_cylinder_with_stub(
         img.SetDirection(direction)
 
     return image, mask_img
+
+
+def _distance_to_segment(points_mm, start, end):
+    start = np.asarray(start, dtype=np.float64)
+    segment = np.asarray(end, dtype=np.float64) - start
+    length_squared = max(float(segment @ segment), 1e-12)
+    t = np.clip(((points_mm - start) @ segment) / length_squared, 0.0, 1.0)
+    return np.linalg.norm(points_mm - (start + t[:, None] * segment), axis=1)
+
+
+def make_capsule_phantom(
+    shape_zyx=(90, 64, 64),
+    spacing=(1.0, 1.0, 1.0),
+    aorta_radius_mm=8.0,
+    aorta_centre_xy_mm=None,
+    aorta_z_mm=(10.0, 80.0),
+    mask_z_mm=None,
+    mask_taper_mm=0.0,
+    branches=(),
+    blocks=(),
+    lumen_hu=300.0,
+    background_hu=40.0,
+):
+    """Aorta plus arbitrary capsule-shaped vessels, for the flood-fill detector.
+
+    Physical coordinates are index * spacing (origin 0, identity direction),
+    in (x, y, z) mm.
+
+    - The aorta is a vertical cylinder of aorta_radius_mm about
+      aorta_centre_xy_mm (default: the volume's centre), present in the image
+      over aorta_z_mm.
+    - The mask is the same cylinder over mask_z_mm (default: aorta_z_mm), so a
+      shorter mask leaves the real aorta continuing past the mask's end face.
+      mask_taper_mm narrows the mask's high end linearly to 2mm over that
+      length while the image aorta stays full width.
+    - branches: dicts {"start": (x, y, z), "end": (x, y, z), "radius": r} --
+      capsules (a segment dilated by r) drawn in the image only, as daughters
+      are in the real task.
+    - blocks: dicts {"low": (x, y, z), "high": (x, y, z), "hu": value} --
+      axis-aligned boxes of the given intensity (e.g. enhancing tissue).
+
+    Returns (image, mask) as SimpleITK images (int16 / uint8).
+    """
+    nz, ny, nx = shape_zyx
+    sx, sy, sz = spacing
+    if aorta_centre_xy_mm is None:
+        aorta_centre_xy_mm = ((nx // 2) * sx, (ny // 2) * sy)
+    if mask_z_mm is None:
+        mask_z_mm = aorta_z_mm
+
+    zz, yy, xx = np.meshgrid(np.arange(nz) * sz, np.arange(ny) * sy, np.arange(nx) * sx, indexing="ij")
+    radial = np.sqrt((xx - aorta_centre_xy_mm[0]) ** 2 + (yy - aorta_centre_xy_mm[1]) ** 2)
+
+    aorta = (radial <= aorta_radius_mm) & (zz >= aorta_z_mm[0]) & (zz <= aorta_z_mm[1])
+
+    mask_radius = np.full(zz.shape, aorta_radius_mm)
+    if mask_taper_mm > 0:
+        taper_start = mask_z_mm[1] - mask_taper_mm
+        fraction = np.clip((zz - taper_start) / mask_taper_mm, 0.0, 1.0)
+        mask_radius = aorta_radius_mm - fraction * (aorta_radius_mm - 2.0)
+    mask = (radial <= mask_radius) & (zz >= mask_z_mm[0]) & (zz <= mask_z_mm[1])
+
+    image = np.full(shape_zyx, background_hu, dtype=np.float32)
+    for block in blocks:
+        low, high = block["low"], block["high"]
+        inside = (
+            (xx >= low[0]) & (xx <= high[0]) & (yy >= low[1]) & (yy <= high[1])
+            & (zz >= low[2]) & (zz <= high[2])
+        )
+        image[inside] = block["hu"]
+
+    points = np.stack([xx.ravel(), yy.ravel(), zz.ravel()], axis=1)
+    lumen = aorta.copy()
+    for branch in branches:
+        inside = _distance_to_segment(points, branch["start"], branch["end"]) <= branch["radius"]
+        lumen |= inside.reshape(shape_zyx)
+    image[lumen] = lumen_hu
+
+    image_sitk = sitk.GetImageFromArray(image.astype(np.int16))
+    mask_sitk = sitk.GetImageFromArray(mask.astype(np.uint8))
+    for volume in (image_sitk, mask_sitk):
+        volume.SetSpacing(tuple(float(s) for s in spacing))
+        volume.SetOrigin((0.0, 0.0, 0.0))
+    return image_sitk, mask_sitk

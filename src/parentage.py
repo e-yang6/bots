@@ -1,223 +1,474 @@
-"""Decide whether a candidate is really an independent direct aortic daughter,
-or whether it belongs to another candidate's vessel.
+"""Split candidate components into independent aortic origins, and record
+which origins lie on a shared vessel.
 
-Two distinct relationships are tested, because on real data they fire in
-very different circumstances.
+Connectivity makes this cheap, because the flood already answers the two
+questions the surface-scoring detector had to approximate with path-to-path
+proximity:
 
-Ostium-on-parent-wall: the candidate's origin sits on another branch's lumen
-SURFACE. The test is surface distance (axis distance minus that branch's
-local radius), not raw path-to-path distance -- two branches running a few mm
-apart in parallel are both aortic daughters, whereas a vessel whose origin
-sits right on another branch's wall is that branch's daughter.
+  Do two contact patches lie on one vessel?  Then a path between them runs
+  entirely through that vessel's lumen and never re-enters the aorta mask.
+  Every flood voxel's shortest path leaves the aorta through exactly one
+  contact-patch voxel, so each patch owns a territory -- the voxels fed
+  through it -- and those territories touch only where the vessels do. The
+  lowest geodesic distance at which two territories touch (vessel_join_mm) is
+  the bottleneck of the best path between the patches that stays outside the
+  aorta: every voxel's parent chain lies inside its own territory with
+  strictly decreasing distance, so no path can join them lower. It is
+  reported per pair.
 
-Trace containment: the candidate's traced path runs INSIDE another
-candidate's tube. This is the relationship that actually occurs here.
-Candidate ostia are, by construction, points on the aorta surface -- measured
-across the dev set they sit a median of 0.8mm and at most 1.4mm from the
-wall -- so a genuine daughter-of-a-daughter arising well downstream never
-produces its own aorta-surface candidate at all, and one arising close to the
-aorta is legitimately near the wall. No amount of ostium refinement separates
-those, which is why an "is it off the aortic wall" gate can never fire.
-What does happen, and what must be caught before final output, is two
-candidates whose traces run down the same vessel: either two detections of
-one branch, or two sub-branches of one short common trunk. The challenge is
-explicit that a common trunk has a single aortic origin even when it divides
-shortly afterwards, so these have to collapse to one.
+  Are two nearby origins really two?  Yes when their contact patches are
+  spatially disjoint on the aortic surface. And a single patch can still hold
+  two origins: two ostia a few mm apart (a main and an accessory renal, the
+  coeliac beside the SMA) fuse through partial volume at the wall into one
+  bimodal patch. Those are split by watershed on the patch's own distance
+  transform, measured along the aortic surface.
+
+  Where the two rules collide -- a disjoint piece of patch that lies on the
+  same vessel as another -- width decides. A piece too narrow to be the mouth
+  of an eligible vessel is a vessel grazing the wall downstream of its real
+  origin, and is folded into that origin (see _absorb_narrow_pieces). A piece
+  wide enough to be a mouth stays its own origin, with the shared vessel
+  recorded.
+
+A daughter-of-a-daughter never touches the aorta, so it never gets a contact
+patch of its own: it is simply part of its parent's component, and tracing
+truncates at the bifurcation (see tracing.detect_bifurcation_by_frontier).
+
+The split is the independence decision: every instance returned here is its
+own origin. shares_vessel_with is reported alongside for the classifier
+stage, which will decide what a disjoint origin that joins another vessel
+3mm out actually is.
 """
 
+import heapq
+import sys
+
 import numpy as np
+from scipy import ndimage
+
+from src.candidates import MIN_ELIGIBLE_LENGTH_MM, flat_to_mm, flat_to_zyx, voxel_volume_mm3
+from src.floodfill import _neighbour_offsets, _pair_slices, geodesic_bfs
+
+# A second watershed basin survives as its own origin only if its peak (the
+# half-width of its patch, in mm along the surface) stands at least this far
+# above the saddle joining it to a higher basin -- and by at least this
+# fraction of its own peak. The absolute floor is one voxel: along a voxel
+# surface, geodesic distance itself wobbles by ~0.3mm between adjacent voxels,
+# so shallower dips are quantization, not a waist between two mouths. The
+# fraction is small because real waists are shallow: two equal mouths of
+# radius R overlapping by R/2 dip by only ~0.3R (half-width sqrt(R * overlap)),
+# and a 1mm voxel graph measures less than that again, while a single
+# elliptical mouth has no dip at all beyond the quantization the floor covers.
+WATERSHED_MIN_DEPTH_MM = 0.8
+WATERSHED_DEPTH_FRACTION = 0.2
+# Basins narrower than this cannot be the mouth of an eligible vessel.
+MIN_OSTIUM_HALF_WIDTH_MM = 1.0
+
+_FULL = np.ones((3, 3, 3), dtype=bool)
 
 
-def _closest_point_on_polyline(polyline_mm, query_mm):
-    """Closest point on a polyline to a query point.
+def _crop_bounds(zyx, shape, margin):
+    low = np.maximum(zyx.min(axis=0) - margin, 0)
+    high = np.minimum(zyx.max(axis=0) + margin + 1, shape)
+    return low, high
 
-    Returns (distance_mm, arc_length_mm_at_closest, segment_index, t) where t
-    is the fractional position along that segment.
+
+def patch_distance_transform(patch_flat, shell, shape, spacing):
+    """Geodesic distance from each patch voxel to the patch rim, along the
+    aortic surface.
+
+    A plain 3D distance transform is useless on a patch: it is a curved sheet
+    one or two voxels thick, so every voxel is ~1 voxel from background. The
+    distance that says how wide the patch is runs along the surface, so this
+    floods the shell from the shell voxels that are NOT in the patch.
+
+    Holes are filled first -- pockets of shell entirely enclosed by the patch
+    -- since each would otherwise read as rim in the middle of the mouth. Not
+    a morphological closing: closing also fills the notch between two fused
+    mouths, which is precisely the waist the watershed needs to see.
+
+    Returns (low_zyx, filled_patch_crop, distance_crop), or None if the patch
+    has no rim in its neighbourhood (it wraps the aorta).
     """
-    if polyline_mm.shape[0] == 0:
-        return np.inf, 0.0, -1, 0.0
-    if polyline_mm.shape[0] == 1:
-        return float(np.linalg.norm(polyline_mm[0] - query_mm)), 0.0, 0, 0.0
+    zyx = flat_to_zyx(patch_flat, shape)
+    low, high = _crop_bounds(zyx, shape, margin=3)
+    crop = tuple(slice(l, h) for l, h in zip(low, high))
+    shell_crop = shell[crop]
 
-    starts = polyline_mm[:-1]
-    ends = polyline_mm[1:]
-    segments = ends - starts
-    lengths_squared = np.einsum("ij,ij->i", segments, segments)
-    lengths_squared[lengths_squared == 0] = 1e-12
+    patch_crop = np.zeros(shell_crop.shape, dtype=bool)
+    local = zyx - low
+    patch_crop[local[:, 0], local[:, 1], local[:, 2]] = True
 
-    t = np.einsum("ij,ij->i", query_mm - starts, segments) / lengths_squared
-    t = np.clip(t, 0.0, 1.0)
-    projections = starts + t[:, None] * segments
-    distances = np.linalg.norm(projections - query_mm, axis=1)
+    outside_patch, _count = ndimage.label(shell_crop & ~patch_crop, structure=_FULL)
+    border = np.zeros(shell_crop.shape, dtype=bool)
+    for axis in range(3):
+        border[(slice(None),) * axis + (0,)] = True
+        border[(slice(None),) * axis + (-1,)] = True
+    open_labels = np.unique(outside_patch[border & (outside_patch > 0)])
+    holes = (outside_patch > 0) & ~np.isin(outside_patch, open_labels)
+    closed = patch_crop | holes
 
-    index = int(np.argmin(distances))
-    segment_lengths = np.linalg.norm(segments, axis=1)
-    arc_length = float(segment_lengths[:index].sum() + t[index] * segment_lengths[index])
-    return float(distances[index]), arc_length, index, float(t[index])
-
-
-def _radius_at_arc_length(trace, arc_length_mm):
-    arc = trace["arc_lengths_mm"]
-    radii = trace["radii_mm"]
-    if arc.size == 0:
-        return 0.0
-    return float(np.interp(arc_length_mm, arc, radii))
+    rim = shell_crop & ~closed
+    if not rim.any():
+        return None
+    # budget: comfortably wider than any ostium's half-width
+    distance, _parent, _frontier = geodesic_bfs(shell_crop | closed, rim, spacing, budget_mm=50.0)
+    distance[~np.isfinite(distance)] = 50.0
+    distance[~closed] = 0.0
+    return low, closed, distance
 
 
-def trace_containment(trace, other_trace, tolerance_mm=0.5):
-    """How much of `trace` runs inside `other_trace`'s tube.
+def watershed_basins(region, height, min_depth_mm=WATERSHED_MIN_DEPTH_MM,
+                     depth_fraction=WATERSHED_DEPTH_FRACTION,
+                     min_peak_mm=MIN_OSTIUM_HALF_WIDTH_MM):
+    """Watershed of `height` over `region` (26-connected), from the top down.
 
-    Returns (fraction_inside, min_surface_gap_mm, min_axis_distance_mm). A
-    point counts as inside when its distance to the other branch's axis is
-    within that branch's local radius (plus a tolerance for the fact that
-    both the axis and the radius are estimates).
+    Two passes. First, which basins exist: voxels are added in decreasing
+    height; a voxel touching no processed voxel starts a basin, and one
+    touching several is a saddle, where every basin except the highest either
+    merges into it (too shallow or too narrow) or stays separate. Depth only
+    grows as the flood descends, so a basin kept separate at its first saddle
+    stays separate.
+
+    Second, which voxels belong to each: a priority flood from the surviving
+    peaks, highest voxels first and first-come-first-served within a height.
+    The first pass alone would settle every tie on a plateau by array order,
+    handing most of a flat-topped mouth to whichever basin was scanned first.
+
+    Returns (labels, basins): labels is an int array over region (0 outside,
+    1..k basins, ordered by decreasing peak); basins is a list of
+    {"label", "peak_mm", "saddle_mm"} (saddle None for the highest basin of
+    each connected piece).
     """
-    points = trace["points_mm"]
-    if points.shape[0] == 0 or other_trace["points_mm"].shape[0] == 0:
-        return 0.0, np.inf, np.inf
+    coords = np.argwhere(region)
+    labels = np.zeros(region.shape, dtype=np.int32)
+    if coords.shape[0] == 0:
+        return labels, []
 
-    inside = 0
-    min_gap = np.inf
-    min_axis = np.inf
-    for point in points:
-        axis_distance, arc_length, _segment, _t = _closest_point_on_polyline(
-            other_trace["points_mm"], point
-        )
-        radius = _radius_at_arc_length(other_trace, arc_length)
-        min_axis = min(min_axis, axis_distance)
-        min_gap = min(min_gap, abs(axis_distance - radius))
-        if axis_distance <= radius + tolerance_mm:
-            inside += 1
+    values = height[region].astype(np.float64)
+    index = np.full(region.shape, -1, dtype=np.int64)
+    index[coords[:, 0], coords[:, 1], coords[:, 2]] = np.arange(coords.shape[0])
 
-    return inside / points.shape[0], float(min_gap), float(min_axis)
+    union = np.arange(coords.shape[0])
+    peak = values.copy()
+    saddle = {}
+    processed = np.zeros(coords.shape[0], dtype=bool)
+    offsets = [(dz, dy, dx) for dz in (-1, 0, 1) for dy in (-1, 0, 1) for dx in (-1, 0, 1)
+               if (dz, dy, dx) != (0, 0, 0)]
+    shape = region.shape
+
+    def find(node):
+        while union[node] != node:
+            union[node] = union[union[node]]
+            node = union[node]
+        return node
+
+    for node in np.argsort(-values, kind="stable"):
+        z, y, x = coords[node]
+        roots = set()
+        for dz, dy, dx in offsets:
+            nz, ny, nx = z + dz, y + dy, x + dx
+            if 0 <= nz < shape[0] and 0 <= ny < shape[1] and 0 <= nx < shape[2]:
+                neighbour = index[nz, ny, nx]
+                if neighbour >= 0 and processed[neighbour]:
+                    roots.add(find(neighbour))
+        processed[node] = True
+        if not roots:
+            continue
+
+        ranked = sorted(roots, key=lambda root: -peak[root])
+        highest = ranked[0]
+        union[node] = highest
+        for root in ranked[1:]:
+            depth = peak[root] - values[node]
+            if peak[root] < min_peak_mm or depth < max(min_depth_mm, depth_fraction * peak[root]):
+                union[root] = highest
+            else:
+                saddle[root] = max(saddle.get(root, -np.inf), float(values[node]))
+
+    unique_roots = sorted({find(node) for node in range(coords.shape[0])}, key=lambda root: -peak[root])
+    relabel = {root: i + 1 for i, root in enumerate(unique_roots)}
+
+    node_label = np.zeros(coords.shape[0], dtype=np.int32)
+    queue, counter = [], 0
+    for root in unique_roots:
+        node_label[root] = relabel[root]
+        heapq.heappush(queue, (-values[root], counter, root))
+        counter += 1
+    while queue:
+        _height, _order, node = heapq.heappop(queue)
+        z, y, x = coords[node]
+        for dz, dy, dx in offsets:
+            nz, ny, nx = z + dz, y + dy, x + dx
+            if 0 <= nz < shape[0] and 0 <= ny < shape[1] and 0 <= nx < shape[2]:
+                neighbour = index[nz, ny, nx]
+                if neighbour >= 0 and node_label[neighbour] == 0:
+                    node_label[neighbour] = node_label[node]
+                    heapq.heappush(queue, (-values[neighbour], counter, neighbour))
+                    counter += 1
+
+    labels[coords[:, 0], coords[:, 1], coords[:, 2]] = node_label
+    basins = [
+        {"label": relabel[root], "peak_mm": float(peak[root]), "saddle_mm": saddle.get(root)}
+        for root in unique_roots
+    ]
+    return labels, basins
 
 
-def check_branch_of_branch(
-    candidates,
-    traces,
-    aorta_surface_tree,
-    ostium_points_mm=None,
-    surface_tolerance_mm=1.5,
-    aorta_margin_mm=2.5,
-    min_parent_arc_mm=1.5,
-    min_parent_length_mm=2.0,
-    containment_fraction_threshold=0.6,
-    containment_min_length_mm=2.0,
-    containment_max_convergence_mm=2.0,
-):
-    """Flag candidates that arise from another candidate's branch.
-
-    For each candidate's ostium, find the traced branch whose lumen surface
-    it sits closest to. `distance_to_parent_surface_mm` is the gap between
-    the ostium and that branch's wall (|distance to its axis| - its local
-    radius), so it is near zero exactly when the ostium lies on the other
-    vessel -- which raw axis-to-axis distance could never distinguish from
-    a fatter parent passing nearby.
-
-    A candidate is flagged only if it also stands off the aorta wall by more
-    than aorta_margin_mm: a true aortic daughter sits ON the aorta, and where
-    both parents are plausible the aorta wins (the challenge asks for direct
-    aortic daughters).
-
-    Returns one dict per candidate, in the same order.
+def _min_peak_mm(spacing):
+    """Smallest patch peak that can be a mouth. Rim distances are measured from
+    the centres of the rim voxels, half a voxel outside the patch's true edge,
+    so the half-width floor is raised by that much.
     """
-    if ostium_points_mm is None:
-        ostium_points_mm = [np.asarray(c["ostium_patch_centroid_mm"], dtype=np.float64) for c in candidates]
+    return MIN_OSTIUM_HALF_WIDTH_MM + 0.5 * float(np.mean(spacing))
 
-    results = []
-    for index, ostium in enumerate(ostium_points_mm):
-        ostium = np.asarray(ostium, dtype=np.float64)
 
-        distance_to_aorta, _nearest = aorta_surface_tree.query(ostium[None, :], k=1)
-        distance_to_aorta_mm = float(distance_to_aorta[0])
+def _split_patch(component, shell, spacing):
+    """Label every contact-patch voxel with the origin it belongs to: one per
+    spatially disjoint piece of the patch, and one per watershed basin within
+    a piece.
 
-        best = None
-        for other_index, other_trace in enumerate(traces):
-            if other_index == index or other_trace is None:
-                continue
-            if other_trace["traced_length_mm"] < min_parent_length_mm:
-                continue
+    Returns (origin_of_patch_voxel, origins): an int array aligned with
+    component["patch_flat"] (origins numbered from 1), and one dict per origin.
+    """
+    patch = component["patch_flat"]
+    shape = component["shape"]
+    transformed = patch_distance_transform(patch, shell, shape, spacing)
+    if transformed is None:
+        return np.ones(patch.size, dtype=np.int32), [
+            {"piece": 1, "basin": 1, "peak_mm": None, "saddle_mm": None}
+        ]
 
-            axis_distance, arc_length, _segment, _t = _closest_point_on_polyline(
-                other_trace["points_mm"], ostium
+    low, closed, distance = transformed
+    pieces, n_pieces = ndimage.label(closed, structure=_FULL)
+    origin_crop = np.zeros(closed.shape, dtype=np.int32)
+    origins = []
+    for piece in range(1, n_pieces + 1):
+        basin_labels, basins = watershed_basins(pieces == piece, distance, min_peak_mm=_min_peak_mm(spacing))
+        for basin in basins:
+            origins.append({
+                "piece": piece,
+                "basin": basin["label"],
+                "peak_mm": basin["peak_mm"],
+                "saddle_mm": basin["saddle_mm"],
+            })
+            origin_crop[basin_labels == basin["label"]] = len(origins)
+
+    local = flat_to_zyx(patch, shape) - low
+    return origin_crop[local[:, 0], local[:, 1], local[:, 2]], origins
+
+
+def _absorb_narrow_pieces(origins, joins, min_peak_mm):
+    """Fold contact spots too narrow to be a mouth into the vessel they belong to.
+
+    A daughter that runs alongside the aorta (the SMA, typically) can graze the
+    wall's partial-volume rim at several points past its real origin. Each
+    graze is a separate, spatially disjoint piece of contact patch, a voxel or
+    a few across, and each would otherwise claim part of the vessel as its own
+    "origin" -- on subject015 one vessel came out as four. The watershed already
+    refuses basins narrower than a mouth inside one piece; this applies the same
+    floor across pieces. A narrow origin is merged into the origin whose
+    territory it joins at the lowest geodesic distance, taking the lowest joins
+    first; a narrow origin that joins nothing stays as it is.
+
+    Returns {origin number: surviving origin number}.
+    """
+    parent = {number: number for number in range(1, len(origins) + 1)}
+    peak = {number: (origin["peak_mm"] if origin["peak_mm"] is not None else np.inf)
+            for number, origin in enumerate(origins, start=1)}
+
+    def find(number):
+        while parent[number] != number:
+            number = parent[number]
+        return number
+
+    for (a, b), _join in sorted(joins.items(), key=lambda item: item[1]):
+        root_a, root_b = find(a), find(b)
+        if root_a == root_b:
+            continue
+        narrow_a, narrow_b = peak[root_a] < min_peak_mm, peak[root_b] < min_peak_mm
+        if not (narrow_a or narrow_b):
+            continue
+        keep, fold = (root_a, root_b) if peak[root_a] >= peak[root_b] else (root_b, root_a)
+        parent[fold] = keep
+    return {number: find(number) for number in parent}
+
+
+def _origin_of_exits(exits, patch_sorted, origin_of_patch):
+    """Origin number for each exit voxel (0 if the exit is not in the patch)."""
+    position = np.clip(np.searchsorted(patch_sorted, exits), 0, max(patch_sorted.size - 1, 0))
+    found = patch_sorted.size > 0
+    matches = (patch_sorted[position] == exits) if found else np.zeros(exits.size, dtype=bool)
+    return np.where(matches, origin_of_patch[position] if found else 0, 0).astype(np.int32)
+
+
+def vessel_join_distances(territory_labels, dist_crop):
+    """Lowest geodesic distance at which each pair of territories touch.
+
+    territory_labels: int crop (0 = none, 1..k); dist_crop: flood distance.
+    Returns {(a, b): join_mm} for a < b, only for pairs that touch.
+    """
+    joins = {}
+    shape = territory_labels.shape
+    for offset in _neighbour_offsets():
+        slices_a, slices_b = _pair_slices(offset, shape)
+        a = territory_labels[slices_a]
+        b = territory_labels[slices_b]
+        touching = (a > 0) & (b > 0) & (a != b)
+        if not touching.any():
+            continue
+        la, lb = a[touching], b[touching]
+        height = np.maximum(dist_crop[slices_a][touching], dist_crop[slices_b][touching])
+        low_label, high_label = np.minimum(la, lb), np.maximum(la, lb)
+        for pair_a, pair_b, value in zip(low_label, high_label, height):
+            key = (int(pair_a), int(pair_b))
+            if value < joins.get(key, np.inf):
+                joins[key] = float(value)
+    return joins
+
+
+def split_into_instances(candidates, detection, min_length_mm=MIN_ELIGIBLE_LENGTH_MM,
+                         verbose=False, file=sys.stderr):
+    """One instance per independent aortic origin.
+
+    Each instance carries the same voxel/patch keys as a candidate component,
+    restricted to its own territory, plus:
+      component_label, piece, basin, split ("none", "disjoint_patches",
+      "watershed" or both), patch_peak_mm, watershed_saddle_mm,
+      absorbed_narrow_pieces, shares_vessel_with (other instance ids whose
+      territory touches this one's), vessel_join_mm ({other id: mm}),
+      is_independent_origin.
+
+    Instances whose territory never reaches min_length_mm are dropped -- the
+    eligibility rule, applied again after the split -- and counted.
+
+    Returns (instances, summary).
+    """
+    reference_image = detection["reference_image"]
+    spacing = reference_image.GetSpacing()
+    shape = detection["shape"]
+    dist_flat = detection["flood"]["dist"].ravel()
+    exit_flat = detection["exit_voxels"].ravel()
+    voxel_volume = voxel_volume_mm3(reference_image)
+    voxel_area = voxel_volume ** (2.0 / 3.0)
+
+    shell = detection["aortic_shell"]
+
+    instances = []
+    summary = {"components": len(candidates), "split_components": 0, "absorbed_narrow_pieces": 0,
+               "instance_too_short": 0}
+
+    for component in candidates:
+        patch = component["patch_flat"]
+        origin_of_patch, origins = _split_patch(component, shell, spacing)
+
+        # territory: each voxel belongs to the origin its exit voxel belongs to
+        voxel_origin = _origin_of_exits(exit_flat[component["voxels_flat"]], patch, origin_of_patch)
+        core_origin = _origin_of_exits(exit_flat[component["core_flat"]], patch, origin_of_patch)
+
+        zyx = flat_to_zyx(component["voxels_flat"], shape)
+        low, high = _crop_bounds(zyx, shape, margin=1)
+        territory_crop = np.zeros(tuple(high - low), dtype=np.int32)
+        local = zyx - low
+        dist_crop = detection["flood"]["dist"][low[0]:high[0], low[1]:high[1], low[2]:high[2]]
+
+        joins = {}
+        absorbed = {number: 0 for number in range(1, len(origins) + 1)}
+        if len(origins) > 1:
+            territory_crop[local[:, 0], local[:, 1], local[:, 2]] = voxel_origin
+            survivor = _absorb_narrow_pieces(
+                origins, vessel_join_distances(territory_crop, dist_crop), _min_peak_mm(spacing)
             )
-            if arc_length < min_parent_arc_mm:
-                # too close to the other branch's own origin to tell the two
-                # apart -- they are neighbouring aortic daughters, not parent
-                # and child
+            summary["absorbed_narrow_pieces"] += sum(1 for n, s in survivor.items() if n != s)
+            for number, target in survivor.items():
+                if number != target:
+                    absorbed[target] += 1
+            lookup = np.array([0] + [survivor[n] for n in range(1, len(origins) + 1)], dtype=np.int32)
+            origin_of_patch = lookup[origin_of_patch]
+            voxel_origin = lookup[voxel_origin]
+            core_origin = lookup[core_origin]
+            territory_crop[local[:, 0], local[:, 1], local[:, 2]] = voxel_origin
+            joins = vessel_join_distances(territory_crop, dist_crop)
+
+        surviving = sorted(set(origin_of_patch.tolist()))
+        pieces_used = {origins[n - 1]["piece"] for n in surviving}
+        if len(surviving) > 1:
+            summary["split_components"] += 1
+
+        local_ids = {}
+        for number in surviving:
+            origin = origins[number - 1]
+            kinds = []
+            if len(pieces_used) > 1:
+                kinds.append("disjoint_patches")
+            if sum(1 for n in surviving if origins[n - 1]["piece"] == origin["piece"]) > 1:
+                kinds.append("watershed")
+            origin["split"] = "+".join(kinds) if kinds else "none"
+
+            in_origin = voxel_origin == number
+            core = component["core_flat"][core_origin == number]
+            if core.size == 0:
+                summary["instance_too_short"] += 1
+                continue
+            core_dist = dist_flat[core]
+            if float(core_dist.max()) < min_length_mm:
+                summary["instance_too_short"] += 1
                 continue
 
-            parent_radius = _radius_at_arc_length(other_trace, arc_length)
-            surface_gap = abs(axis_distance - parent_radius)
+            own_patch = patch[origin_of_patch == number]
+            patch_mm = flat_to_mm(own_patch, reference_image, shape)
+            instance = {
+                key: component[key]
+                for key in ("shape", "neck_mm", "vesselness", "touches_cap", "cap_face_fraction",
+                            "radius_estimate_mm", "direction_estimate")
+                if key in component
+            }
+            instance.update({
+                "instance_id": len(instances),
+                "component_label": component["label"],
+                "core_flat": core,
+                "core_dist": core_dist,
+                "voxels_flat": component["voxels_flat"][in_origin],
+                "voxels_dist": component["voxels_dist"][in_origin],
+                "patch_flat": own_patch,
+                "n_patch_voxels": int(own_patch.size),
+                "patch_mm": patch_mm,
+                "patch_centroid_mm": patch_mm.mean(axis=0),
+                "patch_area_mm2": float(own_patch.size) * voxel_area,
+                "max_distance_mm": float(core_dist.max()),
+                "volume_mm3": float(np.count_nonzero(in_origin)) * voxel_volume,
+                "piece": origin["piece"],
+                "basin": origin["basin"],
+                "split": origin["split"],
+                "patch_peak_mm": origin["peak_mm"],
+                "watershed_saddle_mm": origin["saddle_mm"],
+                "absorbed_narrow_pieces": absorbed[number],
+                "shares_vessel_with": [],
+                "vessel_join_mm": {},
+                "is_independent_origin": True,
+            })
+            local_ids[number] = instance["instance_id"]
+            instances.append(instance)
 
-            if best is None or surface_gap < best["distance_to_parent_surface_mm"]:
-                best = {
-                    "parent_candidate_index": other_index,
-                    "distance_to_parent_surface_mm": float(surface_gap),
-                    "distance_to_parent_axis_mm": float(axis_distance),
-                    "parent_radius_at_contact_mm": float(parent_radius),
-                    "parent_arc_length_mm": float(arc_length),
-                }
+        for (a, b), join_mm in joins.items():
+            if a in local_ids and b in local_ids:
+                first, second = instances[local_ids[a]], instances[local_ids[b]]
+                first["shares_vessel_with"].append(second["instance_id"])
+                second["shares_vessel_with"].append(first["instance_id"])
+                first["vessel_join_mm"][second["instance_id"]] = join_mm
+                second["vessel_join_mm"][first["instance_id"]] = join_mm
 
-        result = {
-            "candidate_index": index,
-            "distance_to_aorta_surface_mm": distance_to_aorta_mm,
-            "parent_candidate_index": None,
-            "distance_to_parent_surface_mm": None,
-            "distance_to_parent_axis_mm": None,
-            "parent_radius_at_contact_mm": None,
-            "parent_arc_length_mm": None,
-            "is_branch_of_branch": False,
-            "shares_vessel_with": None,
-            "containment_fraction": 0.0,
-            "trace_convergence_mm": None,
-            "is_independent_origin": True,
-        }
-        if best is not None:
-            result.update(best)
-            result["is_branch_of_branch"] = bool(
-                best["distance_to_parent_surface_mm"] <= surface_tolerance_mm
-                and distance_to_aorta_mm > aorta_margin_mm
-            )
+    summary["instances"] = len(instances)
+    if verbose:
+        log_instances(instances, summary, file=file)
+    return instances, summary
 
-        own_trace = traces[index] if index < len(traces) else None
-        if own_trace is not None and own_trace["traced_length_mm"] >= containment_min_length_mm:
-            best_containment = None
-            for other_index, other_trace in enumerate(traces):
-                if other_index == index or other_trace is None:
-                    continue
-                if other_trace["traced_length_mm"] < containment_min_length_mm:
-                    continue
-                # The longer trace is taken to represent the shared vessel, so
-                # only the shorter of a pair is demoted. Without this both
-                # members of a duplicate pair flag each other and neither
-                # survives.
-                if other_trace["traced_length_mm"] < own_trace["traced_length_mm"]:
-                    continue
 
-                fraction, surface_gap, axis_distance = trace_containment(own_trace, other_trace)
-                if best_containment is None or fraction > best_containment[1]:
-                    best_containment = (other_index, fraction, surface_gap, axis_distance)
-
-            if best_containment is not None:
-                other_index, fraction, _surface_gap, axis_distance = best_containment
-                result["containment_fraction"] = float(fraction)
-                result["trace_convergence_mm"] = float(axis_distance)
-                # Containment alone is not enough: an overestimated radius on
-                # the other branch inflates its tube until it swallows a
-                # genuinely separate neighbour (observed at containment 1.00
-                # with the two paths still ~4mm apart). The paths must also
-                # actually meet, or two nearby origins -- which the challenge
-                # requires be reported separately -- would be merged into one.
-                if (
-                    fraction >= containment_fraction_threshold
-                    and axis_distance <= containment_max_convergence_mm
-                ):
-                    result["shares_vessel_with"] = int(other_index)
-
-        result["is_independent_origin"] = not (
-            result["is_branch_of_branch"] or result["shares_vessel_with"] is not None
-        )
-        results.append(result)
-
-    return results
+def log_instances(instances, summary, file=sys.stderr):
+    print(
+        f"instances={summary['instances']} from {summary['components']} candidates "
+        f"(split_components={summary['split_components']} "
+        f"absorbed_narrow_pieces={summary['absorbed_narrow_pieces']} "
+        f"instance_too_short={summary['instance_too_short']})",
+        file=file,
+    )

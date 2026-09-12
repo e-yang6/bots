@@ -114,7 +114,7 @@ from schema import (  # noqa: E402
     read_prediction,
     write_prediction,
 )
-from src.candidates import build_evidence  # noqa: E402
+from src.lumen_evidence import build_evidence  # noqa: E402
 from src.geometry import compute_surface_normals  # noqa: E402
 from src.intensity import lumen_stats  # noqa: E402
 from src.io_utils import load_case  # noqa: E402
@@ -166,7 +166,7 @@ MIP_CLIP_ABOVE_LUMEN_HU = 150.0
 # partial-volume rim necessarily passes through the lumen HU on the way and
 # ties with a real vessel. Anything this far above the lumen is treated as
 # bone or calcium, and the rim either side of it is excluded too. This is the
-# same guard src.candidates applies to its lumen field, for the same reason.
+# same guard src.lumen_evidence applies to its lumen field, for the same reason.
 MIP_BONE_MARGIN_HU = 250.0
 MIP_BONE_RIM_VOXELS = 2
 
@@ -221,7 +221,7 @@ def probe_surface(surface_mm, normals, sampler):
     mask, so their only trace on the surface is the contrast-filled lumen
     sitting immediately outside it.
 
-    It samples src.candidates' own "lumen" evidence field rather than raw HU,
+    It samples src.lumen_evidence's "lumen" evidence field rather than raw HU,
     for the reason documented there: raw HU cannot tell a contrast-filled
     vessel from bone or calcification, and ribs and vertebrae run close
     enough to the aorta that a raw-HU probe lights up most of the surface.
