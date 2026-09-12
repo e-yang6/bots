@@ -3,57 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Aorta Branch Viewer</title>
+    <title>Aorta Viewer</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="viewport"></div>
 
     <div id="overlay">
-        <!-- Top bar -->
         <div id="top-bar">
-            <h1>Aorta Branch Viewer</h1>
+            <h1>Aorta Viewer</h1>
             <span id="case-badge">Case: <span id="case-id">---</span></span>
-            <span id="branch-badge"><span id="branch-count">0</span> branches</span>
         </div>
 
-        <!-- Legend -->
-        <div id="legend">
-            <div class="legend-item">
-                <div class="legend-swatch aorta"></div>
-                <span>Aorta surface</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-swatch ostium"></div>
-                <span>Ostium (origin)</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-swatch seed"></div>
-                <span>Seed point (5mm)</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-swatch direction"></div>
-                <span>Branch direction</span>
-            </div>
-        </div>
-
-        <!-- Branch info panel (hidden until tap) -->
-        <div id="info-panel">
-            <h2><span class="dot"></span>Branch <span id="info-id">---</span></h2>
-            <div class="info-grid">
-                <span class="label">Radius</span>
-                <span class="value" id="info-radius">---</span>
-                <span class="label">Ostium</span>
-                <span class="value" id="info-ostium">---</span>
-                <span class="label">Direction</span>
-                <span class="value" id="info-direction">---</span>
-            </div>
-        </div>
-
-        <!-- Status -->
-        <div id="status">Loading...</div>
-
-        <!-- AR button injected here -->
+        <div id="status"></div>
         <div id="ar-button-container"></div>
     </div>
 

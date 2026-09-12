@@ -1,10 +1,8 @@
 /**
- * WebXR AR viewer for aorta branch visualization.
+ * WebXR AR viewer for aorta visualization.
  *
- * Loads a .glb aorta mesh and scene.json with branch markers.
- * Supports:
- *   - AR mode (Android Chrome): place model on a surface, tap branches for info
- *   - Fallback 3D mode (desktop/non-AR): orbit controls, same interaction
+ * Loads a .glb aorta mesh. Branch markers will be added later
+ * when the detection pipeline produces real predictions.
  */
 
 import * as THREE from 'three';
@@ -12,22 +10,13 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { ARButton } from 'three/addons/webxr/ARButton.js';
 
-// ─── State ───────────────────────────────────────────────────────────────────
-
 let scene, camera, renderer, controls;
-let modelGroup;          // holds mesh + markers, moved as a unit in AR
-let branchMarkers = [];  // { mesh, data } for raycasting
-let sceneData = null;
-let reticle;             // AR hit-test reticle
+let modelGroup;
+let reticle;
 let hitTestSource = null;
 let hitTestSourceRequested = false;
 let modelPlaced = false;
 let isARActive = false;
-
-const raycaster = new THREE.Raycaster();
-const pointer = new THREE.Vector2();
-
-// ─── Initialization ─────────────────────────────────────────────────────────
 
 function init() {
     scene = new THREE.Scene();
@@ -42,33 +31,29 @@ function init() {
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     document.getElementById('viewport').appendChild(renderer.domElement);
 
-    // Lighting
     scene.add(new THREE.AmbientLight(0xffffff, 0.6));
     const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
     dirLight.position.set(0.5, 1, 0.5);
     scene.add(dirLight);
 
-    // Group that holds the aorta model + branch markers
     modelGroup = new THREE.Group();
-    // Scale mm → meters for AR (1mm = 0.001m), then scale up for visibility
-    // A typical aorta segment is ~100-200mm tall → 0.1-0.2m, good AR size
-    modelGroup.scale.setScalar(0.001);
+    modelGroup.scale.setScalar(0.001); // mm to meters
     scene.add(modelGroup);
 
-    // AR reticle (ring shown on detected surfaces before placement)
+    // AR reticle
     const reticleGeo = new THREE.RingGeometry(0.03, 0.04, 32);
     reticleGeo.rotateX(-Math.PI / 2);
-    reticle = new THREE.Mesh(reticleGeo, new THREE.MeshBasicMaterial({ color: 0x00ff88 }));
+    reticle = new THREE.Mesh(reticleGeo, new THREE.MeshBasicMaterial({ color: 0x999999 }));
     reticle.matrixAutoUpdate = false;
     reticle.visible = false;
     scene.add(reticle);
 
-    // Orbit controls for non-AR fallback
+    // Orbit controls for desktop
     controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.target.set(0, 0, 0);
 
-    // AR button — only shown if WebXR is available
+    // AR button
     if ('xr' in navigator) {
         const arButton = ARButton.createButton(renderer, {
             requiredFeatures: ['hit-test'],
@@ -92,29 +77,23 @@ function init() {
         });
     }
 
-    // Interaction
     renderer.domElement.addEventListener('pointerdown', onPointerDown);
     window.addEventListener('resize', onWindowResize);
 
-    // Load scene data from URL params or default path
     loadScene('scene.json');
-
     renderer.setAnimationLoop(animate);
 }
 
-// ─── Scene loading ──────────────────────────────────────────────────────────
-
 async function loadScene(sceneJsonUrl) {
     const statusEl = document.getElementById('status');
-    statusEl.textContent = 'Loading scene...';
+    statusEl.textContent = 'Loading...';
 
     try {
         const resp = await fetch(sceneJsonUrl);
-        sceneData = await resp.json();
+        const sceneData = await resp.json();
 
-        const meshUrl = sceneData.mesh_file;
         const loader = new GLTFLoader();
-        const gltf = await loader.loadAsync(meshUrl);
+        const gltf = await loader.loadAsync(sceneData.mesh_file);
 
         const aortaMesh = gltf.scene;
         aortaMesh.traverse((child) => {
@@ -132,78 +111,17 @@ async function loadScene(sceneJsonUrl) {
         });
         modelGroup.add(aortaMesh);
 
-        // Add branch markers
-        addBranchMarkers(sceneData.branches);
-
-        // Update info panel
         document.getElementById('case-id').textContent = sceneData.case_id;
-        document.getElementById('branch-count').textContent = sceneData.branches.length;
+        statusEl.textContent = '';
 
-        statusEl.textContent = sceneData.branches.length > 0
-            ? 'Tap a branch marker for details'
-            : 'No branches detected';
-
-        // In non-AR mode, make sure model is visible and centered
         if (!isARActive) {
             modelGroup.visible = true;
             fitCameraToModel();
         }
     } catch (err) {
-        statusEl.textContent = 'Error loading scene: ' + err.message;
+        statusEl.textContent = 'Error: ' + err.message;
         console.error(err);
     }
-}
-
-function addBranchMarkers(branches) {
-    const markerGeo = new THREE.SphereGeometry(2.5, 16, 16);
-    const markerMat = new THREE.MeshStandardMaterial({
-        color: 0x4a9ebb,
-        roughness: 0.6,
-    });
-
-    const arrowLength = 12;
-    const arrowHeadLength = 3;
-    const arrowHeadWidth = 1.5;
-
-    branches.forEach((branch) => {
-        // Ostium marker sphere
-        const marker = new THREE.Mesh(markerGeo, markerMat.clone());
-        marker.position.set(branch.ostium[0], branch.ostium[1], branch.ostium[2]);
-        modelGroup.add(marker);
-
-        // Direction arrow from ostium along branch direction
-        const dir = new THREE.Vector3(...branch.direction).normalize();
-        const origin = new THREE.Vector3(...branch.ostium);
-        const arrow = new THREE.ArrowHelper(
-            dir, origin, arrowLength, 0x5a8a5a, arrowHeadLength, arrowHeadWidth
-        );
-        modelGroup.add(arrow);
-
-        // Seed point (smaller, different color)
-        const seedGeo = new THREE.SphereGeometry(1.5, 12, 12);
-        const seedMat = new THREE.MeshStandardMaterial({
-            color: 0xb8860b,
-            roughness: 0.6,
-        });
-        const seedMarker = new THREE.Mesh(seedGeo, seedMat);
-        seedMarker.position.set(branch.seed[0], branch.seed[1], branch.seed[2]);
-        modelGroup.add(seedMarker);
-
-        // Radius ring at seed point
-        const ringGeo = new THREE.TorusGeometry(branch.radius_mm, 0.25, 8, 32);
-        const ringMat = new THREE.MeshBasicMaterial({ color: 0xb8860b, transparent: true, opacity: 0.4 });
-        const ring = new THREE.Mesh(ringGeo, ringMat);
-        ring.position.set(branch.seed[0], branch.seed[1], branch.seed[2]);
-        // Orient ring perpendicular to branch direction
-        ring.lookAt(
-            branch.seed[0] + branch.direction[0],
-            branch.seed[1] + branch.direction[1],
-            branch.seed[2] + branch.direction[2]
-        );
-        modelGroup.add(ring);
-
-        branchMarkers.push({ mesh: marker, data: branch });
-    });
 }
 
 function fitCameraToModel() {
@@ -218,61 +136,14 @@ function fitCameraToModel() {
     controls.update();
 }
 
-// ─── Interaction ────────────────────────────────────────────────────────────
-
-function onPointerDown(event) {
-    // In AR mode, first tap places the model
+function onPointerDown() {
     if (isARActive && !modelPlaced && reticle.visible) {
         modelGroup.position.setFromMatrixPosition(reticle.matrix);
         modelGroup.visible = true;
         modelPlaced = true;
-        document.getElementById('status').textContent = 'Model placed. Tap a branch marker for details.';
-        return;
-    }
-
-    // Branch marker hit test
-    const rect = renderer.domElement.getBoundingClientRect();
-    pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-    pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-    raycaster.setFromCamera(pointer, camera);
-    const markerMeshes = branchMarkers.map(b => b.mesh);
-    const intersects = raycaster.intersectObjects(markerMeshes, false);
-
-    if (intersects.length > 0) {
-        const hit = branchMarkers.find(b => b.mesh === intersects[0].object);
-        if (hit) showBranchInfo(hit);
-    } else {
-        hideBranchInfo();
+        document.getElementById('status').textContent = '';
     }
 }
-
-function showBranchInfo(branch) {
-    const panel = document.getElementById('info-panel');
-    const d = branch.data;
-
-    branchMarkers.forEach(b => {
-        b.mesh.material.color.setHex(b === branch ? 0x6ec4df : 0x4a9ebb);
-    });
-
-    document.getElementById('info-id').textContent = d.id;
-    document.getElementById('info-radius').textContent = d.radius_mm.toFixed(1) + ' mm';
-    document.getElementById('info-ostium').textContent =
-        `(${d.ostium[0].toFixed(1)}, ${d.ostium[1].toFixed(1)}, ${d.ostium[2].toFixed(1)})`;
-    document.getElementById('info-direction').textContent =
-        `(${d.direction[0].toFixed(2)}, ${d.direction[1].toFixed(2)}, ${d.direction[2].toFixed(2)})`;
-
-    panel.classList.add('visible');
-}
-
-function hideBranchInfo() {
-    document.getElementById('info-panel').classList.remove('visible');
-    branchMarkers.forEach(b => {
-        b.mesh.material.color.setHex(0x4a9ebb);
-    });
-}
-
-// ─── AR hit-test ────────────────────────────────────────────────────────────
 
 function onXRFrame(timestamp, frame) {
     if (!isARActive || modelPlaced) return;
@@ -302,22 +173,16 @@ function onXRFrame(timestamp, frame) {
     }
 }
 
-// ─── Resize ─────────────────────────────────────────────────────────────────
-
 function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
-// ─── Render loop ────────────────────────────────────────────────────────────
-
 function animate(timestamp, frame) {
     if (frame) onXRFrame(timestamp, frame);
     if (!isARActive) controls.update();
     renderer.render(scene, camera);
 }
-
-// ─── Start ──────────────────────────────────────────────────────────────────
 
 init();
