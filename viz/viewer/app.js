@@ -18,6 +18,13 @@ let hitTestSourceRequested = false;
 let modelPlaced = false;
 let isARActive = false;
 
+// Pinch-to-scale and drag-to-rotate state
+let touches = {};
+let prevPinchDist = 0;
+let prevTouchAngle = 0;
+let prevTouchCenter = { x: 0, y: 0 };
+let modelScale = 0.001; // base scale (mm to meters)
+
 function init() {
     scene = new THREE.Scene();
 
@@ -83,6 +90,9 @@ function init() {
         session.addEventListener('select', onARSelect);
     });
     renderer.domElement.addEventListener('pointerdown', onPointerDown);
+    renderer.domElement.addEventListener('touchstart', onTouchStart, { passive: false });
+    renderer.domElement.addEventListener('touchmove', onTouchMove, { passive: false });
+    renderer.domElement.addEventListener('touchend', onTouchEnd);
     window.addEventListener('resize', onWindowResize);
 
     loadScene('scene.json');
@@ -157,6 +167,84 @@ function onARSelect() {
 
 function onPointerDown() {
     if (isARActive) placeModel();
+}
+
+// ─── Touch gestures (pinch to scale, two-finger rotate) ─────────────────
+
+function getTouchDist(t1, t2) {
+    const dx = t1.clientX - t2.clientX;
+    const dy = t1.clientY - t2.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+}
+
+function getTouchAngle(t1, t2) {
+    return Math.atan2(t1.clientY - t2.clientY, t1.clientX - t2.clientX);
+}
+
+function getTouchCenter(t1, t2) {
+    return { x: (t1.clientX + t2.clientX) / 2, y: (t1.clientY + t2.clientY) / 2 };
+}
+
+function onTouchStart(e) {
+    if (!modelPlaced) return;
+    for (const t of e.changedTouches) {
+        touches[t.identifier] = t;
+    }
+    const ids = Object.keys(touches);
+    if (ids.length === 2) {
+        e.preventDefault();
+        const t1 = touches[ids[0]], t2 = touches[ids[1]];
+        prevPinchDist = getTouchDist(t1, t2);
+        prevTouchAngle = getTouchAngle(t1, t2);
+        prevTouchCenter = getTouchCenter(t1, t2);
+    }
+}
+
+function onTouchMove(e) {
+    if (!modelPlaced) return;
+    for (const t of e.changedTouches) {
+        touches[t.identifier] = t;
+    }
+    const ids = Object.keys(touches);
+    if (ids.length === 2) {
+        e.preventDefault();
+        const t1 = touches[ids[0]], t2 = touches[ids[1]];
+
+        // Pinch to scale
+        const dist = getTouchDist(t1, t2);
+        if (prevPinchDist > 0) {
+            const scaleFactor = dist / prevPinchDist;
+            modelScale *= scaleFactor;
+            modelScale = Math.max(0.0002, Math.min(0.01, modelScale));
+            modelGroup.scale.setScalar(modelScale);
+        }
+        prevPinchDist = dist;
+
+        // Two-finger rotate (around Y axis)
+        const angle = getTouchAngle(t1, t2);
+        const deltaAngle = angle - prevTouchAngle;
+        modelGroup.rotation.y += deltaAngle;
+        prevTouchAngle = angle;
+
+        // Two-finger drag to move
+        const center = getTouchCenter(t1, t2);
+        if (isARActive) {
+            const dx = (center.x - prevTouchCenter.x) * 0.0005;
+            const dy = (center.y - prevTouchCenter.y) * -0.0005;
+            modelGroup.position.x += dx;
+            modelGroup.position.z += dy;
+        }
+        prevTouchCenter = center;
+    }
+}
+
+function onTouchEnd(e) {
+    for (const t of e.changedTouches) {
+        delete touches[t.identifier];
+    }
+    if (Object.keys(touches).length < 2) {
+        prevPinchDist = 0;
+    }
 }
 
 function onXRFrame(timestamp, frame) {
