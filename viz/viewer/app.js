@@ -121,15 +121,14 @@ async function loadScene(sceneJsonUrl) {
         const gltf = await loader.loadAsync(meshUrl);
 
         const aortaMesh = gltf.scene;
-        // Semi-transparent red aorta
         aortaMesh.traverse((child) => {
             if (child.isMesh) {
-                child.material = new THREE.MeshPhysicalMaterial({
-                    color: 0xcc3333,
+                child.material = new THREE.MeshStandardMaterial({
+                    color: 0xb85555,
                     transparent: true,
-                    opacity: 0.45,
-                    roughness: 0.4,
-                    metalness: 0.1,
+                    opacity: 0.35,
+                    roughness: 0.7,
+                    metalness: 0.0,
                     side: THREE.DoubleSide,
                     depthWrite: false,
                 });
@@ -160,17 +159,15 @@ async function loadScene(sceneJsonUrl) {
 }
 
 function addBranchMarkers(branches) {
-    const markerGeo = new THREE.SphereGeometry(2.5, 16, 16);  // 2.5mm radius sphere
-    const markerMat = new THREE.MeshPhysicalMaterial({
-        color: 0x00ccff,
-        emissive: 0x004466,
-        emissiveIntensity: 0.5,
-        roughness: 0.3,
+    const markerGeo = new THREE.SphereGeometry(2.5, 16, 16);
+    const markerMat = new THREE.MeshStandardMaterial({
+        color: 0x4a9ebb,
+        roughness: 0.6,
     });
 
-    const arrowLength = 12;  // mm
+    const arrowLength = 12;
     const arrowHeadLength = 3;
-    const arrowHeadWidth = 2;
+    const arrowHeadWidth = 1.5;
 
     branches.forEach((branch) => {
         // Ostium marker sphere
@@ -182,25 +179,23 @@ function addBranchMarkers(branches) {
         const dir = new THREE.Vector3(...branch.direction).normalize();
         const origin = new THREE.Vector3(...branch.ostium);
         const arrow = new THREE.ArrowHelper(
-            dir, origin, arrowLength, 0x00ff88, arrowHeadLength, arrowHeadWidth
+            dir, origin, arrowLength, 0x5a8a5a, arrowHeadLength, arrowHeadWidth
         );
         modelGroup.add(arrow);
 
         // Seed point (smaller, different color)
         const seedGeo = new THREE.SphereGeometry(1.5, 12, 12);
-        const seedMat = new THREE.MeshPhysicalMaterial({
-            color: 0xffaa00,
-            emissive: 0x553300,
-            emissiveIntensity: 0.4,
-            roughness: 0.3,
+        const seedMat = new THREE.MeshStandardMaterial({
+            color: 0xb8860b,
+            roughness: 0.6,
         });
         const seedMarker = new THREE.Mesh(seedGeo, seedMat);
         seedMarker.position.set(branch.seed[0], branch.seed[1], branch.seed[2]);
         modelGroup.add(seedMarker);
 
         // Radius ring at seed point
-        const ringGeo = new THREE.TorusGeometry(branch.radius_mm, 0.3, 8, 32);
-        const ringMat = new THREE.MeshBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 0.6 });
+        const ringGeo = new THREE.TorusGeometry(branch.radius_mm, 0.25, 8, 32);
+        const ringMat = new THREE.MeshBasicMaterial({ color: 0xb8860b, transparent: true, opacity: 0.4 });
         const ring = new THREE.Mesh(ringGeo, ringMat);
         ring.position.set(branch.seed[0], branch.seed[1], branch.seed[2]);
         // Orient ring perpendicular to branch direction
@@ -260,10 +255,8 @@ function showBranchInfo(branch) {
     const panel = document.getElementById('info-panel');
     const d = branch.data;
 
-    // Highlight selected marker
     branchMarkers.forEach(b => {
-        b.mesh.material.emissive.setHex(b === branch ? 0x00ffff : 0x004466);
-        b.mesh.material.emissiveIntensity = b === branch ? 1.0 : 0.5;
+        b.mesh.material.color.setHex(b === branch ? 0x6ec4df : 0x4a9ebb);
     });
 
     document.getElementById('info-id').textContent = d.id;
@@ -279,8 +272,7 @@ function showBranchInfo(branch) {
 function hideBranchInfo() {
     document.getElementById('info-panel').classList.remove('visible');
     branchMarkers.forEach(b => {
-        b.mesh.material.emissive.setHex(0x004466);
-        b.mesh.material.emissiveIntensity = 0.5;
+        b.mesh.material.color.setHex(0x4a9ebb);
     });
 }
 
