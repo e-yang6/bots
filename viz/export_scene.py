@@ -57,24 +57,25 @@ def mask_to_mesh(mask_sitk, target_faces=15000):
 
     mesh = trimesh.Trimesh(vertices=verts_centered, faces=faces, process=True)
 
-    # Decimate if too many faces. Use fast-simplification if available,
-    # otherwise fall back to skimage's own mesh decimation via
-    # vertex clustering (no compiled dependency needed).
+    # Smooth aggressively first to remove voxel staircase artifacts,
+    # then decimate. Smoothing before decimation gives much better results
+    # than the reverse.
+    trimesh.smoothing.filter_laplacian(mesh, iterations=30, lamb=0.5)
+
+    # Decimate if too many faces.
     if len(mesh.faces) > target_faces:
         try:
             mesh = mesh.simplify_quadric_decimation(face_count=target_faces)
         except (ImportError, ModuleNotFoundError):
-            ratio = target_faces / len(mesh.faces)
-            from skimage.measure import mesh_surface_area
-            # Vertex-clustering fallback: subsample faces uniformly
-            step = max(1, int(1.0 / ratio))
-            keep_mask = np.zeros(len(mesh.faces), dtype=bool)
-            keep_mask[::step] = True
-            mesh.update_faces(keep_mask)
-            mesh.remove_unreferenced_vertices()
+            # Fallback: voxel-based remeshing via trimesh
+            pitch = mesh.extents.max() / (target_faces ** 0.5) * 2
+            try:
+                mesh = mesh.voxelized(pitch).marching_cubes
+            except Exception:
+                pass  # keep the smoothed mesh as-is
 
-    # Light Laplacian smooth
-    trimesh.smoothing.filter_laplacian(mesh, iterations=3)
+    # Final light smooth after decimation
+    trimesh.smoothing.filter_laplacian(mesh, iterations=5, lamb=0.3)
 
     return mesh, centroid
 
