@@ -317,3 +317,116 @@ def test_phantom_direct_daughter_is_not_flagged_as_branch_of_branch():
     results = check_branch_of_branch(candidates, traces, context["surface_tree"], ostium_points_mm=ostia)
     assert len(results) == len(candidates)
     assert all(not result["is_branch_of_branch"] for result in results)
+
+
+def test_adaptive_band_leaves_clean_cases_alone():
+    from src.candidates import LUMEN_BAND, adaptive_lumen_band
+
+    # a clean case: noise is a small fraction of the contrast span, and the
+    # reference sits far above the contrast threshold
+    band, tightening = adaptive_lumen_band(
+        background_noise_hu=40.0, contrast_span_hu=400.0, reference_hu=450.0,
+        contrast_threshold_hu=80.0,
+    )
+    assert tightening == 0.0
+    assert band == LUMEN_BAND
+
+
+def test_adaptive_band_tightens_when_noise_rivals_the_contrast_span():
+    from src.candidates import LUMEN_BAND, MAX_BAND_TIGHTENING, adaptive_lumen_band
+
+    # subject024-like: background noise larger than the whole span
+    band, tightening = adaptive_lumen_band(
+        background_noise_hu=163.0, contrast_span_hu=146.0, reference_hu=84.0,
+        contrast_threshold_hu=80.0,
+    )
+    assert tightening == pytest.approx(1.0)
+    assert band[0] == pytest.approx(LUMEN_BAND[0] + MAX_BAND_TIGHTENING)
+    assert band[1] == pytest.approx(LUMEN_BAND[1] + MAX_BAND_TIGHTENING)
+    # the upper shoulders reject calcium and must not move with contrast
+    assert band[2] == LUMEN_BAND[2]
+    assert band[3] == LUMEN_BAND[3]
+
+
+def test_adaptive_band_tightens_for_a_case_that_barely_clears_the_contrast_gate():
+    from src.candidates import adaptive_lumen_band
+
+    # low noise, but the reference only just clears the 80 HU threshold
+    _band, tightening = adaptive_lumen_band(
+        background_noise_hu=20.0, contrast_span_hu=200.0, reference_hu=90.0,
+        contrast_threshold_hu=80.0,
+    )
+    assert tightening > 0.5
+
+
+def test_adaptive_band_never_gates_a_case_into_silence():
+    from src.candidates import adaptive_lumen_band
+
+    # even absurd noise must leave the band usable rather than rejecting
+    # everything: emitting nothing is worse than emitting filterable noise
+    band, tightening = adaptive_lumen_band(
+        background_noise_hu=5000.0, contrast_span_hu=10.0, reference_hu=81.0,
+        contrast_threshold_hu=80.0,
+    )
+    assert tightening <= 1.0
+    assert band[0] < band[1] < band[2] < band[3]
+    assert band[1] < 1.0  # lumen itself still scores as lumen
+
+
+def test_trace_containment_detects_a_path_running_inside_another_tube():
+    from src.parentage import trace_containment
+
+    host = _straight_trace(start=(0, 0, 0), direction=(1, 0, 0), radius_mm=3.0)
+    # a second path running down the middle of the host
+    inner = _straight_trace(start=(2, 0.5, 0), direction=(1, 0, 0), length_mm=8.0, radius_mm=1.0)
+    fraction, _gap, axis_distance = trace_containment(inner, host)
+    assert fraction == pytest.approx(1.0)
+    assert axis_distance == pytest.approx(0.5, abs=0.2)
+
+    # and one running well outside it
+    outside = _straight_trace(start=(2, 9.0, 0), direction=(1, 0, 0), length_mm=8.0, radius_mm=1.0)
+    fraction_outside, _gap, axis_outside = trace_containment(outside, host)
+    assert fraction_outside == 0.0
+    assert axis_outside > 3.0
+
+
+def test_two_detections_of_one_vessel_collapse_to_one_independent_origin():
+    aorta_surface = np.array([[0.0, y, 0.0] for y in np.linspace(-10, 10, 41)])
+    tree = cKDTree(aorta_surface)
+
+    # same vessel found twice from adjacent wall patches: the paths converge
+    longer = _straight_trace(start=(0, 0, 0), direction=(1, 0, 0), length_mm=10.0, radius_mm=2.0)
+    shorter = _straight_trace(start=(0, 0.8, 0), direction=(1, 0, 0), length_mm=6.0, radius_mm=2.0)
+
+    ostia = [np.array([0.0, 0.0, 0.0]), np.array([0.0, 0.8, 0.0])]
+    results = check_branch_of_branch([None, None], [longer, shorter], tree, ostium_points_mm=ostia)
+
+    # only the shorter one is demoted, so the vessel survives exactly once
+    assert results[0]["is_independent_origin"] is True
+    assert results[1]["is_independent_origin"] is False
+    assert results[1]["shares_vessel_with"] == 0
+    assert results[1]["containment_fraction"] >= 0.6
+
+
+def test_two_nearby_but_separate_origins_are_both_kept():
+    """The challenge requires two nearby origins to stay two instances.
+
+    An overestimated radius can make one branch's tube swallow a neighbour,
+    so containment alone must not collapse them -- the paths have to actually
+    converge.
+    """
+    aorta_surface = np.array([[0.0, y, 0.0] for y in np.linspace(-10, 10, 41)])
+    tree = cKDTree(aorta_surface)
+
+    # a fat branch whose tube nominally reaches the neighbour, but the two
+    # paths stay 4mm apart throughout
+    fat = _straight_trace(start=(0, 0, 0), direction=(1, 0, 0), length_mm=10.0, radius_mm=5.0)
+    neighbour = _straight_trace(start=(0, 4.0, 0), direction=(1, 0, 0), length_mm=8.0, radius_mm=1.0)
+
+    ostia = [np.array([0.0, 0.0, 0.0]), np.array([0.0, 4.0, 0.0])]
+    results = check_branch_of_branch([None, None], [fat, neighbour], tree, ostium_points_mm=ostia)
+
+    assert results[1]["containment_fraction"] >= 0.6  # the tube does contain it
+    assert results[1]["trace_convergence_mm"] > 2.0   # but they never meet
+    assert results[1]["shares_vessel_with"] is None
+    assert all(result["is_independent_origin"] for result in results)

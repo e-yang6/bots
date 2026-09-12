@@ -12,6 +12,7 @@ from scipy import ndimage
 from scipy.spatial import cKDTree
 
 from src.geometry import _direction_matrix, _mm_to_voxel_radius
+from src.intensity import DEFAULT_CONTRAST_HU_THRESHOLD
 
 # Multi-scale vesselness sigmas in mm, covering small daughters (~1mm radius,
 # e.g. a lumbar/inferior mesenteric) up to large ones (~5mm, e.g. the SMA).
@@ -30,6 +31,56 @@ LUMEN_BAND = (0.35, 0.60, 1.35, 2.00)
 # Lumen-likeness at or above which a voxel counts as vessel for binarization
 # (distance transform, shell components, cross-sections, ray-cast radius).
 LUMEN_THRESHOLD = 0.5
+
+# How far the band's low shoulders may be pushed up when a case's own
+# statistics say its contrast is poor. See adaptive_lumen_band.
+MAX_BAND_TIGHTENING = 0.25
+
+# Perivascular noise (as a fraction of the contrast span) at which tightening
+# starts and at which it saturates. Measured across the 25 dev cases: clean
+# cases sit at 0.10-0.25, while the two that blow up sit at 0.84 and 1.12 --
+# i.e. their background noise is comparable to or larger than the entire
+# lumen-to-tissue contrast span.
+NOISE_RATIO_CLEAN = 0.20
+NOISE_RATIO_SATURATED = 0.60
+
+
+def adaptive_lumen_band(background_noise_hu, contrast_span_hu, reference_hu,
+                        contrast_threshold_hu, band=LUMEN_BAND):
+    """Raise the band's low shoulders for cases with poor contrast.
+
+    A fixed lower shoulder admits noise in exactly the cases that can least
+    afford it: where perivascular noise is a large fraction of the whole
+    lumen-to-tissue span, ordinary tissue fluctuation reaches into the band
+    and the surface fills with spurious local maxima.
+
+    Two per-case statistics drive it, and the stronger one wins:
+      - noise_ratio: background MAD over contrast span. This is the sharper
+        discriminator on the dev set (0.10-0.25 for clean cases; 0.84 and
+        1.12 for the two that produce hundreds of candidates).
+      - contrast margin: how far the same reference intensity that
+        is_contrast_enhanced tests sits above its threshold. A case that
+        only just clears that bar gets tightened even if its noise looks
+        unremarkable.
+
+    Only the low shoulders move; the upper ones reject calcium and have
+    nothing to do with contrast quality. Tightening is capped so a case can
+    never be gated into producing no candidates at all -- silently emitting
+    nothing is worse than emitting noise a later stage can filter.
+
+    Returns (band, tightening) with tightening in [0, 1] for logging.
+    """
+    noise_ratio = background_noise_hu / max(contrast_span_hu, 1e-6)
+    span = max(NOISE_RATIO_SATURATED - NOISE_RATIO_CLEAN, 1e-6)
+    from_noise = np.clip((noise_ratio - NOISE_RATIO_CLEAN) / span, 0.0, 1.0)
+
+    margin_ratio = (reference_hu - contrast_threshold_hu) / max(abs(reference_hu), 1e-6)
+    from_margin = np.clip(1.0 - margin_ratio / 0.5, 0.0, 1.0)
+
+    tightening = float(max(from_noise, from_margin))
+    shift = tightening * MAX_BAND_TIGHTENING
+    zero_low, full_low, full_high, zero_high = band
+    return (zero_low + shift, full_low + shift, full_high, zero_high), tightening
 
 
 def lumen_likeness(relative_intensity, band=LUMEN_BAND):
@@ -149,20 +200,27 @@ def build_evidence(image, mask, lumen_stats, shell_mm=4.0):
     far = sitk.BinaryDilate(mask_u8, _mm_to_voxel_radius(12.0, spacing), sitk.sitkBall)
     background_region = sitk.GetArrayFromImage(far).astype(bool) & ~sitk.GetArrayFromImage(near).astype(bool)
     if background_region.any():
-        background_reference_hu = float(np.median(hu_arr[background_region]))
+        background_values = hu_arr[background_region]
+        background_reference_hu = float(np.median(background_values))
+        background_noise_hu = float(np.median(np.abs(background_values - background_reference_hu)))
     else:
         background_reference_hu = float(np.percentile(hu_arr, 40))
+        background_noise_hu = float(np.percentile(hu_arr, 60) - background_reference_hu)
 
     contrast_span = max(lumen_reference_hu - background_reference_hu, 1.0)
+    band, band_tightening = adaptive_lumen_band(
+        background_noise_hu, contrast_span, lumen_reference_hu, DEFAULT_CONTRAST_HU_THRESHOLD
+    )
+
     rel_arr = (hu_arr - background_reference_hu) / contrast_span
-    lumen_arr = lumen_likeness(rel_arr)
+    lumen_arr = lumen_likeness(rel_arr, band=band)
 
     # Kill the partial-volume rim around bone and calcium. A voxel on the edge
     # of a vertebra ramps from soft tissue to ~1500 HU, so it necessarily
     # passes through the lumen band on the way and reads as perfect lumen.
     # Only the immediate rim is suppressed (one voxel), so a genuine branch
     # running past a calcified plaque survives.
-    hyperdense = rel_arr > LUMEN_BAND[3]
+    hyperdense = rel_arr > band[3]
     if hyperdense.any():
         rim = ndimage.binary_dilation(hyperdense, iterations=1) & ~hyperdense
         lumen_arr[rim] = 0.0
@@ -170,7 +228,7 @@ def build_evidence(image, mask, lumen_stats, shell_mm=4.0):
     # Vesselness is computed on the intensity field clipped to the top of the
     # lumen band, so calcium and bone read as a flat plateau rather than as
     # the brightest tubes in the volume.
-    clipped_arr = np.clip(rel_arr, -0.2, LUMEN_BAND[2])
+    clipped_arr = np.clip(rel_arr, -0.2, band[2])
     clipped_image = sitk.GetImageFromArray(clipped_arr)
     clipped_image.CopyInformation(image_f)
     vesselness_arr = sitk.GetArrayFromImage(_multiscale_vesselness(clipped_image))
@@ -205,7 +263,11 @@ def build_evidence(image, mask, lumen_stats, shell_mm=4.0):
         "sampler": sampler,
         "lumen_reference_hu": lumen_reference_hu,
         "background_reference_hu": background_reference_hu,
-        "vessel_hu_threshold": background_reference_hu + LUMEN_BAND[0] * contrast_span,
+        "vessel_hu_threshold": background_reference_hu + band[0] * contrast_span,
+        "background_noise_hu": background_noise_hu,
+        "noise_ratio": background_noise_hu / contrast_span,
+        "lumen_band": band,
+        "band_tightening": band_tightening,
         "lumen_threshold": LUMEN_THRESHOLD,
         "shell": shell,
         "reference_image": image_f,

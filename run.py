@@ -167,7 +167,25 @@ def log_analysis(context, file=sys.stderr):
         print(f"short-circuited: {context['short_circuit_reason']}", file=file)
         return
 
-    print(f"candidates={len(context['candidates'])} traced={len(context['traces'])}", file=file)
+    evidence = context.get("evidence")
+    if evidence is not None:
+        print(
+            f"contrast: lumen_ref={evidence['lumen_reference_hu']:.0f}HU "
+            f"background={evidence['background_reference_hu']:.0f}HU "
+            f"noise={evidence['background_noise_hu']:.0f}HU "
+            f"noise_ratio={evidence['noise_ratio']:.2f} "
+            f"band_tightening={evidence['band_tightening']:.2f} "
+            f"band_low={evidence['lumen_band'][0]:.2f}/{evidence['lumen_band'][1]:.2f}",
+            file=file,
+        )
+
+    independent = sum(1 for p in context["parentage"] if p["is_independent_origin"])
+    shared = sum(1 for p in context["parentage"] if p["shares_vessel_with"] is not None)
+    print(
+        f"candidates={len(context['candidates'])} traced={len(context['traces'])} "
+        f"independent_origins={independent} sharing_another_vessel={shared}",
+        file=file,
+    )
     for index, trace in enumerate(context["traces"]):
         candidate = context["candidates"][index]
         seed = context["seed_estimates"][index]
@@ -184,7 +202,8 @@ def log_analysis(context, file=sys.stderr):
             f"{' MISMATCH' if seed['radius_disagreement_flag'] else ''}) "
             f"d_cap={candidate['distance_to_cap_mm']:.1f}mm "
             f"shell={candidate['shell_volume_mm3']:.0f}mm3"
-            f"{' BRANCH_OF_BRANCH#%d' % parent['parent_candidate_index'] if parent['is_branch_of_branch'] else ''}",
+            f"{' BRANCH_OF_BRANCH#%d' % parent['parent_candidate_index'] if parent['is_branch_of_branch'] else ''}"
+            f"{' SHARES_VESSEL#%d(%.2f)' % (parent['shares_vessel_with'], parent['containment_fraction']) if parent['shares_vessel_with'] is not None else ''}",
             file=file,
         )
     timings = context["timings"]
