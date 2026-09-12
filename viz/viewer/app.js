@@ -112,15 +112,18 @@ async function startGestureDetection() {
 
 function startFallbackVideo() {
     if (fallbackVideo) return;
+    // Use front camera since back camera is locked by WebXR
     navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment', width: 320, height: 240 }
+        video: { facingMode: 'user', width: 320, height: 240 }
     }).then(stream => {
         fallbackVideo = document.createElement('video');
         fallbackVideo.srcObject = stream;
         fallbackVideo.setAttribute('playsinline', '');
         fallbackVideo.play();
+        document.getElementById('status').textContent = 'Front camera active — stand in front of phone';
     }).catch(err => {
         console.warn('Could not open fallback camera:', err);
+        document.getElementById('status').textContent = 'Camera unavailable for gestures';
     });
 }
 
@@ -227,29 +230,52 @@ function onXRFrame(timestamp, frame) {
     // Gesture detection
     if (gestureReady) {
         let usedXRCamera = false;
-        try {
-            processXRFrame(renderer, frame);
-            if (getGestureState().personDetected) usedXRCamera = true;
-        } catch (e) {}
 
-        if (!usedXRCamera && !cameraAccessAvailable) {
-            if (!fallbackVideo) startFallbackVideo();
-            if (fallbackVideo && fallbackVideo.readyState >= 2) {
-                processVideoFrame(fallbackVideo);
+        // Try XR camera-access first
+        if (!cameraAccessAvailable) {
+            try {
+                processXRFrame(renderer, frame);
+                if (getGestureState().personDetected) {
+                    usedXRCamera = true;
+                    cameraAccessAvailable = true;
+                }
+            } catch (e) {
+                // Not available, will fall back
             }
         } else {
-            cameraAccessAvailable = true;
+            try {
+                processXRFrame(renderer, frame);
+                usedXRCamera = true;
+            } catch (e) {}
+        }
+
+        // Fallback: front camera
+        if (!cameraAccessAvailable) {
+            if (!fallbackVideo) {
+                startFallbackVideo();
+            } else if (fallbackVideo.readyState >= 2) {
+                processVideoFrame(fallbackVideo);
+            }
         }
 
         const state = getGestureState();
+        const statusEl = document.getElementById('status');
         if (state.personDetected) {
             currentScale = applyGestures(modelGroup, currentScale);
             if (state.action === 'up') {
-                document.getElementById('status').textContent = 'Growing...';
+                statusEl.textContent = 'GROWING | arms up detected';
             } else if (state.action === 'down') {
-                document.getElementById('status').textContent = 'Shrinking...';
+                statusEl.textContent = 'SHRINKING | arms down detected';
             } else {
-                document.getElementById('status').textContent = 'Raise arms to grow, lower to shrink';
+                statusEl.textContent = 'Person detected | raise or lower arms';
+            }
+        } else {
+            if (cameraAccessAvailable) {
+                statusEl.textContent = 'No person detected (back camera)';
+            } else if (fallbackVideo) {
+                statusEl.textContent = 'No person detected (front camera)';
+            } else {
+                statusEl.textContent = 'Starting camera...';
             }
         }
     }
