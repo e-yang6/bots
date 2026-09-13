@@ -178,6 +178,12 @@ THIN_BRANCH_ELEVATION_DEG = 0.0
 ORGAN_FEEDER_S_FRACTION = 0.720
 ORGAN_BRANCH_S_FRACTION = 0.815
 ORGAN_BED_AZIMUTH_DEG = 70.0      # clear of every other structure's azimuth
+# scripts/validate_phantom.py's MATCH_RADIUS_MM, restated here as the
+# separation the two ostia must exceed: below it the feeder's detection
+# would satisfy the dim branch's match and the case would score itself as a
+# success while the dim branch went undetected. Measured at 5.9mm when both
+# vessels shared an arc length, which is exactly what happened.
+MATCH_FREE_OSTIUM_GAP_MM = 10.0
 ORGAN_BRANCH_RADIUS_MM = 1.8      # top of the 1.2-1.8mm dim-branch range: comfortably past the
                                   # ~1.15mm calibre floor, so the binary opening is not the
                                   # binding constraint and a miss means connectivity
