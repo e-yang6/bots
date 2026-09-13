@@ -17,19 +17,17 @@ import argparse
 import asyncio
 import functools
 import http.server
-import json
 import os
 import socketserver
 import ssl
 import subprocess
-import sys
 import threading
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
 
 class ViewerHandler(http.server.SimpleHTTPRequestHandler):
-    def __init__(self, *args, viewer_dir=None, scene_dir=None, **kwargs):
+    def __init__(self, *args, viewer_dir: str, scene_dir: str, **kwargs):
         self.viewer_dir = viewer_dir
         self.scene_dir = scene_dir
         super().__init__(*args, **kwargs)

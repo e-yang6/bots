@@ -5,3 +5,32 @@ scripts/inspection_output/
 TORALIS CHALLENGE  2/
 TORALIS CHALLENGE/
 viz/.certs/
+
+# Regenerable / development-history artifacts -- not part of the submission.
+# Regenerate with `python -m scripts.validate_phantom` etc; see README.
+reports/stage00_baseline/
+reports/stage01_json/
+reports/stage01_phantom_inputs/
+reports/stage02_geometry/
+reports/stage02_phantoms/
+reports/stage02b_geometry/
+reports/stage02c_direction/
+reports/stage02d_local_radius/
+reports/stage03_shape_rescue/
+reports/stage04_proximal_scoring/
+reports/stage05_origin_eligibility/
+reports/stage06_calibration/
+reports/stage06_phantoms/
+reports/stage07_origin_frontier/
+reports/stage07_phantoms/
+reports/stage08_short_flood/
+reports/stage09_origin_uncertainty/
+reports/stage09_phantoms/
+reports/stage10_verified_secondary/
+reports/offline_windows_py311/
+reports/final_phantom_inputs/
+reports/*.tgz
+reports/paper_*.txt
+/validate_phantom_report.json
+HANDOFF.md
+test_label.json
