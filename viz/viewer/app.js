@@ -28,8 +28,10 @@ let sceneData = null;
 let reticle;
 let hitTestSource = null;
 let hitTestSourceRequested = false;
+let hitTestSourcePending = false;   // guard against stale promise resolution
 let modelPlaced = false;
 let isARActive = false;
+let arSessionId = 0;                // incremented each session to detect stale callbacks
 let selectedBranchIndex = -1;
 let showRejected = true;
 let hasVideoFeed = false;
@@ -106,6 +108,7 @@ function init() {
         document.getElementById('ar-button-container').appendChild(arButton);
 
         renderer.xr.addEventListener('sessionstart', () => {
+            arSessionId++;
             isARActive = true;
             modelPlaced = false;
             modelGroup.visible = false;
@@ -114,9 +117,18 @@ function init() {
             controls.enabled = false;
             overlay.style.pointerEvents = 'auto';
             overlay.style.touchAction = 'none';
+            reticle.visible = false;
+            // Reset hit-test so a fresh source is requested for this new session
+            if (hitTestSource) {
+                hitTestSource.cancel();
+                hitTestSource = null;
+            }
+            hitTestSourceRequested = false;
+            hitTestSourcePending = false;
             startSyncSend();
         });
         renderer.xr.addEventListener('sessionend', () => {
+            arSessionId++;
             isARActive = false;
             modelGroup.visible = true;
             modelGroup.position.set(0, 0, 0);
@@ -125,11 +137,16 @@ function init() {
             controls.enabled = true;
             overlay.style.pointerEvents = '';
             overlay.style.touchAction = '';
+            reticle.visible = false;
             resetGesture();
             stopSyncSend();
-            // Reset hit-test state so AR can restart
-            hitTestSource = null;
+            // Cancel and reset hit-test state
+            if (hitTestSource) {
+                hitTestSource.cancel();
+                hitTestSource = null;
+            }
             hitTestSourceRequested = false;
+            hitTestSourcePending = false;
         });
     }
 
@@ -706,6 +723,12 @@ function connectWebSocket() {
 
     try {
         ws = new WebSocket(wsUrl);
+        ws.onopen = () => {
+            // Laptop: request the phone to send its WebRTC offer
+            if (!isPhone) {
+                ws.send(JSON.stringify({ type: 'webrtc-request' }));
+            }
+        };
         ws.onmessage = (evt) => {
             try {
                 const msg = JSON.parse(evt.data);
@@ -725,6 +748,10 @@ function connectWebSocket() {
                     if (peerConnection) {
                         peerConnection.addIceCandidate(new RTCIceCandidate(msg.candidate));
                     }
+                }
+                // Phone: laptop is asking us to (re-)send the offer
+                if (msg.type === 'webrtc-request' && isPhone) {
+                    resendWebRTCOffer();
                 }
             } catch (e) { /* ignore bad messages */ }
         };
@@ -766,38 +793,57 @@ function stopSyncSend() {
 
 // ─── WebRTC camera feed ─────────────────────────────────────────────────────
 
+let localStream = null;
+
 async function startCameraStream() {
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({
+        localStream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
         });
-
-        peerConnection = new RTCPeerConnection({
-            iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
-        });
-
-        stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
-
-        peerConnection.onicecandidate = (event) => {
-            if (event.candidate && ws && ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify({ type: 'webrtc-ice', candidate: event.candidate }));
-            }
-        };
-
-        const offer = await peerConnection.createOffer();
-        await peerConnection.setLocalDescription(offer);
-
-        const sendOffer = () => {
-            if (ws && ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify({ type: 'webrtc-offer', sdp: offer.sdp }));
-            } else {
-                setTimeout(sendOffer, 500);
-            }
-        };
-        sendOffer();
+        // Create and send the initial offer
+        await createAndSendOffer();
     } catch (e) {
         console.warn('Camera access not available:', e);
     }
+}
+
+async function createAndSendOffer() {
+    if (!localStream) return;
+
+    // Close previous peer connection if any
+    if (peerConnection) {
+        peerConnection.close();
+        peerConnection = null;
+    }
+
+    peerConnection = new RTCPeerConnection({
+        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+    });
+
+    localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+    peerConnection.onicecandidate = (event) => {
+        if (event.candidate && ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: 'webrtc-ice', candidate: event.candidate }));
+        }
+    };
+
+    const offer = await peerConnection.createOffer();
+    await peerConnection.setLocalDescription(offer);
+
+    const sendOffer = () => {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: 'webrtc-offer', sdp: offer.sdp }));
+        } else {
+            setTimeout(sendOffer, 500);
+        }
+    };
+    sendOffer();
+}
+
+async function resendWebRTCOffer() {
+    // Laptop just connected and is asking for the feed — create a fresh offer
+    await createAndSendOffer();
 }
 
 async function handleWebRTCOffer(msg) {
@@ -847,12 +893,20 @@ function onXRFrame(timestamp, frame) {
     const refSpace = renderer.xr.getReferenceSpace();
 
     if (!hitTestSourceRequested) {
-        session.requestReferenceSpace('viewer').then((viewerSpace) => {
-            session.requestHitTestSource({ space: viewerSpace }).then((source) => {
-                hitTestSource = source;
-            });
-        });
         hitTestSourceRequested = true;
+        const mySessionId = arSessionId;
+        session.requestReferenceSpace('viewer').then((viewerSpace) => {
+            if (arSessionId !== mySessionId) return;  // session changed, discard
+            return session.requestHitTestSource({ space: viewerSpace });
+        }).then((source) => {
+            if (!source) return;
+            if (arSessionId !== mySessionId) { source.cancel(); return; }
+            hitTestSource = source;
+        }).catch((e) => {
+            console.warn('Hit test source request failed:', e);
+            // Allow retry on next frame
+            if (arSessionId === mySessionId) hitTestSourceRequested = false;
+        });
     }
 
     if (hitTestSource) {
