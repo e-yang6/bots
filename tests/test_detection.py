@@ -291,3 +291,52 @@ def test_analyze_case_runs_end_to_end_from_nifti_files(tmp_path):
     assert len(context["instances"]) == 1
     assert context["seed_estimates"][0]["direction_xyz"][0] > 0.95
     assert context["ostium_estimates"][0]["ostium_mm"] == pytest.approx([WALL_X, 32.0, 45.0], abs=1.5)
+
+
+# --- organ-bed phantom construction -------------------------------------
+#
+# These guard what the case CLAIMS about itself, not what the pipeline does
+# with it: the detection outcome is scripts/validate_phantom.py's business
+# (and is currently a known failure on the reproducing variants). If any of
+# these break, the case has stopped posing the problem it is named for.
+
+@pytest.mark.parametrize("variant", ["bed_brighter", "equal_hu", "branch_brighter_control"])
+def test_organ_bed_phantom_construction(variant):
+    from scripts.make_phantom import (
+        MATCH_FREE_OSTIUM_GAP_MM, ORGAN_BED_HU_FRACTIONS,
+        ORGAN_BED_REPRODUCING_VARIANTS, generate_phantom,
+    )
+
+    _image, _mask, reference, meta = generate_phantom(
+        seed=29, spacing=(0.8, 0.8, 0.8), n_branches=3,
+        include_ivc=False, include_close_pair=False, organ_bed_variant=variant,
+    )
+    bed = meta["distractors"]["organ_bed"]
+    dim = next(b for b in meta["branches"] if b["label"] == "organ_bed_branch")
+    feeder = next(b for b in meta["branches"] if b["label"] == "organ_feeder")
+
+    # The trap itself: on the reproducing variants no threshold can admit the
+    # branch and exclude the bed, because the bed is not dimmer than it.
+    if variant in ORGAN_BED_REPRODUCING_VARIANTS:
+        assert bed["bed_hu"] >= bed["branch_hu"]
+    else:
+        assert bed["bed_hu"] < bed["branch_hu"]
+
+    # The bed reaches the parent only through a vessel, so it cannot act as an
+    # origin of its own, and it is never a reference daughter.
+    assert bed["gap_to_parent_mm"] > 0.0
+    ostia = [d["ostium_xyz_mm"] for d in reference["daughters"]]
+    assert all(np.linalg.norm(np.asarray(o) - np.asarray(bed["centre"])) > 10.0 for o in ostia)
+
+    # Both vessels ARE reference daughters, and their ostia are far enough
+    # apart that neither can satisfy the other's 10mm match.
+    ids = {d["instance_id"] for d in reference["daughters"]}
+    assert {dim["instance_id"], feeder["instance_id"]} <= ids
+    gap = float(np.linalg.norm(np.asarray(dim["ostium"]) - np.asarray(feeder["ostium"])))
+    assert gap > MATCH_FREE_OSTIUM_GAP_MM
+
+    # The dim branch is eligible on every axis except connectivity, so a miss
+    # is attributable to the bed and not to calibre or length.
+    assert dim["radius_mm"] >= 1.2
+    assert np.linalg.norm(np.asarray(dim["end"]) - np.asarray(dim["ostium"])) > 5.0
+    assert ORGAN_BED_HU_FRACTIONS[variant] > 0.0

@@ -100,14 +100,33 @@ plausibility*, not to *correctness*.
 
 ### Phantom validation (synthetic ground truth)
 
-`python -m scripts.validate_phantom` builds a 29-phantom suite (spacings
+`python -m scripts.validate_phantom` builds a 32-phantom suite (spacings
 0.8mm iso / 1.5mm iso / 0.7x0.7x1.5mm anisotropic; lumen HU 250/400/550;
 2/5/9 branches; a fused bifurcation that must report as one instance; two
 origins 4mm apart that must stay two; a parallel lower-HU vein analogue; a
 bone-like slab; a blob connected only by a single-voxel bridge that must not
 be reported; a mask that stops mid-vessel while the image continues; and a
-non-contrast case that must return empty) and scores every case with
-Hungarian matching against the analytically-known reference.
+non-contrast case that must return empty; and three organ-bed cases, below)
+and scores every case with Hungarian matching against the analytically-known
+reference.
+
+**The organ-bed cases hold an open failure, on purpose.** They reproduce the
+one failure mode the real eval set turned up that no phantom previously
+covered: a dim daughter running into the organ it feeds, where the bed is at
+or above the branch's own HU. Any threshold low enough to reach the branch
+also admits the whole bed as one connected component, and any threshold that
+excludes the bed also excludes the branch, so the threshold search settles
+above the branch and the branch is never reached. Measured on the phantom, in
+the same terms as the real cases: at the lowest fraction that reaches the
+branch, **100% of the newly-reached territory is a single connected component
+and 41/41 of the branch's own centreline points lie inside it** (the real
+cases ran 96.8-99.8% and 41/41). The bright feeder into the same bed is found
+at 0.7mm in every variant, so the miss is attributable to the bed rather than
+to the case being hard. The third variant is a negative control with the bed
+clearly dimmer than the branch; there a leak-free window exists, the search
+finds it, and the branch is reported at 0.8mm. `organ_bed_branch_is_reported`
+therefore FAILS on the two reproducing variants and passes on the control --
+it is the regression target for a fix, not a phantom bug.
 
 The radius gate is `src.rules.RADIUS_VETO_MM = MIN_RADIUS_MM -
 RADIUS_VETO_MEASUREMENT_TOLERANCE_MM = 1.0 - 0.3 = 0.7mm`, not a bare
@@ -129,9 +148,9 @@ The tolerance gate recovers nearly all of the recall the bare cutoff cost,
 without giving back everything the radius gate was added for. Seed error at
 1.5mm phantom spacing: 0.53mm (brief's own bar was < 1.0mm).
 
-**Structural assertions: 142/143 pass** (was 91/115 under the bare cutoff;
-the new thin-branch check, `thin_branch_not_reported`, passes in all 28
-applicable phantoms). The one remaining failure is
+**Structural assertions: 158/161 pass.** Two of the three failures are the
+organ-bed `organ_bed_branch_is_reported` checks described above, held open
+deliberately. The third, and the only unexplained one, is
 `close_pair_stays_two_instances` in a single 1.5mm-spacing phantom -- down
 from 24 failures under the bare cutoff.
 
@@ -266,6 +285,17 @@ counts in those three files are stale until re-run.
   of the 19 at the cost of more false positives like the 6; the 0.3mm value
   is a choice, not a solved boundary. See Phantom validation above for the
   full numbers.
+- **A dim branch running into the organ it feeds is not detected, and no
+  threshold setting fixes it.** When the organ bed sits at or above the
+  branch's own HU, the branch and the bed are one connected component at
+  every threshold that reaches the branch at all, so the leak detector
+  (correctly) rejects those thresholds and the search settles above the
+  branch. Found on the real eval set (5 of 9 misses there), now reproduced
+  deterministically by the organ-bed phantoms above. This is **not** fixable
+  by loosening leak sensitivity, widening the threshold range, or excluding
+  branch-adjacent regions from the leak check: all three were measured and
+  contraindicated, because the leak is real tissue and the branch is inside
+  it. Separating them needs a shape-aware traversal, not an intensity one.
 - Radius is unreliable below ~0.5mm given this cohort's voxel spacing
   (see Plausibility above) -- a resolution limit, not a pipeline bug. The
   new radius gate removes these from output rather than merely flagging
