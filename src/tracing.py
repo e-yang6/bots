@@ -6,10 +6,15 @@ voxel of a vessel, its geodesic distance from the aortic lumen and the
 predecessor on its shortest path there. A branch centerline is one such path
 followed backwards, and a bifurcation is where the flood front splits.
 
-Geodesic distance is arc length from the aortic lumen by construction, so it
-is used as the trace's arc-length parameter directly: the seed "5mm along the
-vessel" is the path point at distance 5.0, never a re-measured Euclidean
-distance from the ostium.
+Geodesic distance from the aortic lumen is arc length by construction, so it
+is what the seed "5mm along the vessel" is measured in -- never a re-measured
+Euclidean distance from the ostium. But the flood's own geodesic distance is
+a sum of 26-connectivity steps (13 possible directions per step), which runs
+measurably long relative to the smooth curve it approximates and snaps a
+short direction fit toward the nearest of those 13 directions. trace_branch
+therefore reports arc length on the Gaussian-smoothed path's own true
+(Euclidean) cumulative length, not the flood's raw distance sum -- see its
+docstring.
 """
 
 import sys
@@ -35,6 +40,25 @@ MAX_TRACE_MM = 10.0
 SEED_DISTANCE_MM = 5.0
 TRACE_STEP_MM = 0.5
 BAND_MM = 0.5
+
+# The flood's shortest path moves through 26-connectivity (13 distinct
+# directions in 3D), so its own geodesic distance sum runs measurably long
+# relative to the smooth curve it approximates, and a direction fit over a
+# short span of it snaps toward whichever of those 13 directions is nearest
+# the true one (measured: ~49% of predicted directions land within 3 degrees
+# of a grid axis, and a trunk built at a fixed off-axis angle shows the same
+# multi-degree error with zero spread across the whole phantom suite -- a
+# geometric artifact of the path, not sampling noise). CENTERLINE_SMOOTHING_MM
+# widens the Gaussian smoothing pass over the raw path from the 1mm this used
+# to be (too narrow to cancel a zigzag whose own period is several voxels for
+# a near-axis direction) -- large relative to a vessel radius but negligible
+# relative to any curvature scale a real or phantom branch bends over.
+# DIRECTION_FIT_LENGTH_MM separately widens the window the direction is
+# PCA-fit over (beyond SEED_DISTANCE_MM, still within MAX_TRACE_MM/bifurcation
+# truncation) for the same reason: a longer baseline averages out more of a
+# periodic quantization ripple than smoothing alone.
+CENTERLINE_SMOOTHING_MM = 2.5
+DIRECTION_FIT_LENGTH_MM = 8.0
 
 # A slab blob only counts toward a split if it is at least this fraction of
 # the slab's largest blob (and a few voxels). The common-trunk rule is about
@@ -140,21 +164,33 @@ def detect_bifurcation_by_frontier(component, dist, spacing=(1.0, 1.0, 1.0), ban
 
 
 def trace_branch(component, dist, parent, reference_image, bifurcation=None,
-                 max_length_mm=MAX_TRACE_MM, step_mm=TRACE_STEP_MM, smoothing_mm=1.0):
+                 max_length_mm=MAX_TRACE_MM, step_mm=TRACE_STEP_MM,
+                 smoothing_mm=CENTERLINE_SMOOTHING_MM):
     """Centerline of an instance from the aortic lumen out to its truncation.
 
-    Truncates at the bifurcation or max_length_mm, whichever comes first.
-    The end point is a voxel of maximum geodesic distance within the truncated
-    region; among the voxels within one band of that maximum, the one deepest
-    inside the lumen is taken, since the single most distant voxel usually
-    sits against the vessel wall and its shortest path hugs that wall. The
-    centerline follows `parent` back from there to the aortic lumen,
-    Gaussian-smoothed, then resampled at step_mm of geodesic distance.
+    Truncates at the bifurcation or max_length_mm, whichever comes first (this
+    part uses the flood's own geodesic distance, which is exactly what that
+    distance is for). The end point is a voxel of maximum geodesic distance
+    within the truncated region; among the voxels within one band of that
+    maximum, the one deepest inside the lumen is taken, since the single most
+    distant voxel usually sits against the vessel wall and its shortest path
+    hugs that wall. The centerline follows `parent` back from there to the
+    aortic lumen and is Gaussian-smoothed.
+
+    Arc length past this point is NOT the flood's geodesic distance: that
+    distance is the sum of 26-connectivity edge steps, each one of only 13
+    directions, so it runs measurably long relative to the smooth curve it
+    approximates (a straight 5mm chord at a generic angle can cost close to
+    10% more than 5mm this way). Arc length is instead the smoothed path's own
+    cumulative Euclidean length, resampled at step_mm of that length -- the
+    same "geodesic distance from the ostium" concept the rest of this module
+    documents, just measured on the refined curve rather than the raw voxel
+    path.
 
     Returns a dict with points_mm / arc_lengths_mm (resampled; arc length is
-    geodesic distance), raw_path_flat / raw_path_mm / raw_dist_mm,
-    traced_length_mm and truncated_by ("bifurcation", "max_length" or
-    "vessel_end").
+    the smoothed path's true length), raw_path_flat / raw_path_mm /
+    raw_dist_mm (the flood's own, pre-refinement, distances), traced_length_mm
+    and truncated_by ("bifurcation", "max_length" or "vessel_end").
     """
     shape = component["shape"]
     spacing = reference_image.GetSpacing()
@@ -186,11 +222,34 @@ def trace_branch(component, dist, parent, reference_image, bifurcation=None,
     path_dist = dist.ravel()[path].astype(np.float64)
     path_mm = flat_to_mm(path, reference_image, shape)
     mean_step = max(float(np.mean(np.diff(path_dist))) if path.size > 1 else step_mm, 1e-6)
-    smoothed = gaussian_filter1d(path_mm, sigma=smoothing_mm / mean_step, axis=0, mode="nearest") \
-        if path.size > 2 else path_mm
+    sigma_samples = smoothing_mm / mean_step
+    if path.size > 2:
+        # gaussian_filter1d's boundary modes only replicate or mirror the edge
+        # SAMPLE, which for a path that is locally close to straight biases the
+        # smoothed curve inward over roughly sigma_samples near each end (an
+        # edge held at a constant instead of continuing the trend). Padding
+        # with a linear extrapolation of the path's own end segments before
+        # filtering, then cropping the pad back off, lets smoothing_mm be sized
+        # for removing the quantization ripple without shortening short traces.
+        pad = int(np.ceil(3 * sigma_samples))
+        if pad > 0:
+            head_step, tail_step = path_mm[1] - path_mm[0], path_mm[-1] - path_mm[-2]
+            head_pad = path_mm[0] - np.outer(np.arange(pad, 0, -1), head_step)
+            tail_pad = path_mm[-1] + np.outer(np.arange(1, pad + 1), tail_step)
+            padded = np.concatenate([head_pad, path_mm, tail_pad], axis=0)
+            smoothed = gaussian_filter1d(padded, sigma=sigma_samples, axis=0, mode="nearest")[pad:-pad]
+        else:
+            smoothed = path_mm
+    else:
+        smoothed = path_mm
 
-    arc = np.arange(0.0, path_dist[-1] + 1e-9, step_mm)
-    points = np.stack([np.interp(arc, path_dist, smoothed[:, axis]) for axis in range(3)], axis=1)
+    if smoothed.shape[0] > 1:
+        true_dist = np.concatenate(([0.0], np.cumsum(np.linalg.norm(np.diff(smoothed, axis=0), axis=1))))
+    else:
+        true_dist = path_dist
+
+    arc = np.arange(0.0, true_dist[-1] + 1e-9, step_mm)
+    points = np.stack([np.interp(arc, true_dist, smoothed[:, axis]) for axis in range(3)], axis=1)
 
     return {
         "points_mm": points,
@@ -198,7 +257,7 @@ def trace_branch(component, dist, parent, reference_image, bifurcation=None,
         "raw_path_flat": path,
         "raw_path_mm": path_mm,
         "raw_dist_mm": path_dist,
-        "traced_length_mm": float(path_dist[-1]),
+        "traced_length_mm": float(true_dist[-1]),
         "truncation_mm": float(limit),
         "truncated_by": truncated_by,
     }
@@ -395,18 +454,27 @@ def _maurer_radius_at(point_mm, reference_image, hu_array, mask_arr, threshold_h
 
 def extract_seed_direction_radius(component, trace, ostium_mm, reference_image, sampler, flood,
                                   mask_arr, seed_distance_mm=SEED_DISTANCE_MM,
-                                  fit_length_mm=SEED_DISTANCE_MM, verbose=False, file=sys.stderr):
+                                  fit_length_mm=DIRECTION_FIT_LENGTH_MM, verbose=False, file=sys.stderr):
     """Seed point, outward direction and radius for one traced instance.
 
     Seed: the trace point at geodesic distance seed_distance_mm, re-centred to
     the intensity-weighted centroid of the lumen cross-section in the plane
     normal to the local direction.
-    Direction: PCA line fit over trace points from 0 to fit_length_mm,
-    oriented outward (away from the ostium), unit length.
-    Radius: signed Maurer distance transform at the re-centred seed, cross-
-    checked against sqrt(frontier_area / pi) over the same distance band.
-    Disagreements over 50% are logged. The vesselness scale at the seed is
-    reported as a third reading when the candidate carries vesselness.
+    Direction: PCA line fit over trace points from 0 to fit_length_mm (wider
+    than seed_distance_mm by default -- DIRECTION_FIT_LENGTH_MM, not
+    SEED_DISTANCE_MM -- so the fit averages over more of the flood's
+    quantization ripple than a 5mm window would), oriented outward (away from
+    the ostium), unit length.
+    Radius: sqrt(frontier_area / pi) over the distance band around the seed,
+    cross-checked against the signed Maurer distance transform at the
+    re-centred seed (falls back to the distance transform only if the
+    frontier reading is degenerate, i.e. zero -- see validate_phantom's
+    phantom-suite comparison of the two: the frontier estimate has under
+    half the distance transform's RMS error against known phantom radii,
+    and its bias holds near zero from 2mm upward instead of running ~0.5mm
+    low at every size). Disagreements over 50% are logged. The vesselness
+    scale at the seed is reported as a third reading when the candidate
+    carries vesselness.
 
     sampler: a lumen_evidence.VolumeSampler holding "hu" and "mask" (and
     ideally "traversal"); flood: the floodfill.robust_flood result.
@@ -465,7 +533,7 @@ def extract_seed_direction_radius(component, trace, ostium_mm, reference_image, 
         "reached_seed_distance": reached,
         "seed_arc_mm": seed_arc,
         "direction_xyz": direction,
-        "radius_mm": radius_dt if radius_dt > 0 else radius_frontier,
+        "radius_mm": radius_frontier if radius_frontier > 0 else radius_dt,
         "radius_from_distance_transform_mm": radius_dt,
         "radius_distance_transform_raw_mm": raw_dt,
         "radius_from_frontier_mm": radius_frontier,
