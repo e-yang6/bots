@@ -85,10 +85,17 @@ def _read_sitk_oblique_fallback(path):
         tmp_path = tmp.name
     try:
         nib_img = nib.load(tmp_path)
-        voxels_xyz = np.asarray(nib_img.dataobj)
+        voxels_xyz = np.array(nib_img.dataobj)
         affine_ras = nib_img.affine.astype(np.float64)
+        # Close the file handle before unlinking (Windows requires this)
+        if hasattr(nib_img, 'uncache'):
+            nib_img.uncache()
+        del nib_img
     finally:
-        os.unlink(tmp_path)
+        try:
+            os.unlink(tmp_path)
+        except PermissionError:
+            pass  # Windows file lock; temp dir will clean up
 
     flip_xy = np.diag([-1.0, -1.0, 1.0, 1.0])
     affine_lps = flip_xy @ affine_ras
