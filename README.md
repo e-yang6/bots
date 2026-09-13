@@ -40,7 +40,11 @@ exact term-by-term reasoning behind any single decision.
    only -- bright does not mean artery, but every real daughter connects to
    the aorta through continuous contrast and almost nothing else does. An
    adaptive threshold search stops as soon as the flood would leak into
-   non-vascular tissue (`src/floodfill.py`).
+   non-vascular tissue (`src/floodfill.py`). When the leak that stopped it
+   is bone -- a newly reached component with >=10% of its voxels brighter
+   than the aortic lumen's own p99, which no contrast-fed vessel can be --
+   the search excises that component and keeps stepping down; any other
+   leak still stops it. Territory the plain search reached is never removed.
 5. **Candidates**: reachable components split off the aorta, rejected for
    being too short, a segmentation end-cap, or the aorta itself continuing
    through a mask gap (`src/candidates.py`).
@@ -152,7 +156,10 @@ without giving back everything the radius gate was added for. Seed error at
 organ-bed `organ_bed_branch_is_reported` checks described above, held open
 deliberately. The third, and the only unexplained one, is
 `close_pair_stays_two_instances` in a single 1.5mm-spacing phantom -- down
-from 24 failures under the bare cutoff.
+from 24 failures under the bare cutoff. (The count was 142/143 before the
+three organ-bed phantoms: they added 18 checks -- 16 pass, the 2 held-open
+failures -- with no existing check removed or changed in status. The
+`close_pair` failure is the one that was already there at 142/143.)
 
 **Recovery count, exactly as asked**: of the 58 reference branches (true
 radius 1.00-1.59mm) the bare 1.0mm cutoff dropped, **39 are now correctly
@@ -273,6 +280,47 @@ a cliff, runtime well under budget -- are not expected to change, since the
 gate only removes already-thin detections after scoring; but the exact
 counts in those three files are stale until re-run.
 
+### Draft eval set (held out -- informative, not an accuracy claim)
+
+`TORALIS CHALLENGE /EVAL_SET` (case_19-case_23) is draft,
+`expert_review_pending` data, not ground truth. It is used only to find
+failure modes, never to claim accuracy. Scored with `run.py` then
+`python -m src.evaluate` per case, aggregated over all 19 draft daughters:
+
+- before bone excision: 10 TP / 3 FP / 9 FN -- P 0.769, R 0.526, F1 0.625
+- after, **raw**: 15 TP / 8 FP / 4 FN -- P 0.652, R 0.789, F1 0.714
+
+**Do not read the raw +0.089 F1 on its own. Two of the five new matches are
+not recoveries by the flood fix:**
+
+- **case_20, a match the tolerance allows but the geometry does not.** Its
+  `branch_003` match lands 4.3mm from that reference's ostium, well inside
+  the evaluator's 10mm tolerance. But the direction is 98deg off, the seed
+  is 12mm off, it sits 2.5mm from the neighbouring `branch_004` ostium, and
+  the flood reached only 4 of the reference's 40 centreline points. It is a
+  vessel near a shared origin, not a trace of `branch_003`. Of case_20's
+  0/4 -> 2/4, one recovery is real (`branch_002`: 1.3mm, 9deg).
+- **case_22, a side effect on the radius veto.** `branch_002` was a
+  radius-veto miss (0.40mm < `RADIUS_VETO_MM`). It now passes only because
+  radius is measured against the flood threshold, which the descent lowered
+  (now 1.64mm). `rules.py` is unchanged. The match is geometrically sound,
+  but it is a radius-measurement side effect, not the connectivity fix.
+
+Scoring the case_20 match as a false positive plus a miss: P 0.609, R 0.737,
+F1 0.667. Also leaving the case_22 veto recovery uncredited: P 0.591,
+R 0.684, **F1 0.634, only +0.009 over before**. Precision falls in every
+reading. The clean recoveries attributable to the fix are case_20 `branch_002`
+and case_22 `branch_001`/`branch_006`. case_23's one match moved from
+`branch_002` to `branch_003` by Hungarian reassignment of the same
+detection -- no real change.
+
+The 5 new false positives: one at case_20's annotator-excluded posterior
+tracks, two small posterior vessels at case_23's annotator-excluded iliac
+level, and two in case_22 that the notes don't explain (bone's dim outer
+shell traced as a vessel -- an artifact of the excision -- and a vein
+crossing anterior to the aorta). case_22's runtime rose from 5.1s to 14.5s
+(26 flood attempts against 6).
+
 ## Known limitations
 
 - **The radius gate's tolerance margin is a real trade, not a fix.**
@@ -296,6 +344,16 @@ counts in those three files are stale until re-run.
   branch-adjacent regions from the leak check: all three were measured and
   contraindicated, because the leak is real tissue and the branch is inside
   it. Separating them needs a shape-aware traversal, not an intensity one.
+  A later per-attempt diagnostic of the eval set's six unreached ostia found
+  this is not the whole story there: in both affected cases the leak that
+  actually pinned the threshold was **vertebral bone** against the aortic
+  wall, touching no reference branch (removing it cleared the leak flag;
+  removing the reference branches' own territory did not). That part is
+  fixed by the bone excision in step 4; the tissue-bed part is not, and
+  still stops the search. The excision has a measured cost on that draft
+  set, not a phantom-backed accuracy claim: lower settled thresholds reach
+  more non-branch structures (a vein crossing the aorta, bone's dim outer
+  shell traced as a vessel, and annotator-excluded posterior tracks).
 - Radius is unreliable below ~0.5mm given this cohort's voxel spacing
   (see Plausibility above) -- a resolution limit, not a pipeline bug. The
   new radius gate removes these from output rather than merely flagging

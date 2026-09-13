@@ -1,0 +1,21 @@
+lumen HU median=442 p25=428 p75=459 contrast_enhanced=True
+components kept=1 dropped=0 caps=2 surface_points=13178
+flood: T=177HU (0.400 x lumen ref 442HU) retries=12 leak=none growth=0.64 reached=9378
+  search: 0.400->LEAK:growth 0.650->ok 0.525->ok 0.463->LEAK:growth 0.494->LEAK:growth 0.509->LEAK:growth
+  bone descent (ceiling 497HU, excised 3460 voxels in 2 components): 0.500->LEAK:growth 0.500(-2223bone)->ok 0.475(-2223bone)->ok 0.450(-2223bone)->ok 0.425(-2223bone)->LEAK:growth 0.425(-3460bone)->ok 0.400(-3460bone)->ok
+components=14 candidates=5 neck=2.0mm rejected: no_contact_patch=0 end_cap=0 aortic_continuation=1 too_short=8
+  rejected aortic_continuation: label=14 len=15.0mm r~3.4mm (16deg from centerline)
+instances=5 from 5 candidates (split_components=0 absorbed_narrow_pieces=3 instance_too_short=0)
+  # 0 comp=12 len=15.0mm traced=9.4mm (max_length) ostium=(8.2,5.0,1490.3) patch=110mm2 disagree=3.7mm r=3.06mm (dt=2.32 frontier=3.06 vesselness=2.22) vness=4.19e-05
+  # 1 comp=11 len=15.0mm traced=9.5mm (max_length) ostium=(-3.0,7.4,1476.7) patch=92mm2 disagree=3.0mm r=2.85mm (dt=2.06 frontier=2.85 vesselness=2.22) vness=3.1e-05
+  # 2 comp=10 len=15.0mm traced=9.3mm (max_length) ostium=(11.4,10.6,1465.5) patch=76mm2 disagree=2.8mm r=2.65mm (dt=2.00 frontier=2.65 vesselness=2.22) vness=4.06e-05
+  # 3 comp=13 len=15.0mm traced=8.7mm (max_length) ostium=(4.2,5.0,1503.9) patch=8mm2 disagree=3.3mm r=1.28mm (dt=0.94 frontier=1.28 vesselness=1.48) vness=0.000103
+  # 4 comp=2 len=15.0mm traced=8.1mm (max_length) ostium=(12.2,-12.6,1407.1) patch=17mm2 disagree=7.9mm r=0.64mm (dt=0.48 frontier=0.64 vesselness=1.48) vness=0.000109
+timings: load_and_prepare_s=1.4s geometry_s=0.5s flood_s=1.6s candidates_s=0.6s parentage_s=0.0s tracing_s=0.1s
+scoring: 5 instances, confidence threshold=0.50
+  instance=  0 comp=12 confidence=0.61 status=KEPT
+  instance=  1 comp=11 confidence=0.77 status=KEPT
+  instance=  2 comp=10 confidence=0.95 status=KEPT
+  instance=  3 comp=13 confidence=0.47 status=BELOW_THRESHOLD (confidence 0.47 < 0.50)
+  instance=  4 comp=2 confidence=0.00 status=VETOED (radius 0.64mm < 0.70mm (1.0mm minimum less 0.3mm measurement-noise margin))
+kept 3/5 as daughters

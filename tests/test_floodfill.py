@@ -182,6 +182,61 @@ def test_robust_flood_uses_the_lowest_threshold_that_does_not_leak():
     assert np.isinf(flood["dist"][30, 32, 70])
 
 
+def _bone_contact_phantom(with_cortex):
+    # The stub's tip meets a block through a 160 HU contact layer, so below
+    # fraction 0.533 of the 300 HU lumen the flood gets into the block and
+    # leaks. With cortex, the block is bone: a 900 HU shell (brighter than any
+    # lumen voxel) around 160 HU marrow. Without, it is plain 160 HU tissue.
+    # A dim 130 HU box vessel (fraction 0.433) leaves the opposite wall and is
+    # only reachable once the search gets past the block's leak.
+    # (the stub's rounded tip reaches x=50, so the contact runs past it)
+    contact = {"low": (47.5, 26.0, 24.0), "high": (52.0, 38.0, 36.0), "hu": 160.0}
+    dim_branch = {"low": (14.0, 30.0, 28.0), "high": (24.5, 34.0, 32.0), "hu": 130.0}
+    if with_cortex:
+        block = [{"low": (52.0, 18.0, 16.0), "high": (74.0, 46.0, 44.0), "hu": 900.0},
+                 {"low": (55.0, 21.0, 19.0), "high": (71.0, 43.0, 41.0), "hu": 160.0}]
+    else:
+        block = [{"low": (52.0, 18.0, 16.0), "high": (74.0, 46.0, 44.0), "hu": 160.0}]
+    return make_capsule_phantom(
+        shape_zyx=(60, 64, 96), aorta_centre_xy_mm=(32.0, 32.0), aorta_z_mm=(5.0, 55.0),
+        branches=[{"start": (36.0, 32.0, 30.0), "end": (47.0, 32.0, 30.0), "radius": 3.0}],
+        blocks=block + [contact, dim_branch],
+    )
+
+
+def test_bone_leak_is_excised_and_the_search_continues_below_it():
+    from src.intensity import lumen_stats
+
+    image, mask = _bone_contact_phantom(with_cortex=True)
+    flood = robust_flood(image, mask, lumen_stats(image, mask))
+
+    bisection = flood["attempts"][:flood["bisection_attempts"]]
+    settled = min(a["fraction"] for a in bisection if not a["leak"])
+    assert settled > 160.0 / 300.0
+    assert flood["leak"]["leak"] is False
+    assert flood["threshold_fraction"] < 130.0 / 300.0
+    assert flood["bone_excised_voxels"] > 0
+    assert all(c["bright_share"] >= 0.10 for c in flood["bone_excised_components"])
+    assert np.isfinite(flood["dist"][30, 32, 18])     # the dim branch is reached
+    assert np.isfinite(flood["dist"][30, 32, 44])     # the bright stub still is
+    assert np.isinf(flood["dist"][30, 32, 53])        # the cortex is not
+    assert np.isinf(flood["dist"][30, 32, 57])        # nor the marrow behind it
+
+
+def test_tissue_leak_still_stops_the_search_where_bisection_left_it():
+    from src.intensity import lumen_stats
+
+    image, mask = _bone_contact_phantom(with_cortex=False)
+    flood = robust_flood(image, mask, lumen_stats(image, mask))
+
+    assert flood["attempts"][flood["bisection_attempts"]:] != []   # the descent was tried
+    assert flood["bone_excised_voxels"] == 0
+    assert flood["leak"]["leak"] is False
+    assert flood["threshold_fraction"] > 160.0 / 300.0
+    assert np.isinf(flood["dist"][30, 32, 18])        # the dim branch stays out of reach
+    assert np.isinf(flood["dist"][30, 32, 57])        # and so does the tissue
+
+
 def test_robust_flood_needs_no_retries_when_nothing_leaks():
     image, mask = make_capsule_phantom(
         branches=[{"start": (36.0, 32.0, 45.0), "end": (58.0, 32.0, 45.0), "radius": 3.0}],

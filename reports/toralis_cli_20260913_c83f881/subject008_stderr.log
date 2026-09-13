@@ -1,0 +1,23 @@
+  radius disagreement 80% on instance 0: distance transform 1.11mm vs frontier 5.46mm
+lumen HU median=438 p25=361 p75=469 contrast_enhanced=True
+components kept=1 dropped=1 caps=2 surface_points=12038
+flood: T=244HU (0.556 x lumen ref 438HU) retries=7 leak=none growth=0.82 reached=11405
+  search: 0.400->LEAK:growth 0.650->ok 0.525->LEAK:growth 0.588->ok 0.556->ok 0.541->LEAK:growth
+  bone descent (ceiling 491HU, excised 0 voxels in 0 components): 0.531->LEAK:growth 0.531(-26bone)->LEAK:growth
+components=9 candidates=6 neck=2.0mm rejected: no_contact_patch=0 end_cap=0 aortic_continuation=0 too_short=3
+instances=6 from 6 candidates (split_components=0 absorbed_narrow_pieces=1 instance_too_short=0)
+  # 0 comp=5 len=15.0mm traced=2.8mm (bifurcation@3.4mm) ostium=(0.4,8.2,1469.5) patch=160mm2 disagree=4.9mm r=5.46mm (dt=1.11 frontier=5.46 vesselness=2.22 MISMATCH) vness=2.83e-06 seed<5mm
+  # 1 comp=9 len=15.0mm traced=8.9mm (max_length) ostium=(8.4,9.8,1523.9) patch=144mm2 disagree=7.4mm r=3.81mm (dt=3.09 frontier=3.81 vesselness=3.33) vness=1.93e-05
+  # 2 comp=8 len=15.0mm traced=8.4mm (max_length) ostium=(5.2,7.4,1507.9) patch=127mm2 disagree=7.2mm r=4.12mm (dt=3.20 frontier=4.12 vesselness=3.33) vness=1.96e-05
+  # 3 comp=7 len=15.0mm traced=9.3mm (max_length@13.9mm) ostium=(6.8,9.8,1487.9) patch=74mm2 disagree=3.3mm r=3.05mm (dt=2.33 frontier=3.05 vesselness=2.22) vness=2.55e-05
+  # 4 comp=6 len=15.0mm traced=9.3mm (max_length) ostium=(-5.2,7.4,1493.5) patch=74mm2 disagree=4.0mm r=2.90mm (dt=2.13 frontier=2.90 vesselness=2.22) vness=4.31e-05
+  # 5 comp=2 len=9.4mm traced=7.5mm (vessel_end) ostium=(-0.4,-13.4,1432.7) patch=26mm2 disagree=8.3mm r=0.90mm (dt=0.62 frontier=0.90 vesselness=1.48) vness=3.97e-05
+timings: load_and_prepare_s=1.6s geometry_s=0.6s flood_s=1.9s candidates_s=0.7s parentage_s=0.1s tracing_s=0.2s
+scoring: 6 instances, confidence threshold=0.50
+  instance=  0 comp=5 confidence=0.00 status=VETOED (traced length 2.8mm < 5mm)
+  instance=  1 comp=9 confidence=0.47 status=BELOW_THRESHOLD (confidence 0.47 < 0.50)
+  instance=  2 comp=8 confidence=0.37 status=BELOW_THRESHOLD (confidence 0.37 < 0.50)
+  instance=  3 comp=7 confidence=0.87 status=KEPT
+  instance=  4 comp=6 confidence=0.78 status=KEPT
+  instance=  5 comp=2 confidence=0.44 status=BELOW_THRESHOLD (confidence 0.44 < 0.50)
+kept 2/6 as daughters

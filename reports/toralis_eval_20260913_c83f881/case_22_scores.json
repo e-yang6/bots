@@ -1,0 +1,13 @@
+{
+  "precision": 0.6666666666666666,
+  "recall": 1.0,
+  "f1": 0.8,
+  "mean_ostium_error_mm": 0.8365169479997202,
+  "mean_seed_error_mm": 0.9375308885198689,
+  "mean_direction_error_deg": 11.151800982297905,
+  "mean_radius_error_mm": 0.0834939823838714,
+  "radius_scored_matches": 1,
+  "true_positives": 6,
+  "false_positives": 3,
+  "false_negatives": 0
+}

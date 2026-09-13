@@ -1,0 +1,13 @@
+lumen HU median=523 p25=504 p75=534 contrast_enhanced=True
+components kept=1 dropped=0 caps=2 surface_points=4561
+flood: T=209HU (0.400 x lumen ref 523HU) retries=0 leak=none growth=0.67 reached=3502
+  search: 0.400->ok
+components=3 candidates=1 neck=2.0mm rejected: no_contact_patch=0 end_cap=2 aortic_continuation=0 too_short=0
+  rejected end_cap: label=1 len=15.0mm r~3.9mm (86% of patch on the low end face)
+  rejected end_cap: label=2 len=15.0mm r~3.8mm (95% of patch on the low end face)
+instances=1 from 1 candidates (split_components=0 absorbed_narrow_pieces=0 instance_too_short=0)
+  # 0 comp=3 len=15.0mm traced=8.4mm (max_length) ostium=(14.5,-139.8,200.1) patch=36mm2 disagree=7.2mm r=1.07mm (dt=0.86 frontier=1.07 vesselness=1.48) vness=9.4e-05
+timings: load_and_prepare_s=0.6s geometry_s=0.1s flood_s=0.1s candidates_s=0.1s parentage_s=0.0s tracing_s=0.0s
+scoring: 1 instances, confidence threshold=0.50
+  instance=  0 comp=3 confidence=0.28 status=BELOW_THRESHOLD (confidence 0.28 < 0.50)
+kept 0/1 as daughters

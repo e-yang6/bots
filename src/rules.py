@@ -32,15 +32,24 @@ CAP_ANGLE_VETO_DEG = 25.0
 # that ends up in the final JSON, not some intermediate estimate of it.
 MIN_RADIUS_MM = 1.0
 
-# Absorbs known measurement noise on thin vessels: scripts/validate_phantom.py
-# showed radius_at_seed_mm (the distance-transform-based estimate) can read
-# up to ~0.4-0.5mm low near this scale, e.g. a true 1.4mm-radius branch
-# measured at 0.95mm -- comfortably above the 2mm-diameter minimum but wrongly
-# vetoed by a bare MIN_RADIUS_MM cutoff. Vetoing at MIN_RADIUS_MM minus this
-# margin, rather than at MIN_RADIUS_MM itself, trades a little of the other
-# direction (a genuinely sub-1mm branch measured a bit high could still slip
-# through) for recovering the branches this noise band was wrongly dropping.
-# See README.md's Phantom validation section for the measured trade-off.
+# Absorbs known measurement noise near the minimum: radius_at_seed_mm is now
+# primarily the flood-frontier estimate (src.tracing.extract_seed_direction_
+# radius), not the distance transform -- see that function's docstring and
+# validate_phantom's radius comparison for why the switch was made. Re-derived
+# against the frontier estimate's own phantom-suite error in the true-radius
+# 1.0-2.0mm band that brackets this cutoff (n=89, two known bad-trace outliers
+# excluded -- both flagged independently by >20deg direction/ostium-disagreement
+# errors, not radius noise): mean -0.14mm, sd 0.15mm, so mean + ~1sd lands back
+# at this same 0.3mm figure -- kept, but now anchored to the frontier
+# estimate's measured bias+noise rather than the distance transform's (which
+# ran closer to 0.5mm low at this scale). No true radius below 1.0mm exists in
+# the phantom suite, so behaviour exactly at MIN_RADIUS_MM is extrapolated from
+# the nearest tested band, not directly measured. Vetoing at MIN_RADIUS_MM
+# minus this margin, rather than at MIN_RADIUS_MM itself, trades a little of
+# the other direction (a genuinely sub-1mm branch measured a bit high could
+# still slip through) for recovering the branches this noise band was wrongly
+# dropping. See README.md's Phantom validation section for the measured
+# trade-off.
 RADIUS_VETO_MEASUREMENT_TOLERANCE_MM = 0.3
 RADIUS_VETO_MM = MIN_RADIUS_MM - RADIUS_VETO_MEASUREMENT_TOLERANCE_MM
 

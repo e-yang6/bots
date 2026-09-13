@@ -41,7 +41,10 @@ def match_and_score(predictions, references, distance_threshold_mm=10):
 
     predictions / references: either a full JSON dict with a "daughters" key,
     or a bare list of daughter dicts. Each daughter dict must have
-    ostium_xyz_mm, seed_xyz_mm, radius_mm, direction_xyz.
+    ostium_xyz_mm, seed_xyz_mm, radius_mm, direction_xyz. A reference
+    radius_mm may be null (a draft annotation whose radius could not be
+    measured): that match still counts for detection and every other error,
+    and is only left out of the radius error.
 
     Matching is one-to-one via the Hungarian algorithm on pairwise Euclidean
     ostium distance, only accepting a match if distance <= distance_threshold_mm.
@@ -50,8 +53,11 @@ def match_and_score(predictions, references, distance_threshold_mm=10):
 
     Returns a dict with precision, recall, f1, mean_ostium_error_mm,
     mean_seed_error_mm, mean_direction_error_deg, mean_radius_error_mm,
-    true_positives, false_positives, false_negatives, and matches (a list of
-    (pred_index, ref_index, distance_mm) tuples for accepted matches).
+    radius_scored_matches, true_positives, false_positives, false_negatives,
+    and matches (a list of (pred_index, ref_index, distance_mm) tuples for
+    accepted matches). mean_radius_error_mm is None when there are matches
+    but none has a reference radius -- 0.0 would claim a perfect radius that
+    was never measured.
     """
     preds = _extract_daughters(predictions)
     refs = _extract_daughters(references)
@@ -94,10 +100,13 @@ def match_and_score(predictions, references, distance_threshold_mm=10):
         ostium_errors.append(d)
         seed_errors.append(_euclidean(p["seed_xyz_mm"], r["seed_xyz_mm"]))
         direction_errors.append(_direction_angle_deg(p["direction_xyz"], r["direction_xyz"]))
-        radius_errors.append(abs(p["radius_mm"] - r["radius_mm"]))
+        if r.get("radius_mm") is not None:
+            radius_errors.append(abs(p["radius_mm"] - r["radius_mm"]))
 
     def _mean(values):
         return float(np.mean(values)) if values else 0.0
+
+    mean_radius_error = None if matches and not radius_errors else _mean(radius_errors)
 
     return {
         "precision": precision,
@@ -106,7 +115,8 @@ def match_and_score(predictions, references, distance_threshold_mm=10):
         "mean_ostium_error_mm": _mean(ostium_errors),
         "mean_seed_error_mm": _mean(seed_errors),
         "mean_direction_error_deg": _mean(direction_errors),
-        "mean_radius_error_mm": _mean(radius_errors),
+        "mean_radius_error_mm": mean_radius_error,
+        "radius_scored_matches": len(radius_errors),
         "true_positives": true_positives,
         "false_positives": false_positives,
         "false_negatives": false_negatives,

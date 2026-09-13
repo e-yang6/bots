@@ -32,6 +32,22 @@ distance band at thresholds from 0.45 to 0.85 of the lumen reference):
    (growth 0.5-1.6x over the same span, on every case where the threshold
    was high enough), while leaking floods grow 1.8-4x. So a growth rule is
    checked alongside the explosion rule (see detect_leak).
+
+3. On the 1.5mm eval-set cases, the leak that pins the threshold search is
+   often not tissue at all but vertebral bone pressed against the aortic
+   wall: its partial-volume ramp crosses the lumen's HU on the way to cortex,
+   so the flood walks straight in, the frontier grows, and every threshold
+   below that point is rejected -- taking every dimmer daughter elsewhere on
+   the aorta down with it (case_22 settled at 0.84 of its lumen for exactly
+   this reason; case_20 at 0.60). Bone is separable from contrast-filled
+   vessel where tissue is not: nothing the aorta feeds can be brighter than
+   the aorta itself, so a newly reached component with a substantial share
+   of voxels above the lumen's own upper tail is not a vessel. After the
+   ordinary search settles, robust_flood therefore keeps stepping down,
+   excising such components and re-testing, and stops at the first leak
+   that excision does not explain (see _bone_like and robust_flood). Tissue
+   leaks -- an organ bed a branch runs into -- are untouched by this and
+   still stop the search, exactly as before.
 """
 
 import sys
@@ -67,6 +83,22 @@ WEAK_GROWTH_RATIO = 1.25
 EARLY_WINDOW_MM = (3.0, 6.0)
 LATE_WINDOW_MM = 3.0
 MAX_VISITED_RATIO = 40.0
+
+# Bone excision; see module docstring point 3 and _bone_like.
+# The ceiling is this percentile of the eroded lumen's own HU: contrast blood
+# downstream of the aorta cannot be brighter than the aorta, so a genuine
+# vessel has about (100 - percentile)% of its voxels above it at most, and
+# fewer once partial volume dims it.
+BONE_CEILING_PERCENTILE = 99.0
+# 10x that 1% noise rate. On the draft eval set the large components rendered
+# and confirmed as vertebral bone ran 0.16-0.47, and the tissue, organ and
+# branch components beside them 0.00-0.04.
+BONE_MIN_BRIGHT_SHARE = 0.10
+# Ignore specks: a few noisy bright voxels are not a structure.
+BONE_MIN_COMPONENT_MM3 = 10.0
+# Descent step below the settled fraction, and excise/re-flood rounds per step.
+BONE_DESCENT_STEP = 0.025
+MAX_EXCISION_ROUNDS = 3
 
 _CROSS = ndimage.generate_binary_structure(3, 1)
 _FULL = np.ones((3, 3, 3), dtype=bool)
@@ -345,6 +377,28 @@ def detect_leak(
     return result
 
 
+def _bone_like(new_territory, hu, ceiling_hu, min_voxels,
+               min_bright_share=BONE_MIN_BRIGHT_SHARE):
+    """Union of the 26-connected components of new_territory that are bone.
+
+    A component is bone-like when at least min_bright_share of its voxels
+    are brighter than ceiling_hu (the lumen's own upper tail) and it has at
+    least min_voxels voxels. Returns (mask, one summary dict per excised
+    component).
+    """
+    labels, count = ndimage.label(new_territory, structure=_FULL)
+    if count == 0:
+        return np.zeros_like(new_territory), []
+    flat = labels.ravel()
+    sizes = np.bincount(flat, minlength=count + 1)
+    bright = np.bincount(flat, weights=(hu > ceiling_hu).ravel().astype(np.float64), minlength=count + 1)
+    share = bright / np.maximum(sizes, 1)
+    keep = (sizes >= min_voxels) & (share >= min_bright_share)
+    keep[0] = False
+    excised = [{"voxels": int(sizes[k]), "bright_share": float(share[k])} for k in np.flatnonzero(keep)]
+    return keep[labels], excised
+
+
 def robust_flood(
     image,
     aorta_mask,
@@ -363,6 +417,16 @@ def robust_flood(
     threshold found -- too high a threshold and small branches thin out and
     vanish before reaching 5mm. If nothing in range stops leaking, the top of
     the range is used and the result stays flagged as leaking.
+
+    If the search settled on a non-leaking threshold with a leak below it,
+    it then steps down by BONE_DESCENT_STEP. At each step, if the flood
+    leaks, the bone-like components (see _bone_like) of the territory it
+    newly reached beyond the previous accepted flood are excised from the
+    traversal volume and the step is re-flooded; the step is accepted only
+    once it stops leaking. The descent ends at the first step whose leak
+    excision does not remove, or at the bottom of fraction_range. Excised
+    voxels stay excised for every lower step. A case that never leaks, or
+    whose leak is not bone, ends exactly where the bisection left it.
 
     image / aorta_mask: SimpleITK images (or arrays, with spacing taken as
     isotropic 1mm -- tests only).
@@ -392,8 +456,10 @@ def robust_flood(
     reference = float(lumen_reference_hu(lumen_stats))
     attempts = []
 
-    def attempt(fraction):
+    def attempt(fraction, excised=None):
         traversal, threshold = build_traversal_volume(hu, lumen_stats, fraction)
+        if excised is not None:
+            traversal &= ~excised
         source = _source_region(traversal, seeds, mask)
         dist, parent, frontier = _flood(
             traversal, source, mask, spacing, budget_mm, candidate_region, band_mm
@@ -406,6 +472,7 @@ def robust_flood(
         attempts.append({
             "fraction": float(fraction), "threshold_hu": threshold, "leak": leak["leak"],
             "reason": leak["reason"], "growth": leak["growth"], "visited": visited,
+            "excised_voxels": 0 if excised is None else int(excised.sum()),
         })
         return {
             "dist": dist, "parent": parent, "frontier_sizes": frontier, "traversal": traversal,
@@ -427,6 +494,38 @@ def robust_flood(
         if chosen is None:
             chosen = attempt(fraction_range[1])
 
+    bisection_attempts = len(attempts)
+    leaked_below = any(a["leak"] and a["fraction"] < chosen["threshold_fraction"] for a in attempts)
+    ceiling = float(np.percentile(hu[seeds], BONE_CEILING_PERCENTILE))
+    excised = np.zeros_like(mask)
+    excised_components = []
+    if not chosen["leak"]["leak"] and leaked_below:
+        min_voxels = BONE_MIN_COMPONENT_MM3 / float(np.prod(spacing))
+        # Nothing the bisection's own flood reached is ever excised, so the
+        # descent adds territory rather than trading some away.
+        protected = np.isfinite(chosen["dist"]) | mask
+        fraction = chosen["threshold_fraction"] - BONE_DESCENT_STEP
+        while fraction >= fraction_range[0] - 1e-9:
+            accepted_reach = np.isfinite(chosen["dist"]) & ~mask
+            trial = excised.copy()
+            trial_components = []
+            result = attempt(fraction, trial)
+            for _ in range(MAX_EXCISION_ROUNDS):
+                if not result["leak"]["leak"]:
+                    break
+                reached = np.isfinite(result["dist"]) & ~mask
+                bone, components = _bone_like(reached & ~accepted_reach, hu, ceiling, min_voxels)
+                if not components:
+                    break
+                trial |= bone & ~protected
+                trial_components.extend(components)
+                result = attempt(fraction, trial)
+            if result["leak"]["leak"]:
+                break
+            chosen, excised = result, trial
+            excised_components.extend(trial_components)
+            fraction -= BONE_DESCENT_STEP
+
     chosen.update({
         "lumen_reference_hu": reference,
         "retries": len(attempts) - 1,
@@ -435,6 +534,10 @@ def robust_flood(
         "band_mm": float(band_mm),
         "spacing": spacing,
         "aorta_cross_section_voxels": cross_section,
+        "bisection_attempts": bisection_attempts,
+        "bone_ceiling_hu": ceiling,
+        "bone_excised_voxels": int(excised.sum()),
+        "bone_excised_components": excised_components,
     })
 
     if verbose:
@@ -452,9 +555,17 @@ def log_flood(flood, file=sys.stderr):
         f"reached={int(flood['frontier_sizes'].sum())}",
         file=file,
     )
-    print(
-        "  search: " + " ".join(
-            f"{a['fraction']:.3f}->{'LEAK:' + a['reason'] if a['leak'] else 'ok'}" for a in flood["attempts"]
-        ),
-        file=file,
-    )
+    split = flood.get("bisection_attempts", len(flood["attempts"]))
+
+    def step(a):
+        cut = f"(-{a['excised_voxels']}bone)" if a.get("excised_voxels") else ""
+        return f"{a['fraction']:.3f}{cut}->{'LEAK:' + a['reason'] if a['leak'] else 'ok'}"
+
+    print("  search: " + " ".join(step(a) for a in flood["attempts"][:split]), file=file)
+    if len(flood["attempts"]) > split:
+        print(
+            f"  bone descent (ceiling {flood['bone_ceiling_hu']:.0f}HU, excised "
+            f"{flood['bone_excised_voxels']} voxels in {len(flood['bone_excised_components'])} components): "
+            + " ".join(step(a) for a in flood["attempts"][split:]),
+            file=file,
+        )
