@@ -1,0 +1,3110 @@
+{
+  "overall": {
+    "precision": 0.9686379928315413,
+    "recall": 0.9368279569892473,
+    "f1": 0.9490881030894233,
+    "mean_ostium_error_mm": 0.6670301969202272,
+    "mean_seed_error_mm": 0.503544912117487,
+    "mean_direction_error_deg": 8.945445601551183,
+    "mean_radius_error_mm": 0.14925782125083256
+  },
+  "by_spacing": {
+    "aniso": {
+      "precision": 0.9685185185185186,
+      "recall": 0.9398148148148147,
+      "f1": 0.9502837205735758,
+      "mean_ostium_error_mm": 0.5558358379210473,
+      "mean_seed_error_mm": 0.302755377619536,
+      "mean_direction_error_deg": 7.675627259447683,
+      "mean_radius_error_mm": 0.1951063582392275,
+      "n_cases": 9
+    },
+    "iso": {
+      "precision": 0.9686868686868686,
+      "recall": 0.9356060606060606,
+      "f1": 0.9485989868459064,
+      "mean_ostium_error_mm": 0.7125187983289829,
+      "mean_seed_error_mm": 0.5856860853211941,
+      "mean_direction_error_deg": 9.464916741502613,
+      "mean_radius_error_mm": 0.13050160157376195,
+      "n_cases": 22
+    }
+  },
+  "by_lumen_hu": {
+    "250.0": {
+      "precision": 0.9450617283950616,
+      "recall": 0.9444444444444444,
+      "f1": 0.943800752624282,
+      "mean_ostium_error_mm": 0.6844877920594497,
+      "mean_seed_error_mm": 0.5673256673592053,
+      "mean_direction_error_deg": 9.28467314137514,
+      "mean_radius_error_mm": 0.20008347266172144,
+      "n_cases": 9
+    },
+    "400.0": {
+      "precision": 0.9846153846153847,
+      "recall": 0.9230769230769231,
+      "f1": 0.9484814702206006,
+      "mean_ostium_error_mm": 0.6421381916962094,
+      "mean_seed_error_mm": 0.49423655481486367,
+      "mean_direction_error_deg": 9.064293183107493,
+      "mean_radius_error_mm": 0.1241505763669421,
+      "n_cases": 13
+    },
+    "550.0": {
+      "precision": 0.9691358024691357,
+      "recall": 0.949074074074074,
+      "f1": 0.9552517010317523,
+      "mean_ostium_error_mm": 0.6855277204379198,
+      "mean_seed_error_mm": 0.45320956186844646,
+      "mean_direction_error_deg": 8.434549332812558,
+      "mean_radius_error_mm": 0.13469819022778548,
+      "n_cases": 9
+    }
+  },
+  "by_n_branches": {
+    "2": {
+      "precision": 0.9814814814814815,
+      "recall": 1.0,
+      "f1": 0.9898989898989901,
+      "mean_ostium_error_mm": 0.6888286608098722,
+      "mean_seed_error_mm": 0.4830253399367247,
+      "mean_direction_error_deg": 8.379108635365638,
+      "mean_radius_error_mm": 0.15075970571752945,
+      "n_cases": 9
+    },
+    "3": {
+      "precision": 1.0,
+      "recall": 0.7777777777777778,
+      "f1": 0.8727272727272727,
+      "mean_ostium_error_mm": 0.5676628082500779,
+      "mean_seed_error_mm": 0.4434686029211384,
+      "mean_direction_error_deg": 9.181358652165992,
+      "mean_radius_error_mm": 0.08076485232205143,
+      "n_cases": 3
+    },
+    "5": {
+      "precision": 0.9777777777777779,
+      "recall": 0.9375,
+      "f1": 0.9539495798319327,
+      "mean_ostium_error_mm": 0.6592752346223669,
+      "mean_seed_error_mm": 0.5228719962980102,
+      "mean_direction_error_deg": 9.118092861171794,
+      "mean_radius_error_mm": 0.14303900386270643,
+      "n_cases": 10
+    },
+    "9": {
+      "precision": 0.9351851851851853,
+      "recall": 0.9259259259259258,
+      "f1": 0.9283291855755623,
+      "mean_ostium_error_mm": 0.6869708206960328,
+      "mean_seed_error_mm": 0.5226153827186728,
+      "mean_direction_error_deg": 9.241314595731113,
+      "mean_radius_error_mm": 0.17749672352498072,
+      "n_cases": 9
+    }
+  },
+  "cases": [
+    {
+      "case_id": "phantom_seed0_sp0.8x0.8x0.8_hu250_n2",
+      "spacing": [
+        0.8,
+        0.8,
+        0.8
+      ],
+      "spacing_tag": "iso",
+      "lumen_hu": 250.0,
+      "n_branches": 2,
+      "n_reference": 5,
+      "n_predicted": 5,
+      "elapsed_s": 2.453626871109009,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "mean_ostium_error_mm": 0.6126202340466,
+      "mean_seed_error_mm": 0.5035770339209369,
+      "mean_direction_error_deg": 8.736940247902249,
+      "mean_radius_error_mm": 0.11685947888592718,
+      "radius_scored_matches": 5,
+      "true_positives": 5,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "matches": [
+        [
+          0,
+          1,
+          0.507166508806916
+        ],
+        [
+          1,
+          0,
+          0.7681358409979171
+        ],
+        [
+          2,
+          2,
+          0.5260203993118481
+        ],
+        [
+          3,
+          4,
+          0.5604573324691251
+        ],
+        [
+          4,
+          3,
+          0.7013210886471941
+        ]
+      ]
+    },
+    {
+      "case_id": "phantom_seed1_sp0.8x0.8x0.8_hu250_n5",
+      "spacing": [
+        0.8,
+        0.8,
+        0.8
+      ],
+      "spacing_tag": "iso",
+      "lumen_hu": 250.0,
+      "n_branches": 5,
+      "n_reference": 8,
+      "n_predicted": 8,
+      "elapsed_s": 3.209871530532837,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "mean_ostium_error_mm": 0.579685544179954,
+      "mean_seed_error_mm": 0.4391669295520828,
+      "mean_direction_error_deg": 9.111583709098564,
+      "mean_radius_error_mm": 0.08897453577706918,
+      "radius_scored_matches": 8,
+      "true_positives": 8,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "matches": [
+        [
+          0,
+          2,
+          0.4600157232254086
+        ],
+        [
+          1,
+          4,
+          0.42488314435476926
+        ],
+        [
+          2,
+          1,
+          0.507166508806916
+        ],
+        [
+          3,
+          3,
+          0.6894843156264542
+        ],
+        [
+          4,
+          5,
+          0.5260203993118481
+        ],
+        [
+          5,
+          7,
+          0.5604573324691251
+        ],
+        [
+          6,
+          0,
+          0.7681358409979171
+        ],
+        [
+          7,
+          6,
+          0.7013210886471941
+        ]
+      ]
+    },
+    {
+      "case_id": "phantom_seed2_sp0.8x0.8x0.8_hu250_n9",
+      "spacing": [
+        0.8,
+        0.8,
+        0.8
+      ],
+      "spacing_tag": "iso",
+      "lumen_hu": 250.0,
+      "n_branches": 9,
+      "n_reference": 12,
+      "n_predicted": 12,
+      "elapsed_s": 3.0191218852996826,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "mean_ostium_error_mm": 0.6329829117050688,
+      "mean_seed_error_mm": 0.6420531748968368,
+      "mean_direction_error_deg": 9.43321643109571,
+      "mean_radius_error_mm": 0.10952301914578137,
+      "radius_scored_matches": 12,
+      "true_positives": 12,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "matches": [
+        [
+          0,
+          1,
+          0.507166508806916
+        ],
+        [
+          1,
+          8,
+          0.9257047615447868
+        ],
+        [
+          2,
+          7,
+          0.5313372437581345
+        ],
+        [
+          3,
+          4,
+          0.42488314435476926
+        ],
+        [
+          4,
+          5,
+          0.6849190428034506
+        ],
+        [
+          5,
+          3,
+          0.6894843156264542
+        ],
+        [
+          6,
+          2,
+          0.4600157232254086
+        ],
+        [
+          7,
+          9,
+          0.5260203993118481
+        ],
+        [
+          8,
+          6,
+          0.8163495389148195
+        ],
+        [
+          9,
+          11,
+          0.5604573324691251
+        ],
+        [
+          10,
+          0,
+          0.7681358409979171
+        ],
+        [
+          11,
+          10,
+          0.7013210886471941
+        ]
+      ]
+    },
+    {
+      "case_id": "phantom_seed3_sp0.8x0.8x0.8_hu400_n2",
+      "spacing": [
+        0.8,
+        0.8,
+        0.8
+      ],
+      "spacing_tag": "iso",
+      "lumen_hu": 400.0,
+      "n_branches": 2,
+      "n_reference": 5,
+      "n_predicted": 5,
+      "elapsed_s": 2.5764381885528564,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "mean_ostium_error_mm": 0.5868154458154831,
+      "mean_seed_error_mm": 0.48388769784060026,
+      "mean_direction_error_deg": 8.194587924002274,
+      "mean_radius_error_mm": 0.12357721261743718,
+      "radius_scored_matches": 5,
+      "true_positives": 5,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "matches": [
+        [
+          0,
+          0,
+          0.6391118998423323
+        ],
+        [
+          1,
+          2,
+          0.5260203993118481
+        ],
+        [
+          2,
+          4,
+          0.5604573324691251
+        ],
+        [
+          3,
+          1,
+          0.507166508806916
+        ],
+        [
+          4,
+          3,
+          0.7013210886471941
+        ]
+      ]
+    },
+    {
+      "case_id": "phantom_seed4_sp0.8x0.8x0.8_hu400_n5",
+      "spacing": [
+        0.8,
+        0.8,
+        0.8
+      ],
+      "spacing_tag": "iso",
+      "lumen_hu": 400.0,
+      "n_branches": 5,
+      "n_reference": 8,
+      "n_predicted": 8,
+      "elapsed_s": 2.661345958709717,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "mean_ostium_error_mm": 0.579685544179954,
+      "mean_seed_error_mm": 0.6647321104025306,
+      "mean_direction_error_deg": 10.110446948484306,
+      "mean_radius_error_mm": 0.07660553679967405,
+      "radius_scored_matches": 8,
+      "true_positives": 8,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "matches": [
+        [
+          0,
+          1,
+          0.507166508806916
+        ],
+        [
+          1,
+          4,
+          0.42488314435476926
+        ],
+        [
+          2,
+          2,
+          0.4600157232254086
+        ],
+        [
+          3,
+          0,
+          0.7681358409979171
+        ],
+        [
+          4,
+          5,
+          0.5260203993118481
+        ],
+        [
+          5,
+          7,
+          0.5604573324691251
+        ],
+        [
+          6,
+          3,
+          0.6894843156264542
+        ],
+        [
+          7,
+          6,
+          0.7013210886471941
+        ]
+      ]
+    },
+    {
+      "case_id": "phantom_seed5_sp0.8x0.8x0.8_hu400_n9",
+      "spacing": [
+        0.8,
+        0.8,
+        0.8
+      ],
+      "spacing_tag": "iso",
+      "lumen_hu": 400.0,
+      "n_branches": 9,
+      "n_reference": 12,
+      "n_predicted": 11,
+      "elapsed_s": 2.787139892578125,
+      "precision": 1.0,
+      "recall": 0.9166666666666666,
+      "f1": 0.9565217391304348,
+      "mean_ostium_error_mm": 0.5945729141554001,
+      "mean_seed_error_mm": 0.46971486581951305,
+      "mean_direction_error_deg": 8.385614194145864,
+      "mean_radius_error_mm": 0.12857491065821075,
+      "radius_scored_matches": 11,
+      "true_positives": 11,
+      "false_positives": 0,
+      "false_negatives": 1,
+      "matches": [
+        [
+          0,
+          3,
+          0.6894843156264542
+        ],
+        [
+          1,
+          1,
+          0.507166508806916
+        ],
+        [
+          2,
+          2,
+          0.4600157232254086
+        ],
+        [
+          3,
+          5,
+          0.6849190428034506
+        ],
+        [
+          4,
+          4,
+          0.42488314435476926
+        ],
+        [
+          5,
+          0,
+          0.6391118998423323
+        ],
+        [
+          6,
+          9,
+          0.5260203993118481
+        ],
+        [
+          7,
+          6,
+          0.8155853568637694
+        ],
+        [
+          8,
+          11,
+          0.5604573324691251
+        ],
+        [
+          9,
+          7,
+          0.5313372437581345
+        ],
+        [
+          10,
+          10,
+          0.7013210886471941
+        ]
+      ]
+    },
+    {
+      "case_id": "phantom_seed6_sp0.8x0.8x0.8_hu550_n2",
+      "spacing": [
+        0.8,
+        0.8,
+        0.8
+      ],
+      "spacing_tag": "iso",
+      "lumen_hu": 550.0,
+      "n_branches": 2,
+      "n_reference": 5,
+      "n_predicted": 6,
+      "elapsed_s": 2.1812212467193604,
+      "precision": 0.8333333333333334,
+      "recall": 1.0,
+      "f1": 0.9090909090909091,
+      "mean_ostium_error_mm": 0.6126202340466,
+      "mean_seed_error_mm": 0.48842862105225315,
+      "mean_direction_error_deg": 8.736940247902249,
+      "mean_radius_error_mm": 0.09461827865190697,
+      "radius_scored_matches": 5,
+      "true_positives": 5,
+      "false_positives": 1,
+      "false_negatives": 0,
+      "matches": [
+        [
+          0,
+          2,
+          0.5260203993118481
+        ],
+        [
+          1,
+          0,
+          0.7681358409979171
+        ],
+        [
+          2,
+          1,
+          0.507166508806916
+        ],
+        [
+          3,
+          4,
+          0.5604573324691251
+        ],
+        [
+          4,
+          3,
+          0.7013210886471941
+        ]
+      ]
+    },
+    {
+      "case_id": "phantom_seed7_sp0.8x0.8x0.8_hu550_n5",
+      "spacing": [
+        0.8,
+        0.8,
+        0.8
+      ],
+      "spacing_tag": "iso",
+      "lumen_hu": 550.0,
+      "n_branches": 5,
+      "n_reference": 8,
+      "n_predicted": 9,
+      "elapsed_s": 2.3669185638427734,
+      "precision": 0.8888888888888888,
+      "recall": 1.0,
+      "f1": 0.9411764705882353,
+      "mean_ostium_error_mm": 0.5887965715570552,
+      "mean_seed_error_mm": 0.6613374871747995,
+      "mean_direction_error_deg": 10.110446948484306,
+      "mean_radius_error_mm": 0.10137467477851844,
+      "radius_scored_matches": 8,
+      "true_positives": 8,
+      "false_positives": 1,
+      "false_negatives": 0,
+      "matches": [
+        [
+          0,
+          1,
+          0.507166508806916
+        ],
+        [
+          1,
+          3,
+          0.7623725346432635
+        ],
+        [
+          2,
+          0,
+          0.7681358409979171
+        ],
+        [
+          3,
+          2,
+          0.4600157232254086
+        ],
+        [
+          4,
+          5,
+          0.5260203993118481
+        ],
+        [
+          5,
+          7,
+          0.5604573324691251
+        ],
+        [
+          6,
+          4,
+          0.42488314435476926
+        ],
+        [
+          7,
+          6,
+          0.7013210886471941
+        ]
+      ]
+    },
+    {
+      "case_id": "phantom_seed8_sp0.8x0.8x0.8_hu550_n9",
+      "spacing": [
+        0.8,
+        0.8,
+        0.8
+      ],
+      "spacing_tag": "iso",
+      "lumen_hu": 550.0,
+      "n_branches": 9,
+      "n_reference": 12,
+      "n_predicted": 12,
+      "elapsed_s": 3.1079318523406982,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "mean_ostium_error_mm": 0.62223091660877,
+      "mean_seed_error_mm": 0.42255174466732376,
+      "mean_direction_error_deg": 8.373457550723728,
+      "mean_radius_error_mm": 0.07029545757976609,
+      "radius_scored_matches": 12,
+      "true_positives": 12,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "matches": [
+        [
+          0,
+          8,
+          0.9257047615447868
+        ],
+        [
+          1,
+          3,
+          0.6894843156264542
+        ],
+        [
+          2,
+          4,
+          0.42488314435476926
+        ],
+        [
+          3,
+          1,
+          0.507166508806916
+        ],
+        [
+          4,
+          5,
+          0.6849190428034506
+        ],
+        [
+          5,
+          7,
+          0.5313372437581345
+        ],
+        [
+          6,
+          2,
+          0.4600157232254086
+        ],
+        [
+          7,
+          6,
+          0.8163495389148195
+        ],
+        [
+          8,
+          9,
+          0.5260203993118481
+        ],
+        [
+          9,
+          11,
+          0.5604573324691251
+        ],
+        [
+          10,
+          0,
+          0.6391118998423323
+        ],
+        [
+          11,
+          10,
+          0.7013210886471941
+        ]
+      ]
+    },
+    {
+      "case_id": "phantom_seed9_sp1.5x1.5x1.5_hu250_n2",
+      "spacing": [
+        1.5,
+        1.5,
+        1.5
+      ],
+      "spacing_tag": "iso",
+      "lumen_hu": 250.0,
+      "n_branches": 2,
+      "n_reference": 5,
+      "n_predicted": 5,
+      "elapsed_s": 1.9811458587646484,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "mean_ostium_error_mm": 0.864526564345485,
+      "mean_seed_error_mm": 0.7774559606613606,
+      "mean_direction_error_deg": 10.426625872050446,
+      "mean_radius_error_mm": 0.25514668697399784,
+      "radius_scored_matches": 5,
+      "true_positives": 5,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "matches": [
+        [
+          0,
+          0,
+          0.8054417372160058
+        ],
+        [
+          1,
+          1,
+          0.7938834589922004
+        ],
+        [
+          2,
+          2,
+          1.1478126240080668
+        ],
+        [
+          3,
+          4,
+          0.767713764086461
+        ],
+        [
+          4,
+          3,
+          0.8077812374246917
+        ]
+      ]
+    },
+    {
+      "case_id": "phantom_seed10_sp1.5x1.5x1.5_hu250_n5",
+      "spacing": [
+        1.5,
+        1.5,
+        1.5
+      ],
+      "spacing_tag": "iso",
+      "lumen_hu": 250.0,
+      "n_branches": 5,
+      "n_reference": 8,
+      "n_predicted": 9,
+      "elapsed_s": 2.6500747203826904,
+      "precision": 0.8888888888888888,
+      "recall": 1.0,
+      "f1": 0.9411764705882353,
+      "mean_ostium_error_mm": 0.8448909442443839,
+      "mean_seed_error_mm": 1.0244651049757845,
+      "mean_direction_error_deg": 11.463064634023773,
+      "mean_radius_error_mm": 0.24639367121151046,
+      "radius_scored_matches": 8,
+      "true_positives": 8,
+      "false_positives": 1,
+      "false_negatives": 0,
+      "matches": [
+        [
+          0,
+          0,
+          0.8054417372160058
+        ],
+        [
+          1,
+          4,
+          0.8772451374082811
+        ],
+        [
+          2,
+          2,
+          1.225967129625642
+        ],
+        [
+          3,
+          1,
+          0.7938834589922004
+        ],
+        [
+          4,
+          3,
+          0.3896960848161574
+        ],
+        [
+          5,
+          5,
+          1.091399004385632
+        ],
+        [
+          6,
+          7,
+          0.767713764086461
+        ],
+        [
+          8,
+          6,
+          0.8077812374246917
+        ]
+      ]
+    },
+    {
+      "case_id": "phantom_seed11_sp1.5x1.5x1.5_hu250_n9",
+      "spacing": [
+        1.5,
+        1.5,
+        1.5
+      ],
+      "spacing_tag": "iso",
+      "lumen_hu": 250.0,
+      "n_branches": 9,
+      "n_reference": 12,
+      "n_predicted": 10,
+      "elapsed_s": 2.333024024963379,
+      "precision": 0.7,
+      "recall": 0.5833333333333334,
+      "f1": 0.6363636363636365,
+      "mean_ostium_error_mm": 0.9639258135293147,
+      "mean_seed_error_mm": 0.6111131637610896,
+      "mean_direction_error_deg": 10.926306814522578,
+      "mean_radius_error_mm": 0.27702818087207837,
+      "radius_scored_matches": 7,
+      "true_positives": 7,
+      "false_positives": 3,
+      "false_negatives": 5,
+      "matches": [
+        [
+          0,
+          1,
+          1.8444979753581692
+        ],
+        [
+          1,
+          5,
+          0.7522527498769302
+        ],
+        [
+          2,
+          8,
+          0.8099731135688245
+        ],
+        [
+          3,
+          2,
+          1.225967129625642
+        ],
+        [
+          4,
+          0,
+          0.5392947247644841
+        ],
+        [
+          7,
+          11,
+          0.767713764086461
+        ],
+        [
+          8,
+          10,
+          0.8077812374246917
+        ]
+      ]
+    },
+    {
+      "case_id": "phantom_seed12_sp1.5x1.5x1.5_hu400_n2",
+      "spacing": [
+        1.5,
+        1.5,
+        1.5
+      ],
+      "spacing_tag": "iso",
+      "lumen_hu": 400.0,
+      "n_branches": 2,
+      "n_reference": 5,
+      "n_predicted": 5,
+      "elapsed_s": 1.8737668991088867,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "mean_ostium_error_mm": 0.864526564345485,
+      "mean_seed_error_mm": 0.7415237538078818,
+      "mean_direction_error_deg": 8.84695981707662,
+      "mean_radius_error_mm": 0.19236071578486516,
+      "radius_scored_matches": 5,
+      "true_positives": 5,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "matches": [
+        [
+          0,
+          1,
+          0.7938834589922004
+        ],
+        [
+          1,
+          0,
+          0.8054417372160058
+        ],
+        [
+          2,
+          2,
+          1.1478126240080668
+        ],
+        [
+          3,
+          4,
+          0.767713764086461
+        ],
+        [
+          4,
+          3,
+          0.8077812374246917
+        ]
+      ]
+    },
+    {
+      "case_id": "phantom_seed13_sp1.5x1.5x1.5_hu400_n5",
+      "spacing": [
+        1.5,
+        1.5,
+        1.5
+      ],
+      "spacing_tag": "iso",
+      "lumen_hu": 400.0,
+      "n_branches": 5,
+      "n_reference": 8,
+      "n_predicted": 7,
+      "elapsed_s": 2.149846076965332,
+      "precision": 1.0,
+      "recall": 0.875,
+      "f1": 0.9333333333333333,
+      "mean_ostium_error_mm": 0.9485179667941032,
+      "mean_seed_error_mm": 0.5974954859159519,
+      "mean_direction_error_deg": 10.261455302602716,
+      "mean_radius_error_mm": 0.0451860457868967,
+      "radius_scored_matches": 7,
+      "true_positives": 7,
+      "false_positives": 0,
+      "false_negatives": 1,
+      "matches": [
+        [
+          0,
+          7,
+          0.6448318446005628
+        ],
+        [
+          1,
+          2,
+          1.225967129625642
+        ],
+        [
+          2,
+          0,
+          0.8054417372160058
+        ],
+        [
+          3,
+          1,
+          1.6180951098675957
+        ],
+        [
+          4,
+          3,
+          0.3896960848161574
+        ],
+        [
+          5,
+          6,
+          0.8077812374246917
+        ],
+        [
+          6,
+          5,
+          1.1478126240080668
+        ]
+      ]
+    },
+    {
+      "case_id": "phantom_seed14_sp1.5x1.5x1.5_hu400_n9",
+      "spacing": [
+        1.5,
+        1.5,
+        1.5
+      ],
+      "spacing_tag": "iso",
+      "lumen_hu": 400.0,
+      "n_branches": 9,
+      "n_reference": 12,
+      "n_predicted": 12,
+      "elapsed_s": 2.755474328994751,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "mean_ostium_error_mm": 0.8315428600738003,
+      "mean_seed_error_mm": 0.8391765762211819,
+      "mean_direction_error_deg": 10.46499255930945,
+      "mean_radius_error_mm": 0.18016069898380807,
+      "radius_scored_matches": 12,
+      "true_positives": 12,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "matches": [
+        [
+          0,
+          3,
+          0.3896960848161574
+        ],
+        [
+          1,
+          8,
+          1.219615489194153
+        ],
+        [
+          2,
+          6,
+          0.4131458615212405
+        ],
+        [
+          3,
+          1,
+          0.7938834589922004
+        ],
+        [
+          4,
+          4,
+          0.42018243726116916
+        ],
+        [
+          5,
+          7,
+          1.0919334270738537
+        ],
+        [
+          6,
+          0,
+          0.8054417372160058
+        ],
+        [
+          7,
+          5,
+          0.7522527498769302
+        ],
+        [
+          8,
+          2,
+          1.1363287026110696
+        ],
+        [
+          9,
+          11,
+          1.0004405108900647
+        ],
+        [
+          10,
+          9,
+          1.1478126240080668
+        ],
+        [
+          11,
+          10,
+          0.8077812374246917
+        ]
+      ]
+    },
+    {
+      "case_id": "phantom_seed15_sp1.5x1.5x1.5_hu550_n2",
+      "spacing": [
+        1.5,
+        1.5,
+        1.5
+      ],
+      "spacing_tag": "iso",
+      "lumen_hu": 550.0,
+      "n_branches": 2,
+      "n_reference": 5,
+      "n_predicted": 5,
+      "elapsed_s": 1.9499537944793701,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "mean_ostium_error_mm": 1.0293688945205641,
+      "mean_seed_error_mm": 0.642322115636289,
+      "mean_direction_error_deg": 9.459841876872796,
+      "mean_radius_error_mm": 0.08676497689251468,
+      "radius_scored_matches": 5,
+      "true_positives": 5,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "matches": [
+        [
+          0,
+          1,
+          1.6180951098675957
+        ],
+        [
+          1,
+          0,
+          0.8054417372160058
+        ],
+        [
+          2,
+          4,
+          0.767713764086461
+        ],
+        [
+          3,
+          2,
+          1.1478126240080668
+        ],
+        [
+          4,
+          3,
+          0.8077812374246917
+        ]
+      ]
+    },
+    {
+      "case_id": "phantom_seed16_sp1.5x1.5x1.5_hu550_n5",
+      "spacing": [
+        1.5,
+        1.5,
+        1.5
+      ],
+      "spacing_tag": "iso",
+      "lumen_hu": 550.0,
+      "n_branches": 5,
+      "n_reference": 8,
+      "n_predicted": 7,
+      "elapsed_s": 1.9274511337280273,
+      "precision": 1.0,
+      "recall": 0.875,
+      "f1": 0.9333333333333333,
+      "mean_ostium_error_mm": 0.8484149022673909,
+      "mean_seed_error_mm": 0.5661025440748169,
+      "mean_direction_error_deg": 8.7300116443637,
+      "mean_radius_error_mm": 0.22980006623400645,
+      "radius_scored_matches": 7,
+      "true_positives": 7,
+      "false_positives": 0,
+      "false_negatives": 1,
+      "matches": [
+        [
+          0,
+          3,
+          0.3896960848161574
+        ],
+        [
+          1,
+          4,
+          0.8772451374082811
+        ],
+        [
+          2,
+          0,
+          0.33056035826048286
+        ],
+        [
+          3,
+          1,
+          1.6180951098675957
+        ],
+        [
+          4,
+          5,
+          1.1478126240080668
+        ],
+        [
+          5,
+          7,
+          0.767713764086461
+        ],
+        [
+          6,
+          6,
+          0.8077812374246917
+        ]
+      ]
+    },
+    {
+      "case_id": "phantom_seed17_sp1.5x1.5x1.5_hu550_n9",
+      "spacing": [
+        1.5,
+        1.5,
+        1.5
+      ],
+      "spacing_tag": "iso",
+      "lumen_hu": 550.0,
+      "n_branches": 9,
+      "n_reference": 12,
+      "n_predicted": 12,
+      "elapsed_s": 2.7153284549713135,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "mean_ostium_error_mm": 0.8031427605364686,
+      "mean_seed_error_mm": 0.551763239061971,
+      "mean_direction_error_deg": 8.801152685413916,
+      "mean_radius_error_mm": 0.10447443612189512,
+      "radius_scored_matches": 12,
+      "true_positives": 12,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "matches": [
+        [
+          0,
+          7,
+          0.9598198389967806
+        ],
+        [
+          1,
+          2,
+          1.225967129625642
+        ],
+        [
+          2,
+          3,
+          0.4673098716854356
+        ],
+        [
+          3,
+          6,
+          0.41465238242166697
+        ],
+        [
+          4,
+          4,
+          0.42018243726116916
+        ],
+        [
+          5,
+          0,
+          0.8054417372160058
+        ],
+        [
+          6,
+          5,
+          0.7522527498769302
+        ],
+        [
+          7,
+          8,
+          1.197777814328473
+        ],
+        [
+          8,
+          1,
+          0.7938834589922004
+        ],
+        [
+          9,
+          11,
+          0.6448318446005628
+        ],
+        [
+          10,
+          10,
+          0.8077812374246917
+        ],
+        [
+          11,
+          9,
+          1.1478126240080668
+        ]
+      ]
+    },
+    {
+      "case_id": "phantom_seed18_sp0.7x0.7x1.5_hu250_n2",
+      "spacing": [
+        0.7,
+        0.7,
+        1.5
+      ],
+      "spacing_tag": "aniso",
+      "lumen_hu": 250.0,
+      "n_branches": 2,
+      "n_reference": 5,
+      "n_predicted": 5,
+      "elapsed_s": 2.3110480308532715,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "mean_ostium_error_mm": 0.5429933367228772,
+      "mean_seed_error_mm": 0.25739874475286406,
+      "mean_direction_error_deg": 7.061714323702176,
+      "mean_radius_error_mm": 0.21990964916405487,
+      "radius_scored_matches": 5,
+      "true_positives": 5,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "matches": [
+        [
+          0,
+          1,
+          0.5867205212150405
+        ],
+        [
+          1,
+          4,
+          0.5574440448630146
+        ],
+        [
+          2,
+          0,
+          0.3305605988909167
+        ],
+        [
+          3,
+          2,
+          0.646643363855258
+        ],
+        [
+          4,
+          3,
+          0.5935981547901565
+        ]
+      ]
+    },
+    {
+      "case_id": "phantom_seed19_sp0.7x0.7x1.5_hu250_n5",
+      "spacing": [
+        0.7,
+        0.7,
+        1.5
+      ],
+      "spacing_tag": "aniso",
+      "lumen_hu": 250.0,
+      "n_branches": 5,
+      "n_reference": 8,
+      "n_predicted": 8,
+      "elapsed_s": 2.444042444229126,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "mean_ostium_error_mm": 0.5727151346943841,
+      "mean_seed_error_mm": 0.32881123902807285,
+      "mean_direction_error_deg": 7.766051367739323,
+      "mean_radius_error_mm": 0.1773528481092449,
+      "radius_scored_matches": 8,
+      "true_positives": 8,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "matches": [
+        [
+          0,
+          2,
+          0.7720993039357705
+        ],
+        [
+          1,
+          7,
+          0.5574440448630146
+        ],
+        [
+          2,
+          0,
+          0.3305605988909167
+        ],
+        [
+          3,
+          3,
+          0.4673100345418533
+        ],
+        [
+          4,
+          5,
+          0.646643363855258
+        ],
+        [
+          5,
+          1,
+          0.7938832098973047
+        ],
+        [
+          6,
+          4,
+          0.4201823667807979
+        ],
+        [
+          7,
+          6,
+          0.5935981547901565
+        ]
+      ]
+    },
+    {
+      "case_id": "phantom_seed20_sp0.7x0.7x1.5_hu250_n9",
+      "spacing": [
+        0.7,
+        0.7,
+        1.5
+      ],
+      "spacing_tag": "aniso",
+      "lumen_hu": 250.0,
+      "n_branches": 9,
+      "n_reference": 12,
+      "n_predicted": 12,
+      "elapsed_s": 2.863090753555298,
+      "precision": 0.9166666666666666,
+      "recall": 0.9166666666666666,
+      "f1": 0.9166666666666666,
+      "mean_ostium_error_mm": 0.5460496450669795,
+      "mean_seed_error_mm": 0.5218896546838199,
+      "mean_direction_error_deg": 8.636554872241435,
+      "mean_radius_error_mm": 0.309563183815829,
+      "radius_scored_matches": 11,
+      "true_positives": 11,
+      "false_positives": 1,
+      "false_negatives": 1,
+      "matches": [
+        [
+          0,
+          3,
+          0.3896962801078445
+        ],
+        [
+          1,
+          1,
+          0.7938832098973047
+        ],
+        [
+          2,
+          4,
+          0.4201823667807979
+        ],
+        [
+          3,
+          11,
+          0.5574440448630146
+        ],
+        [
+          4,
+          8,
+          0.8002337651315352
+        ],
+        [
+          5,
+          0,
+          0.3305605988909167
+        ],
+        [
+          6,
+          9,
+          0.646643363855258
+        ],
+        [
+          7,
+          5,
+          0.2285941929665217
+        ],
+        [
+          8,
+          10,
+          0.5935981547901565
+        ],
+        [
+          9,
+          2,
+          0.6155965864447513
+        ],
+        [
+          10,
+          7,
+          0.6301135320086734
+        ]
+      ]
+    },
+    {
+      "case_id": "phantom_seed21_sp0.7x0.7x1.5_hu400_n2",
+      "spacing": [
+        0.7,
+        0.7,
+        1.5
+      ],
+      "spacing_tag": "aniso",
+      "lumen_hu": 400.0,
+      "n_branches": 2,
+      "n_reference": 5,
+      "n_predicted": 5,
+      "elapsed_s": 2.1151978969573975,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "mean_ostium_error_mm": 0.5429933367228772,
+      "mean_seed_error_mm": 0.23896756479332182,
+      "mean_direction_error_deg": 6.9749662046919765,
+      "mean_radius_error_mm": 0.13454351708265994,
+      "radius_scored_matches": 5,
+      "true_positives": 5,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "matches": [
+        [
+          0,
+          4,
+          0.5574440448630146
+        ],
+        [
+          1,
+          2,
+          0.646643363855258
+        ],
+        [
+          2,
+          0,
+          0.3305605988909167
+        ],
+        [
+          3,
+          3,
+          0.5935981547901565
+        ],
+        [
+          4,
+          1,
+          0.5867205212150405
+        ]
+      ]
+    },
+    {
+      "case_id": "phantom_seed22_sp0.7x0.7x1.5_hu400_n5",
+      "spacing": [
+        0.7,
+        0.7,
+        1.5
+      ],
+      "spacing_tag": "aniso",
+      "lumen_hu": 400.0,
+      "n_branches": 5,
+      "n_reference": 8,
+      "n_predicted": 7,
+      "elapsed_s": 2.5466387271881104,
+      "precision": 1.0,
+      "recall": 0.875,
+      "f1": 0.9333333333333333,
+      "mean_ostium_error_mm": 0.5442316819456146,
+      "mean_seed_error_mm": 0.31452787665313264,
+      "mean_direction_error_deg": 7.287037783066105,
+      "mean_radius_error_mm": 0.20740705459796427,
+      "radius_scored_matches": 7,
+      "true_positives": 7,
+      "false_positives": 0,
+      "false_negatives": 1,
+      "matches": [
+        [
+          0,
+          4,
+          0.4201823667807979
+        ],
+        [
+          1,
+          1,
+          0.7938832098973047
+        ],
+        [
+          2,
+          3,
+          0.4673100345418533
+        ],
+        [
+          3,
+          7,
+          0.5574440448630146
+        ],
+        [
+          4,
+          0,
+          0.3305605988909167
+        ],
+        [
+          5,
+          5,
+          0.646643363855258
+        ],
+        [
+          6,
+          6,
+          0.5935981547901565
+        ]
+      ]
+    },
+    {
+      "case_id": "phantom_seed23_sp0.7x0.7x1.5_hu400_n9",
+      "spacing": [
+        0.7,
+        0.7,
+        1.5
+      ],
+      "spacing_tag": "aniso",
+      "lumen_hu": 400.0,
+      "n_branches": 9,
+      "n_reference": 12,
+      "n_predicted": 15,
+      "elapsed_s": 2.981804370880127,
+      "precision": 0.8,
+      "recall": 1.0,
+      "f1": 0.888888888888889,
+      "mean_ostium_error_mm": 0.588364201732265,
+      "mean_seed_error_mm": 0.31682301351604825,
+      "mean_direction_error_deg": 9.6552277420358,
+      "mean_radius_error_mm": 0.18222514959183303,
+      "radius_scored_matches": 12,
+      "true_positives": 12,
+      "false_positives": 3,
+      "false_negatives": 0,
+      "matches": [
+        [
+          0,
+          2,
+          0.6155965864447513
+        ],
+        [
+          1,
+          3,
+          0.3896962801078445
+        ],
+        [
+          2,
+          11,
+          0.5574440448630146
+        ],
+        [
+          3,
+          7,
+          0.8709397400284669
+        ],
+        [
+          4,
+          9,
+          0.646643363855258
+        ],
+        [
+          5,
+          8,
+          0.8099727538611666
+        ],
+        [
+          6,
+          5,
+          0.2285941929665217
+        ],
+        [
+          7,
+          6,
+          0.801687543615373
+        ],
+        [
+          8,
+          10,
+          0.5935981547901565
+        ],
+        [
+          9,
+          1,
+          0.5867205212150405
+        ],
+        [
+          10,
+          0,
+          0.5392948722587889
+        ],
+        [
+          11,
+          4,
+          0.4201823667807979
+        ]
+      ]
+    },
+    {
+      "case_id": "phantom_seed24_sp0.7x0.7x1.5_hu550_n2",
+      "spacing": [
+        0.7,
+        0.7,
+        1.5
+      ],
+      "spacing_tag": "aniso",
+      "lumen_hu": 550.0,
+      "n_branches": 2,
+      "n_reference": 5,
+      "n_predicted": 5,
+      "elapsed_s": 2.216353178024292,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "mean_ostium_error_mm": 0.5429933367228773,
+      "mean_seed_error_mm": 0.21366656696501404,
+      "mean_direction_error_deg": 6.973401204089956,
+      "mean_radius_error_mm": 0.13305683540440097,
+      "radius_scored_matches": 5,
+      "true_positives": 5,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "matches": [
+        [
+          0,
+          4,
+          0.5574440448630146
+        ],
+        [
+          1,
+          0,
+          0.3305605988909167
+        ],
+        [
+          2,
+          2,
+          0.646643363855258
+        ],
+        [
+          3,
+          3,
+          0.5935981547901565
+        ],
+        [
+          4,
+          1,
+          0.5867205212150405
+        ]
+      ]
+    },
+    {
+      "case_id": "phantom_seed25_sp0.7x0.7x1.5_hu550_n5",
+      "spacing": [
+        0.7,
+        0.7,
+        1.5
+      ],
+      "spacing_tag": "aniso",
+      "lumen_hu": 550.0,
+      "n_branches": 5,
+      "n_reference": 8,
+      "n_predicted": 6,
+      "elapsed_s": 2.283478021621704,
+      "precision": 1.0,
+      "recall": 0.75,
+      "f1": 0.8571428571428571,
+      "mean_ostium_error_mm": 0.5222565048253235,
+      "mean_seed_error_mm": 0.20426072634327974,
+      "mean_direction_error_deg": 6.230383325370837,
+      "mean_radius_error_mm": 0.156273511431436,
+      "radius_scored_matches": 6,
+      "true_positives": 6,
+      "false_positives": 0,
+      "false_negatives": 2,
+      "matches": [
+        [
+          0,
+          3,
+          0.3896962801078445
+        ],
+        [
+          1,
+          2,
+          0.6155965864447513
+        ],
+        [
+          2,
+          7,
+          0.5574440448630146
+        ],
+        [
+          3,
+          5,
+          0.646643363855258
+        ],
+        [
+          4,
+          6,
+          0.5935981547901565
+        ],
+        [
+          5,
+          0,
+          0.3305605988909167
+        ]
+      ]
+    },
+    {
+      "case_id": "phantom_seed26_sp0.7x0.7x1.5_hu550_n9",
+      "spacing": [
+        0.7,
+        0.7,
+        1.5
+      ],
+      "spacing_tag": "aniso",
+      "lumen_hu": 550.0,
+      "n_branches": 9,
+      "n_reference": 12,
+      "n_predicted": 11,
+      "elapsed_s": 2.7498698234558105,
+      "precision": 1.0,
+      "recall": 0.9166666666666666,
+      "f1": 0.9565217391304348,
+      "mean_ostium_error_mm": 0.5999253628562274,
+      "mean_seed_error_mm": 0.328453011840271,
+      "mean_direction_error_deg": 8.495308512091547,
+      "mean_radius_error_mm": 0.2356254749556246,
+      "radius_scored_matches": 11,
+      "true_positives": 11,
+      "false_positives": 0,
+      "false_negatives": 1,
+      "matches": [
+        [
+          0,
+          3,
+          0.4673100345418533
+        ],
+        [
+          1,
+          1,
+          0.7938832098973047
+        ],
+        [
+          2,
+          7,
+          0.9598198876544588
+        ],
+        [
+          3,
+          11,
+          0.5574440448630146
+        ],
+        [
+          4,
+          4,
+          0.4201823667807979
+        ],
+        [
+          5,
+          8,
+          0.8002337651315352
+        ],
+        [
+          6,
+          9,
+          0.646643363855258
+        ],
+        [
+          7,
+          0,
+          0.3305605988909167
+        ],
+        [
+          8,
+          5,
+          0.2285941929665217
+        ],
+        [
+          9,
+          10,
+          0.5935981547901565
+        ],
+        [
+          10,
+          6,
+          0.8009093720466843
+        ]
+      ]
+    },
+    {
+      "case_id": "phantom_seed27_sp0.8x0.8x0.8_hu400_n5_trunc",
+      "spacing": [
+        0.8,
+        0.8,
+        0.8
+      ],
+      "spacing_tag": "iso",
+      "lumen_hu": 400.0,
+      "n_branches": 5,
+      "n_reference": 8,
+      "n_predicted": 8,
+      "elapsed_s": 1.7164838314056396,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "mean_ostium_error_mm": 0.563557551535506,
+      "mean_seed_error_mm": 0.42782045885965075,
+      "mean_direction_error_deg": 10.110446948484306,
+      "mean_radius_error_mm": 0.1010220939007439,
+      "radius_scored_matches": 8,
+      "true_positives": 8,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "matches": [
+        [
+          0,
+          1,
+          0.507166508806916
+        ],
+        [
+          1,
+          2,
+          0.4600157232254086
+        ],
+        [
+          2,
+          4,
+          0.42488314435476926
+        ],
+        [
+          3,
+          3,
+          0.6894843156264542
+        ],
+        [
+          4,
+          0,
+          0.6391118998423323
+        ],
+        [
+          5,
+          5,
+          0.5260203993118481
+        ],
+        [
+          6,
+          7,
+          0.5604573324691251
+        ],
+        [
+          7,
+          6,
+          0.7013210886471941
+        ]
+      ]
+    },
+    {
+      "case_id": "phantom_seed28_noncontrast",
+      "spacing": [
+        0.8,
+        0.8,
+        0.8
+      ],
+      "spacing_tag": "iso",
+      "lumen_hu": 60.0,
+      "n_branches": 0,
+      "n_reference": 0,
+      "n_predicted": 0,
+      "elapsed_s": 0.655024528503418,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "mean_ostium_error_mm": 0.0,
+      "mean_seed_error_mm": 0.0,
+      "mean_direction_error_deg": 0.0,
+      "mean_radius_error_mm": 0.0,
+      "radius_scored_matches": 0,
+      "true_positives": 0,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "matches": []
+    },
+    {
+      "case_id": "phantom_seed29_sp0.8x0.8x0.8_hu400_n3_organbed_bed_brighter",
+      "spacing": [
+        0.8,
+        0.8,
+        0.8
+      ],
+      "spacing_tag": "iso",
+      "lumen_hu": 400.0,
+      "n_branches": 3,
+      "n_reference": 6,
+      "n_predicted": 4,
+      "elapsed_s": 1.9516301155090332,
+      "precision": 1.0,
+      "recall": 0.6666666666666666,
+      "f1": 0.8,
+      "mean_ostium_error_mm": 0.5467457217623783,
+      "mean_seed_error_mm": 0.4019939469936825,
+      "mean_direction_error_deg": 9.216934490293694,
+      "mean_radius_error_mm": 0.05026643665885566,
+      "radius_scored_matches": 4,
+      "true_positives": 4,
+      "false_positives": 0,
+      "false_negatives": 2,
+      "matches": [
+        [
+          0,
+          1,
+          0.507166508806916
+        ],
+        [
+          1,
+          2,
+          0.4600157232254086
+        ],
+        [
+          2,
+          4,
+          0.6937802557053409
+        ],
+        [
+          3,
+          3,
+          0.5260203993118481
+        ]
+      ]
+    },
+    {
+      "case_id": "phantom_seed30_sp0.8x0.8x0.8_hu400_n3_organbed_equal_hu",
+      "spacing": [
+        0.8,
+        0.8,
+        0.8
+      ],
+      "spacing_tag": "iso",
+      "lumen_hu": 400.0,
+      "n_branches": 3,
+      "n_reference": 6,
+      "n_predicted": 5,
+      "elapsed_s": 2.017590284347534,
+      "precision": 1.0,
+      "recall": 0.8333333333333334,
+      "f1": 0.9090909090909091,
+      "mean_ostium_error_mm": 0.5652189573783691,
+      "mean_seed_error_mm": 0.4444476390458063,
+      "mean_direction_error_deg": 8.808974573952032,
+      "mean_radius_error_mm": 0.10342525146220072,
+      "radius_scored_matches": 5,
+      "true_positives": 5,
+      "false_positives": 0,
+      "false_negatives": 1,
+      "matches": [
+        [
+          0,
+          1,
+          0.507166508806916
+        ],
+        [
+          1,
+          2,
+          0.4600157232254086
+        ],
+        [
+          2,
+          4,
+          0.6937802557053409
+        ],
+        [
+          3,
+          0,
+          0.6391118998423323
+        ],
+        [
+          4,
+          3,
+          0.5260203993118481
+        ]
+      ]
+    },
+    {
+      "case_id": "phantom_seed31_sp0.8x0.8x0.8_hu400_n3_organbed_branch_brighter_control",
+      "spacing": [
+        0.8,
+        0.8,
+        0.8
+      ],
+      "spacing_tag": "iso",
+      "lumen_hu": 400.0,
+      "n_branches": 3,
+      "n_reference": 6,
+      "n_predicted": 5,
+      "elapsed_s": 1.523113489151001,
+      "precision": 1.0,
+      "recall": 0.8333333333333334,
+      "f1": 0.9090909090909091,
+      "mean_ostium_error_mm": 0.5910237456094861,
+      "mean_seed_error_mm": 0.48396422272392625,
+      "mean_direction_error_deg": 9.518166892252253,
+      "mean_radius_error_mm": 0.0886028688450979,
+      "radius_scored_matches": 5,
+      "true_positives": 5,
+      "false_positives": 0,
+      "false_negatives": 1,
+      "matches": [
+        [
+          0,
+          1,
+          0.507166508806916
+        ],
+        [
+          1,
+          4,
+          0.6937802557053409
+        ],
+        [
+          2,
+          2,
+          0.4600157232254086
+        ],
+        [
+          3,
+          0,
+          0.7681358409979171
+        ],
+        [
+          4,
+          3,
+          0.5260203993118481
+        ]
+      ]
+    }
+  ],
+  "structural_checks": [
+    {
+      "case": "phantom_seed0_sp0.8x0.8x0.8_hu250_n2",
+      "check": "leak_bridge_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 24.0mm from the bridged blob (need > 10mm), instance branch_003"
+    },
+    {
+      "case": "phantom_seed0_sp0.8x0.8x0.8_hu250_n2",
+      "check": "ivc_not_reported_at_midpoint",
+      "passed": true,
+      "detail": "nearest daughter 27.6mm from the IVC analogue's midpoint, instance branch_005"
+    },
+    {
+      "case": "phantom_seed0_sp0.8x0.8x0.8_hu250_n2",
+      "check": "thin_branch_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 17.1mm from the 0.8mm-radius thin branch's ostium (need > 10mm), instance branch_002"
+    },
+    {
+      "case": "phantom_seed0_sp0.8x0.8x0.8_hu250_n2",
+      "check": "bifurcation_reported_as_one_instance",
+      "passed": true,
+      "detail": "1 daughters within 10mm of the trunk's ostium (need exactly 1)"
+    },
+    {
+      "case": "phantom_seed0_sp0.8x0.8x0.8_hu250_n2",
+      "check": "close_pair_stays_two_instances",
+      "passed": true,
+      "detail": "matches: ['branch_005', 'branch_004'] (need two distinct, non-None instances)"
+    },
+    {
+      "case": "phantom_seed1_sp0.8x0.8x0.8_hu250_n5",
+      "check": "leak_bridge_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 18.7mm from the bridged blob (need > 10mm), instance branch_001"
+    },
+    {
+      "case": "phantom_seed1_sp0.8x0.8x0.8_hu250_n5",
+      "check": "ivc_not_reported_at_midpoint",
+      "passed": true,
+      "detail": "nearest daughter 27.6mm from the IVC analogue's midpoint, instance branch_008"
+    },
+    {
+      "case": "phantom_seed1_sp0.8x0.8x0.8_hu250_n5",
+      "check": "thin_branch_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 17.1mm from the 0.8mm-radius thin branch's ostium (need > 10mm), instance branch_007"
+    },
+    {
+      "case": "phantom_seed1_sp0.8x0.8x0.8_hu250_n5",
+      "check": "bifurcation_reported_as_one_instance",
+      "passed": true,
+      "detail": "1 daughters within 10mm of the trunk's ostium (need exactly 1)"
+    },
+    {
+      "case": "phantom_seed1_sp0.8x0.8x0.8_hu250_n5",
+      "check": "close_pair_stays_two_instances",
+      "passed": true,
+      "detail": "matches: ['branch_008', 'branch_006'] (need two distinct, non-None instances)"
+    },
+    {
+      "case": "phantom_seed2_sp0.8x0.8x0.8_hu250_n9",
+      "check": "leak_bridge_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 13.9mm from the bridged blob (need > 10mm), instance branch_009"
+    },
+    {
+      "case": "phantom_seed2_sp0.8x0.8x0.8_hu250_n9",
+      "check": "ivc_not_reported_at_midpoint",
+      "passed": true,
+      "detail": "nearest daughter 27.5mm from the IVC analogue's midpoint, instance branch_009"
+    },
+    {
+      "case": "phantom_seed2_sp0.8x0.8x0.8_hu250_n9",
+      "check": "thin_branch_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 17.1mm from the 0.8mm-radius thin branch's ostium (need > 10mm), instance branch_011"
+    },
+    {
+      "case": "phantom_seed2_sp0.8x0.8x0.8_hu250_n9",
+      "check": "bifurcation_reported_as_one_instance",
+      "passed": true,
+      "detail": "1 daughters within 10mm of the trunk's ostium (need exactly 1)"
+    },
+    {
+      "case": "phantom_seed2_sp0.8x0.8x0.8_hu250_n9",
+      "check": "close_pair_stays_two_instances",
+      "passed": true,
+      "detail": "matches: ['branch_012', 'branch_010'] (need two distinct, non-None instances)"
+    },
+    {
+      "case": "phantom_seed3_sp0.8x0.8x0.8_hu400_n2",
+      "check": "leak_bridge_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 24.0mm from the bridged blob (need > 10mm), instance branch_002"
+    },
+    {
+      "case": "phantom_seed3_sp0.8x0.8x0.8_hu400_n2",
+      "check": "ivc_not_reported_at_midpoint",
+      "passed": true,
+      "detail": "nearest daughter 27.6mm from the IVC analogue's midpoint, instance branch_005"
+    },
+    {
+      "case": "phantom_seed3_sp0.8x0.8x0.8_hu400_n2",
+      "check": "thin_branch_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 17.9mm from the 0.8mm-radius thin branch's ostium (need > 10mm), instance branch_001"
+    },
+    {
+      "case": "phantom_seed3_sp0.8x0.8x0.8_hu400_n2",
+      "check": "bifurcation_reported_as_one_instance",
+      "passed": true,
+      "detail": "1 daughters within 10mm of the trunk's ostium (need exactly 1)"
+    },
+    {
+      "case": "phantom_seed3_sp0.8x0.8x0.8_hu400_n2",
+      "check": "close_pair_stays_two_instances",
+      "passed": true,
+      "detail": "matches: ['branch_005', 'branch_003'] (need two distinct, non-None instances)"
+    },
+    {
+      "case": "phantom_seed4_sp0.8x0.8x0.8_hu400_n5",
+      "check": "leak_bridge_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 18.7mm from the bridged blob (need > 10mm), instance branch_003"
+    },
+    {
+      "case": "phantom_seed4_sp0.8x0.8x0.8_hu400_n5",
+      "check": "ivc_not_reported_at_midpoint",
+      "passed": true,
+      "detail": "nearest daughter 27.6mm from the IVC analogue's midpoint, instance branch_008"
+    },
+    {
+      "case": "phantom_seed4_sp0.8x0.8x0.8_hu400_n5",
+      "check": "thin_branch_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 17.1mm from the 0.8mm-radius thin branch's ostium (need > 10mm), instance branch_004"
+    },
+    {
+      "case": "phantom_seed4_sp0.8x0.8x0.8_hu400_n5",
+      "check": "bifurcation_reported_as_one_instance",
+      "passed": true,
+      "detail": "1 daughters within 10mm of the trunk's ostium (need exactly 1)"
+    },
+    {
+      "case": "phantom_seed4_sp0.8x0.8x0.8_hu400_n5",
+      "check": "close_pair_stays_two_instances",
+      "passed": true,
+      "detail": "matches: ['branch_008', 'branch_006'] (need two distinct, non-None instances)"
+    },
+    {
+      "case": "phantom_seed5_sp0.8x0.8x0.8_hu400_n9",
+      "check": "leak_bridge_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 13.9mm from the bridged blob (need > 10mm), instance branch_008"
+    },
+    {
+      "case": "phantom_seed5_sp0.8x0.8x0.8_hu400_n9",
+      "check": "ivc_not_reported_at_midpoint",
+      "passed": true,
+      "detail": "nearest daughter 27.3mm from the IVC analogue's midpoint, instance branch_008"
+    },
+    {
+      "case": "phantom_seed5_sp0.8x0.8x0.8_hu400_n9",
+      "check": "thin_branch_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 17.9mm from the 0.8mm-radius thin branch's ostium (need > 10mm), instance branch_006"
+    },
+    {
+      "case": "phantom_seed5_sp0.8x0.8x0.8_hu400_n9",
+      "check": "bifurcation_reported_as_one_instance",
+      "passed": true,
+      "detail": "1 daughters within 10mm of the trunk's ostium (need exactly 1)"
+    },
+    {
+      "case": "phantom_seed5_sp0.8x0.8x0.8_hu400_n9",
+      "check": "close_pair_stays_two_instances",
+      "passed": true,
+      "detail": "matches: ['branch_011', 'branch_009'] (need two distinct, non-None instances)"
+    },
+    {
+      "case": "phantom_seed6_sp0.8x0.8x0.8_hu550_n2",
+      "check": "leak_bridge_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 24.0mm from the bridged blob (need > 10mm), instance branch_001"
+    },
+    {
+      "case": "phantom_seed6_sp0.8x0.8x0.8_hu550_n2",
+      "check": "ivc_not_reported_at_midpoint",
+      "passed": true,
+      "detail": "nearest daughter 27.6mm from the IVC analogue's midpoint, instance branch_005"
+    },
+    {
+      "case": "phantom_seed6_sp0.8x0.8x0.8_hu550_n2",
+      "check": "thin_branch_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 17.1mm from the 0.8mm-radius thin branch's ostium (need > 10mm), instance branch_002"
+    },
+    {
+      "case": "phantom_seed6_sp0.8x0.8x0.8_hu550_n2",
+      "check": "bifurcation_reported_as_one_instance",
+      "passed": true,
+      "detail": "1 daughters within 10mm of the trunk's ostium (need exactly 1)"
+    },
+    {
+      "case": "phantom_seed6_sp0.8x0.8x0.8_hu550_n2",
+      "check": "close_pair_stays_two_instances",
+      "passed": true,
+      "detail": "matches: ['branch_005', 'branch_004'] (need two distinct, non-None instances)"
+    },
+    {
+      "case": "phantom_seed7_sp0.8x0.8x0.8_hu550_n5",
+      "check": "leak_bridge_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 18.7mm from the bridged blob (need > 10mm), instance branch_004"
+    },
+    {
+      "case": "phantom_seed7_sp0.8x0.8x0.8_hu550_n5",
+      "check": "ivc_not_reported_at_midpoint",
+      "passed": true,
+      "detail": "nearest daughter 27.6mm from the IVC analogue's midpoint, instance branch_008"
+    },
+    {
+      "case": "phantom_seed7_sp0.8x0.8x0.8_hu550_n5",
+      "check": "thin_branch_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 17.1mm from the 0.8mm-radius thin branch's ostium (need > 10mm), instance branch_003"
+    },
+    {
+      "case": "phantom_seed7_sp0.8x0.8x0.8_hu550_n5",
+      "check": "bifurcation_reported_as_one_instance",
+      "passed": true,
+      "detail": "1 daughters within 10mm of the trunk's ostium (need exactly 1)"
+    },
+    {
+      "case": "phantom_seed7_sp0.8x0.8x0.8_hu550_n5",
+      "check": "close_pair_stays_two_instances",
+      "passed": true,
+      "detail": "matches: ['branch_008', 'branch_006'] (need two distinct, non-None instances)"
+    },
+    {
+      "case": "phantom_seed8_sp0.8x0.8x0.8_hu550_n9",
+      "check": "leak_bridge_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 13.9mm from the bridged blob (need > 10mm), instance branch_008"
+    },
+    {
+      "case": "phantom_seed8_sp0.8x0.8x0.8_hu550_n9",
+      "check": "ivc_not_reported_at_midpoint",
+      "passed": true,
+      "detail": "nearest daughter 27.5mm from the IVC analogue's midpoint, instance branch_008"
+    },
+    {
+      "case": "phantom_seed8_sp0.8x0.8x0.8_hu550_n9",
+      "check": "thin_branch_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 17.9mm from the 0.8mm-radius thin branch's ostium (need > 10mm), instance branch_011"
+    },
+    {
+      "case": "phantom_seed8_sp0.8x0.8x0.8_hu550_n9",
+      "check": "bifurcation_reported_as_one_instance",
+      "passed": true,
+      "detail": "1 daughters within 10mm of the trunk's ostium (need exactly 1)"
+    },
+    {
+      "case": "phantom_seed8_sp0.8x0.8x0.8_hu550_n9",
+      "check": "close_pair_stays_two_instances",
+      "passed": true,
+      "detail": "matches: ['branch_012', 'branch_010'] (need two distinct, non-None instances)"
+    },
+    {
+      "case": "phantom_seed9_sp1.5x1.5x1.5_hu250_n2",
+      "check": "leak_bridge_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 24.4mm from the bridged blob (need > 10mm), instance branch_003"
+    },
+    {
+      "case": "phantom_seed9_sp1.5x1.5x1.5_hu250_n2",
+      "check": "ivc_not_reported_at_midpoint",
+      "passed": true,
+      "detail": "nearest daughter 27.5mm from the IVC analogue's midpoint, instance branch_005"
+    },
+    {
+      "case": "phantom_seed9_sp1.5x1.5x1.5_hu250_n2",
+      "check": "thin_branch_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 17.7mm from the 0.8mm-radius thin branch's ostium (need > 10mm), instance branch_001"
+    },
+    {
+      "case": "phantom_seed9_sp1.5x1.5x1.5_hu250_n2",
+      "check": "bifurcation_reported_as_one_instance",
+      "passed": true,
+      "detail": "1 daughters within 10mm of the trunk's ostium (need exactly 1)"
+    },
+    {
+      "case": "phantom_seed9_sp1.5x1.5x1.5_hu250_n2",
+      "check": "close_pair_stays_two_instances",
+      "passed": true,
+      "detail": "matches: ['branch_005', 'branch_004'] (need two distinct, non-None instances)"
+    },
+    {
+      "case": "phantom_seed10_sp1.5x1.5x1.5_hu250_n5",
+      "check": "leak_bridge_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 17.7mm from the bridged blob (need > 10mm), instance branch_003"
+    },
+    {
+      "case": "phantom_seed10_sp1.5x1.5x1.5_hu250_n5",
+      "check": "ivc_not_reported_at_midpoint",
+      "passed": true,
+      "detail": "nearest daughter 27.5mm from the IVC analogue's midpoint, instance branch_003"
+    },
+    {
+      "case": "phantom_seed10_sp1.5x1.5x1.5_hu250_n5",
+      "check": "thin_branch_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 17.7mm from the 0.8mm-radius thin branch's ostium (need > 10mm), instance branch_001"
+    },
+    {
+      "case": "phantom_seed10_sp1.5x1.5x1.5_hu250_n5",
+      "check": "bifurcation_reported_as_one_instance",
+      "passed": true,
+      "detail": "1 daughters within 10mm of the trunk's ostium (need exactly 1)"
+    },
+    {
+      "case": "phantom_seed10_sp1.5x1.5x1.5_hu250_n5",
+      "check": "close_pair_stays_two_instances",
+      "passed": true,
+      "detail": "matches: ['branch_009', 'branch_007'] (need two distinct, non-None instances)"
+    },
+    {
+      "case": "phantom_seed11_sp1.5x1.5x1.5_hu250_n9",
+      "check": "leak_bridge_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 17.7mm from the bridged blob (need > 10mm), instance branch_004"
+    },
+    {
+      "case": "phantom_seed11_sp1.5x1.5x1.5_hu250_n9",
+      "check": "ivc_not_reported_at_midpoint",
+      "passed": true,
+      "detail": "nearest daughter 27.5mm from the IVC analogue's midpoint, instance branch_004"
+    },
+    {
+      "case": "phantom_seed11_sp1.5x1.5x1.5_hu250_n9",
+      "check": "thin_branch_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 17.1mm from the 0.8mm-radius thin branch's ostium (need > 10mm), instance branch_005"
+    },
+    {
+      "case": "phantom_seed11_sp1.5x1.5x1.5_hu250_n9",
+      "check": "bifurcation_reported_as_one_instance",
+      "passed": true,
+      "detail": "1 daughters within 10mm of the trunk's ostium (need exactly 1)"
+    },
+    {
+      "case": "phantom_seed11_sp1.5x1.5x1.5_hu250_n9",
+      "check": "close_pair_stays_two_instances",
+      "passed": true,
+      "detail": "matches: ['branch_009', 'branch_008'] (need two distinct, non-None instances)"
+    },
+    {
+      "case": "phantom_seed12_sp1.5x1.5x1.5_hu400_n2",
+      "check": "leak_bridge_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 24.4mm from the bridged blob (need > 10mm), instance branch_003"
+    },
+    {
+      "case": "phantom_seed12_sp1.5x1.5x1.5_hu400_n2",
+      "check": "ivc_not_reported_at_midpoint",
+      "passed": true,
+      "detail": "nearest daughter 27.5mm from the IVC analogue's midpoint, instance branch_005"
+    },
+    {
+      "case": "phantom_seed12_sp1.5x1.5x1.5_hu400_n2",
+      "check": "thin_branch_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 17.7mm from the 0.8mm-radius thin branch's ostium (need > 10mm), instance branch_002"
+    },
+    {
+      "case": "phantom_seed12_sp1.5x1.5x1.5_hu400_n2",
+      "check": "bifurcation_reported_as_one_instance",
+      "passed": true,
+      "detail": "1 daughters within 10mm of the trunk's ostium (need exactly 1)"
+    },
+    {
+      "case": "phantom_seed12_sp1.5x1.5x1.5_hu400_n2",
+      "check": "close_pair_stays_two_instances",
+      "passed": true,
+      "detail": "matches: ['branch_005', 'branch_004'] (need two distinct, non-None instances)"
+    },
+    {
+      "case": "phantom_seed13_sp1.5x1.5x1.5_hu400_n5",
+      "check": "leak_bridge_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 17.7mm from the bridged blob (need > 10mm), instance branch_002"
+    },
+    {
+      "case": "phantom_seed13_sp1.5x1.5x1.5_hu400_n5",
+      "check": "ivc_not_reported_at_midpoint",
+      "passed": true,
+      "detail": "nearest daughter 27.5mm from the IVC analogue's midpoint, instance branch_002"
+    },
+    {
+      "case": "phantom_seed13_sp1.5x1.5x1.5_hu400_n5",
+      "check": "thin_branch_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 17.7mm from the 0.8mm-radius thin branch's ostium (need > 10mm), instance branch_003"
+    },
+    {
+      "case": "phantom_seed13_sp1.5x1.5x1.5_hu400_n5",
+      "check": "bifurcation_reported_as_one_instance",
+      "passed": true,
+      "detail": "1 daughters within 10mm of the trunk's ostium (need exactly 1)"
+    },
+    {
+      "case": "phantom_seed13_sp1.5x1.5x1.5_hu400_n5",
+      "check": "close_pair_stays_two_instances",
+      "passed": true,
+      "detail": "matches: ['branch_006', 'branch_001'] (need two distinct, non-None instances)"
+    },
+    {
+      "case": "phantom_seed14_sp1.5x1.5x1.5_hu400_n9",
+      "check": "leak_bridge_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 14.6mm from the bridged blob (need > 10mm), instance branch_003"
+    },
+    {
+      "case": "phantom_seed14_sp1.5x1.5x1.5_hu400_n9",
+      "check": "ivc_not_reported_at_midpoint",
+      "passed": true,
+      "detail": "nearest daughter 27.5mm from the IVC analogue's midpoint, instance branch_012"
+    },
+    {
+      "case": "phantom_seed14_sp1.5x1.5x1.5_hu400_n9",
+      "check": "thin_branch_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 17.7mm from the 0.8mm-radius thin branch's ostium (need > 10mm), instance branch_007"
+    },
+    {
+      "case": "phantom_seed14_sp1.5x1.5x1.5_hu400_n9",
+      "check": "bifurcation_reported_as_one_instance",
+      "passed": true,
+      "detail": "1 daughters within 10mm of the trunk's ostium (need exactly 1)"
+    },
+    {
+      "case": "phantom_seed14_sp1.5x1.5x1.5_hu400_n9",
+      "check": "close_pair_stays_two_instances",
+      "passed": true,
+      "detail": "matches: ['branch_012', 'branch_010'] (need two distinct, non-None instances)"
+    },
+    {
+      "case": "phantom_seed15_sp1.5x1.5x1.5_hu550_n2",
+      "check": "leak_bridge_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 24.4mm from the bridged blob (need > 10mm), instance branch_004"
+    },
+    {
+      "case": "phantom_seed15_sp1.5x1.5x1.5_hu550_n2",
+      "check": "ivc_not_reported_at_midpoint",
+      "passed": true,
+      "detail": "nearest daughter 27.5mm from the IVC analogue's midpoint, instance branch_005"
+    },
+    {
+      "case": "phantom_seed15_sp1.5x1.5x1.5_hu550_n2",
+      "check": "thin_branch_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 17.7mm from the 0.8mm-radius thin branch's ostium (need > 10mm), instance branch_002"
+    },
+    {
+      "case": "phantom_seed15_sp1.5x1.5x1.5_hu550_n2",
+      "check": "bifurcation_reported_as_one_instance",
+      "passed": true,
+      "detail": "1 daughters within 10mm of the trunk's ostium (need exactly 1)"
+    },
+    {
+      "case": "phantom_seed15_sp1.5x1.5x1.5_hu550_n2",
+      "check": "close_pair_stays_two_instances",
+      "passed": true,
+      "detail": "matches: ['branch_005', 'branch_003'] (need two distinct, non-None instances)"
+    },
+    {
+      "case": "phantom_seed16_sp1.5x1.5x1.5_hu550_n5",
+      "check": "leak_bridge_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 24.4mm from the bridged blob (need > 10mm), instance branch_005"
+    },
+    {
+      "case": "phantom_seed16_sp1.5x1.5x1.5_hu550_n5",
+      "check": "ivc_not_reported_at_midpoint",
+      "passed": true,
+      "detail": "nearest daughter 27.5mm from the IVC analogue's midpoint, instance branch_007"
+    },
+    {
+      "case": "phantom_seed16_sp1.5x1.5x1.5_hu550_n5",
+      "check": "thin_branch_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 17.9mm from the 0.8mm-radius thin branch's ostium (need > 10mm), instance branch_003"
+    },
+    {
+      "case": "phantom_seed16_sp1.5x1.5x1.5_hu550_n5",
+      "check": "bifurcation_reported_as_one_instance",
+      "passed": true,
+      "detail": "1 daughters within 10mm of the trunk's ostium (need exactly 1)"
+    },
+    {
+      "case": "phantom_seed16_sp1.5x1.5x1.5_hu550_n5",
+      "check": "close_pair_stays_two_instances",
+      "passed": true,
+      "detail": "matches: ['branch_007', 'branch_006'] (need two distinct, non-None instances)"
+    },
+    {
+      "case": "phantom_seed17_sp1.5x1.5x1.5_hu550_n9",
+      "check": "leak_bridge_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 14.6mm from the bridged blob (need > 10mm), instance branch_004"
+    },
+    {
+      "case": "phantom_seed17_sp1.5x1.5x1.5_hu550_n9",
+      "check": "ivc_not_reported_at_midpoint",
+      "passed": true,
+      "detail": "nearest daughter 27.5mm from the IVC analogue's midpoint, instance branch_002"
+    },
+    {
+      "case": "phantom_seed17_sp1.5x1.5x1.5_hu550_n9",
+      "check": "thin_branch_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 17.7mm from the 0.8mm-radius thin branch's ostium (need > 10mm), instance branch_006"
+    },
+    {
+      "case": "phantom_seed17_sp1.5x1.5x1.5_hu550_n9",
+      "check": "bifurcation_reported_as_one_instance",
+      "passed": true,
+      "detail": "1 daughters within 10mm of the trunk's ostium (need exactly 1)"
+    },
+    {
+      "case": "phantom_seed17_sp1.5x1.5x1.5_hu550_n9",
+      "check": "close_pair_stays_two_instances",
+      "passed": true,
+      "detail": "matches: ['branch_011', 'branch_010'] (need two distinct, non-None instances)"
+    },
+    {
+      "case": "phantom_seed18_sp0.7x0.7x1.5_hu250_n2",
+      "check": "leak_bridge_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 23.6mm from the bridged blob (need > 10mm), instance branch_004"
+    },
+    {
+      "case": "phantom_seed18_sp0.7x0.7x1.5_hu250_n2",
+      "check": "ivc_not_reported_at_midpoint",
+      "passed": true,
+      "detail": "nearest daughter 27.1mm from the IVC analogue's midpoint, instance branch_005"
+    },
+    {
+      "case": "phantom_seed18_sp0.7x0.7x1.5_hu250_n2",
+      "check": "thin_branch_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 17.9mm from the 0.8mm-radius thin branch's ostium (need > 10mm), instance branch_003"
+    },
+    {
+      "case": "phantom_seed18_sp0.7x0.7x1.5_hu250_n2",
+      "check": "bifurcation_reported_as_one_instance",
+      "passed": true,
+      "detail": "1 daughters within 10mm of the trunk's ostium (need exactly 1)"
+    },
+    {
+      "case": "phantom_seed18_sp0.7x0.7x1.5_hu250_n2",
+      "check": "close_pair_stays_two_instances",
+      "passed": true,
+      "detail": "matches: ['branch_005', 'branch_002'] (need two distinct, non-None instances)"
+    },
+    {
+      "case": "phantom_seed19_sp0.7x0.7x1.5_hu250_n5",
+      "check": "leak_bridge_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 19.0mm from the bridged blob (need > 10mm), instance branch_001"
+    },
+    {
+      "case": "phantom_seed19_sp0.7x0.7x1.5_hu250_n5",
+      "check": "ivc_not_reported_at_midpoint",
+      "passed": true,
+      "detail": "nearest daughter 27.1mm from the IVC analogue's midpoint, instance branch_008"
+    },
+    {
+      "case": "phantom_seed19_sp0.7x0.7x1.5_hu250_n5",
+      "check": "thin_branch_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 17.9mm from the 0.8mm-radius thin branch's ostium (need > 10mm), instance branch_003"
+    },
+    {
+      "case": "phantom_seed19_sp0.7x0.7x1.5_hu250_n5",
+      "check": "bifurcation_reported_as_one_instance",
+      "passed": true,
+      "detail": "1 daughters within 10mm of the trunk's ostium (need exactly 1)"
+    },
+    {
+      "case": "phantom_seed19_sp0.7x0.7x1.5_hu250_n5",
+      "check": "close_pair_stays_two_instances",
+      "passed": true,
+      "detail": "matches: ['branch_008', 'branch_002'] (need two distinct, non-None instances)"
+    },
+    {
+      "case": "phantom_seed20_sp0.7x0.7x1.5_hu250_n9",
+      "check": "leak_bridge_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 18.4mm from the bridged blob (need > 10mm), instance branch_010"
+    },
+    {
+      "case": "phantom_seed20_sp0.7x0.7x1.5_hu250_n9",
+      "check": "ivc_not_reported_at_midpoint",
+      "passed": true,
+      "detail": "nearest daughter 27.1mm from the IVC analogue's midpoint, instance branch_009"
+    },
+    {
+      "case": "phantom_seed20_sp0.7x0.7x1.5_hu250_n9",
+      "check": "thin_branch_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 17.9mm from the 0.8mm-radius thin branch's ostium (need > 10mm), instance branch_006"
+    },
+    {
+      "case": "phantom_seed20_sp0.7x0.7x1.5_hu250_n9",
+      "check": "bifurcation_reported_as_one_instance",
+      "passed": true,
+      "detail": "1 daughters within 10mm of the trunk's ostium (need exactly 1)"
+    },
+    {
+      "case": "phantom_seed20_sp0.7x0.7x1.5_hu250_n9",
+      "check": "close_pair_stays_two_instances",
+      "passed": true,
+      "detail": "matches: ['branch_009', 'branch_004'] (need two distinct, non-None instances)"
+    },
+    {
+      "case": "phantom_seed21_sp0.7x0.7x1.5_hu400_n2",
+      "check": "leak_bridge_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 23.6mm from the bridged blob (need > 10mm), instance branch_002"
+    },
+    {
+      "case": "phantom_seed21_sp0.7x0.7x1.5_hu400_n2",
+      "check": "ivc_not_reported_at_midpoint",
+      "passed": true,
+      "detail": "nearest daughter 27.1mm from the IVC analogue's midpoint, instance branch_004"
+    },
+    {
+      "case": "phantom_seed21_sp0.7x0.7x1.5_hu400_n2",
+      "check": "thin_branch_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 17.9mm from the 0.8mm-radius thin branch's ostium (need > 10mm), instance branch_003"
+    },
+    {
+      "case": "phantom_seed21_sp0.7x0.7x1.5_hu400_n2",
+      "check": "bifurcation_reported_as_one_instance",
+      "passed": true,
+      "detail": "1 daughters within 10mm of the trunk's ostium (need exactly 1)"
+    },
+    {
+      "case": "phantom_seed21_sp0.7x0.7x1.5_hu400_n2",
+      "check": "close_pair_stays_two_instances",
+      "passed": true,
+      "detail": "matches: ['branch_004', 'branch_001'] (need two distinct, non-None instances)"
+    },
+    {
+      "case": "phantom_seed22_sp0.7x0.7x1.5_hu400_n5",
+      "check": "leak_bridge_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 23.6mm from the bridged blob (need > 10mm), instance branch_006"
+    },
+    {
+      "case": "phantom_seed22_sp0.7x0.7x1.5_hu400_n5",
+      "check": "ivc_not_reported_at_midpoint",
+      "passed": true,
+      "detail": "nearest daughter 27.1mm from the IVC analogue's midpoint, instance branch_007"
+    },
+    {
+      "case": "phantom_seed22_sp0.7x0.7x1.5_hu400_n5",
+      "check": "thin_branch_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 17.9mm from the 0.8mm-radius thin branch's ostium (need > 10mm), instance branch_005"
+    },
+    {
+      "case": "phantom_seed22_sp0.7x0.7x1.5_hu400_n5",
+      "check": "bifurcation_reported_as_one_instance",
+      "passed": true,
+      "detail": "1 daughters within 10mm of the trunk's ostium (need exactly 1)"
+    },
+    {
+      "case": "phantom_seed22_sp0.7x0.7x1.5_hu400_n5",
+      "check": "close_pair_stays_two_instances",
+      "passed": true,
+      "detail": "matches: ['branch_007', 'branch_004'] (need two distinct, non-None instances)"
+    },
+    {
+      "case": "phantom_seed23_sp0.7x0.7x1.5_hu400_n9",
+      "check": "leak_bridge_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 14.7mm from the bridged blob (need > 10mm), instance branch_008"
+    },
+    {
+      "case": "phantom_seed23_sp0.7x0.7x1.5_hu400_n9",
+      "check": "ivc_not_reported_at_midpoint",
+      "passed": true,
+      "detail": "nearest daughter 27.1mm from the IVC analogue's midpoint, instance branch_009"
+    },
+    {
+      "case": "phantom_seed23_sp0.7x0.7x1.5_hu400_n9",
+      "check": "thin_branch_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 17.1mm from the 0.8mm-radius thin branch's ostium (need > 10mm), instance branch_011"
+    },
+    {
+      "case": "phantom_seed23_sp0.7x0.7x1.5_hu400_n9",
+      "check": "bifurcation_reported_as_one_instance",
+      "passed": true,
+      "detail": "1 daughters within 10mm of the trunk's ostium (need exactly 1)"
+    },
+    {
+      "case": "phantom_seed23_sp0.7x0.7x1.5_hu400_n9",
+      "check": "close_pair_stays_two_instances",
+      "passed": true,
+      "detail": "matches: ['branch_009', 'branch_003'] (need two distinct, non-None instances)"
+    },
+    {
+      "case": "phantom_seed24_sp0.7x0.7x1.5_hu550_n2",
+      "check": "leak_bridge_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 23.6mm from the bridged blob (need > 10mm), instance branch_003"
+    },
+    {
+      "case": "phantom_seed24_sp0.7x0.7x1.5_hu550_n2",
+      "check": "ivc_not_reported_at_midpoint",
+      "passed": true,
+      "detail": "nearest daughter 27.1mm from the IVC analogue's midpoint, instance branch_004"
+    },
+    {
+      "case": "phantom_seed24_sp0.7x0.7x1.5_hu550_n2",
+      "check": "thin_branch_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 17.9mm from the 0.8mm-radius thin branch's ostium (need > 10mm), instance branch_002"
+    },
+    {
+      "case": "phantom_seed24_sp0.7x0.7x1.5_hu550_n2",
+      "check": "bifurcation_reported_as_one_instance",
+      "passed": true,
+      "detail": "1 daughters within 10mm of the trunk's ostium (need exactly 1)"
+    },
+    {
+      "case": "phantom_seed24_sp0.7x0.7x1.5_hu550_n2",
+      "check": "close_pair_stays_two_instances",
+      "passed": true,
+      "detail": "matches: ['branch_004', 'branch_001'] (need two distinct, non-None instances)"
+    },
+    {
+      "case": "phantom_seed25_sp0.7x0.7x1.5_hu550_n5",
+      "check": "leak_bridge_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 18.4mm from the bridged blob (need > 10mm), instance branch_002"
+    },
+    {
+      "case": "phantom_seed25_sp0.7x0.7x1.5_hu550_n5",
+      "check": "ivc_not_reported_at_midpoint",
+      "passed": true,
+      "detail": "nearest daughter 27.1mm from the IVC analogue's midpoint, instance branch_005"
+    },
+    {
+      "case": "phantom_seed25_sp0.7x0.7x1.5_hu550_n5",
+      "check": "thin_branch_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 17.9mm from the 0.8mm-radius thin branch's ostium (need > 10mm), instance branch_006"
+    },
+    {
+      "case": "phantom_seed25_sp0.7x0.7x1.5_hu550_n5",
+      "check": "bifurcation_reported_as_one_instance",
+      "passed": true,
+      "detail": "1 daughters within 10mm of the trunk's ostium (need exactly 1)"
+    },
+    {
+      "case": "phantom_seed25_sp0.7x0.7x1.5_hu550_n5",
+      "check": "close_pair_stays_two_instances",
+      "passed": true,
+      "detail": "matches: ['branch_005', 'branch_003'] (need two distinct, non-None instances)"
+    },
+    {
+      "case": "phantom_seed26_sp0.7x0.7x1.5_hu550_n9",
+      "check": "leak_bridge_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 14.8mm from the bridged blob (need > 10mm), instance branch_011"
+    },
+    {
+      "case": "phantom_seed26_sp0.7x0.7x1.5_hu550_n9",
+      "check": "ivc_not_reported_at_midpoint",
+      "passed": true,
+      "detail": "nearest daughter 27.1mm from the IVC analogue's midpoint, instance branch_010"
+    },
+    {
+      "case": "phantom_seed26_sp0.7x0.7x1.5_hu550_n9",
+      "check": "thin_branch_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 17.9mm from the 0.8mm-radius thin branch's ostium (need > 10mm), instance branch_008"
+    },
+    {
+      "case": "phantom_seed26_sp0.7x0.7x1.5_hu550_n9",
+      "check": "bifurcation_reported_as_one_instance",
+      "passed": true,
+      "detail": "1 daughters within 10mm of the trunk's ostium (need exactly 1)"
+    },
+    {
+      "case": "phantom_seed26_sp0.7x0.7x1.5_hu550_n9",
+      "check": "close_pair_stays_two_instances",
+      "passed": true,
+      "detail": "matches: ['branch_010', 'branch_004'] (need two distinct, non-None instances)"
+    },
+    {
+      "case": "phantom_seed27_sp0.8x0.8x0.8_hu400_n5_trunc",
+      "check": "truncation_no_branch_at_cut_face",
+      "passed": true,
+      "detail": "nearest daughter 15.3mm from the cut face (need > 10mm), instance branch_003"
+    },
+    {
+      "case": "phantom_seed27_sp0.8x0.8x0.8_hu400_n5_trunc",
+      "check": "leak_bridge_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 18.7mm from the bridged blob (need > 10mm), instance branch_002"
+    },
+    {
+      "case": "phantom_seed27_sp0.8x0.8x0.8_hu400_n5_trunc",
+      "check": "ivc_not_reported_at_midpoint",
+      "passed": true,
+      "detail": "nearest daughter 27.6mm from the IVC analogue's midpoint, instance branch_008"
+    },
+    {
+      "case": "phantom_seed27_sp0.8x0.8x0.8_hu400_n5_trunc",
+      "check": "thin_branch_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 17.9mm from the 0.8mm-radius thin branch's ostium (need > 10mm), instance branch_005"
+    },
+    {
+      "case": "phantom_seed27_sp0.8x0.8x0.8_hu400_n5_trunc",
+      "check": "bifurcation_reported_as_one_instance",
+      "passed": true,
+      "detail": "1 daughters within 10mm of the trunk's ostium (need exactly 1)"
+    },
+    {
+      "case": "phantom_seed27_sp0.8x0.8x0.8_hu400_n5_trunc",
+      "check": "close_pair_stays_two_instances",
+      "passed": true,
+      "detail": "matches: ['branch_008', 'branch_007'] (need two distinct, non-None instances)"
+    },
+    {
+      "case": "phantom_seed28_noncontrast",
+      "check": "non_contrast_returns_empty",
+      "passed": true,
+      "detail": "0 daughters (need 0)"
+    },
+    {
+      "case": "phantom_seed29_sp0.8x0.8x0.8_hu400_n3_organbed_bed_brighter",
+      "check": "leak_bridge_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 18.7mm from the bridged blob (need > 10mm), instance branch_002"
+    },
+    {
+      "case": "phantom_seed29_sp0.8x0.8x0.8_hu400_n3_organbed_bed_brighter",
+      "check": "thin_branch_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 32.4mm from the 0.8mm-radius thin branch's ostium (need > 10mm), instance branch_004"
+    },
+    {
+      "case": "phantom_seed29_sp0.8x0.8x0.8_hu400_n3_organbed_bed_brighter",
+      "check": "organ_bed_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 14.6mm from the organ bed's centre (need > 10mm), instance branch_003"
+    },
+    {
+      "case": "phantom_seed29_sp0.8x0.8x0.8_hu400_n3_organbed_bed_brighter",
+      "check": "organ_feeder_is_reported",
+      "passed": true,
+      "detail": "nearest daughter 0.7mm from the bright feeder's ostium (need <= 10mm), instance branch_003"
+    },
+    {
+      "case": "phantom_seed29_sp0.8x0.8x0.8_hu400_n3_organbed_bed_brighter",
+      "check": "organ_bed_branch_is_reported",
+      "passed": false,
+      "detail": "nearest daughter 14.6mm from the 1.8mm-radius dim branch's ostium (need <= 10mm), instance branch_003 -- KNOWN OPEN: the bed is at or above the branch's own HU, so no threshold separates them"
+    },
+    {
+      "case": "phantom_seed29_sp0.8x0.8x0.8_hu400_n3_organbed_bed_brighter",
+      "check": "bifurcation_reported_as_one_instance",
+      "passed": true,
+      "detail": "1 daughters within 10mm of the trunk's ostium (need exactly 1)"
+    },
+    {
+      "case": "phantom_seed30_sp0.8x0.8x0.8_hu400_n3_organbed_equal_hu",
+      "check": "leak_bridge_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 18.7mm from the bridged blob (need > 10mm), instance branch_002"
+    },
+    {
+      "case": "phantom_seed30_sp0.8x0.8x0.8_hu400_n3_organbed_equal_hu",
+      "check": "thin_branch_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 17.9mm from the 0.8mm-radius thin branch's ostium (need > 10mm), instance branch_004"
+    },
+    {
+      "case": "phantom_seed30_sp0.8x0.8x0.8_hu400_n3_organbed_equal_hu",
+      "check": "organ_bed_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 14.6mm from the organ bed's centre (need > 10mm), instance branch_003"
+    },
+    {
+      "case": "phantom_seed30_sp0.8x0.8x0.8_hu400_n3_organbed_equal_hu",
+      "check": "organ_feeder_is_reported",
+      "passed": true,
+      "detail": "nearest daughter 0.7mm from the bright feeder's ostium (need <= 10mm), instance branch_003"
+    },
+    {
+      "case": "phantom_seed30_sp0.8x0.8x0.8_hu400_n3_organbed_equal_hu",
+      "check": "organ_bed_branch_is_reported",
+      "passed": false,
+      "detail": "nearest daughter 14.6mm from the 1.8mm-radius dim branch's ostium (need <= 10mm), instance branch_003 -- KNOWN OPEN: the bed is at or above the branch's own HU, so no threshold separates them"
+    },
+    {
+      "case": "phantom_seed30_sp0.8x0.8x0.8_hu400_n3_organbed_equal_hu",
+      "check": "bifurcation_reported_as_one_instance",
+      "passed": true,
+      "detail": "1 daughters within 10mm of the trunk's ostium (need exactly 1)"
+    },
+    {
+      "case": "phantom_seed31_sp0.8x0.8x0.8_hu400_n3_organbed_branch_brighter_control",
+      "check": "leak_bridge_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 18.7mm from the bridged blob (need > 10mm), instance branch_003"
+    },
+    {
+      "case": "phantom_seed31_sp0.8x0.8x0.8_hu400_n3_organbed_branch_brighter_control",
+      "check": "thin_branch_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 17.1mm from the 0.8mm-radius thin branch's ostium (need > 10mm), instance branch_004"
+    },
+    {
+      "case": "phantom_seed31_sp0.8x0.8x0.8_hu400_n3_organbed_branch_brighter_control",
+      "check": "organ_bed_not_reported",
+      "passed": true,
+      "detail": "nearest daughter 14.6mm from the organ bed's centre (need > 10mm), instance branch_002"
+    },
+    {
+      "case": "phantom_seed31_sp0.8x0.8x0.8_hu400_n3_organbed_branch_brighter_control",
+      "check": "organ_feeder_is_reported",
+      "passed": true,
+      "detail": "nearest daughter 0.7mm from the bright feeder's ostium (need <= 10mm), instance branch_002"
+    },
+    {
+      "case": "phantom_seed31_sp0.8x0.8x0.8_hu400_n3_organbed_branch_brighter_control",
+      "check": "organ_bed_branch_is_reported",
+      "passed": false,
+      "detail": "nearest daughter 14.6mm from the 1.8mm-radius dim branch's ostium (need <= 10mm), instance branch_002 -- control variant, expected to pass"
+    },
+    {
+      "case": "phantom_seed31_sp0.8x0.8x0.8_hu400_n3_organbed_branch_brighter_control",
+      "check": "bifurcation_reported_as_one_instance",
+      "passed": true,
+      "detail": "1 daughters within 10mm of the trunk's ostium (need exactly 1)"
+    },
+    {
+      "case": "iso_1.5_aggregate",
+      "check": "seed_error_under_1mm_at_1.5mm_spacing",
+      "passed": true,
+      "detail": "mean seed error 0.71mm across 9 cases (need < 1.0mm)"
+    }
+  ]
+}

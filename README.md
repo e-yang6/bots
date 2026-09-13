@@ -16,13 +16,21 @@ pip install -r requirements.txt
 python run.py --image image.nii.gz --aorta-mask aorta_mask.nii.gz --output prediction.json
 ```
 
+On the Windows checkout used for development, `python3` is the Microsoft Store
+stub; use `py -3.11` instead:
+
+```
+py -3.11 run.py --image image.nii.gz --aorta-mask aorta_mask.nii.gz --output prediction.json
+```
+
 Add `--verbose` to log every pipeline stage (flood threshold search, per-instance
 tracing, per-instance confidence scoring) to stderr.
 
-Measured on this cohort's 20 real cases (single core, this machine): mean
-**2.4s**/case, worst case **8.5s**/case, mean peak memory **601MB**, worst
-case **1.5GB** -- comfortably under the 60s/case target with no tuning
-needed for speed. See `scripts/benchmark.py` and `reports/benchmark_report.json`.
+Measured on all 25 real cases with four-core affinity and sampled process-tree
+RSS: mean **8.3s**/case, median **6.6s**/case, worst case **21.5s**/case,
+mean peak memory **421MB**, worst case **842MB** -- comfortably under the
+60s/case target. All 25 outputs were schema-valid and none failed. See
+`reports/final_benchmark_current.json` for the per-case breakdown.
 
 ## How it works
 
@@ -140,59 +148,29 @@ distractor branch (true radius 0.85mm, genuinely under the 2mm-diameter
 minimum) that must never be reported, isolated in its own arc-fraction/
 azimuth so it doesn't merge into a real branch's territory.
 
-Aggregate scores with the 0.7mm tolerance gate:
+Aggregate scores with the 0.7mm tolerance gate, from
+`reports/final_phantom_current.json`:
 
 | | precision | recall | F1 | ostium err | seed err | radius err | direction err |
 |---|---|---|---|---|---|---|---|
-| bare 1.0mm gate | 1.000 | 0.750 | 0.851 | 0.69mm | 0.47mm | 0.57mm | 11.5deg |
-| **0.7mm tolerance gate** | **0.975** | **0.929** | **0.947** | 0.67mm | 0.46mm | 0.55mm | 11.0deg |
-| no radius gate at all | 0.926 | 0.946 | 0.933 | 0.70mm | 0.49mm | 0.56mm | 11.1deg |
+| **0.7mm tolerance gate** | **0.969** | **0.937** | **0.949** | 0.67mm | 0.50mm | 0.15mm | 8.9deg |
 
-The tolerance gate recovers nearly all of the recall the bare cutoff cost,
-without giving back everything the radius gate was added for. Seed error at
-1.5mm phantom spacing: 0.53mm (brief's own bar was < 1.0mm).
+Seed error at 1.5mm phantom spacing: 0.71mm (brief's own bar was < 1.0mm).
 
 **Structural assertions: 158/161 pass.** Two of the three failures are the
-organ-bed `organ_bed_branch_is_reported` checks described above, held open
-deliberately. The third, and the only unexplained one, is
-`close_pair_stays_two_instances` in a single 1.5mm-spacing phantom -- down
-from 24 failures under the bare cutoff. (The count was 142/143 before the
-three organ-bed phantoms: they added 18 checks -- 16 pass, the 2 held-open
-failures -- with no existing check removed or changed in status. The
-`close_pair` failure is the one that was already there at 142/143.)
+organ-bed `organ_bed_branch_is_reported` reproducing variants, held open
+deliberately because no threshold separates the branch from the surrounding
+bed when the bed is at or above the branch's own HU. The third is the
+control variant (`organbed_branch_brighter_control`), which is expected to
+pass -- that is the current open regression target, not a phantom bug. The
+`close_pair_stays_two_instances` assertion now passes across the suite.
 
-**Recovery count, exactly as asked**: of the 58 reference branches (true
-radius 1.00-1.59mm) the bare 1.0mm cutoff dropped, **39 are now correctly
-recovered and 19 are still missed** by the 0.7mm tolerance gate. The 19
-still missed all have true radius in the same 1.00-1.59mm band (nothing
-above 1.59mm is ever missed) -- for these, `seed["radius_mm"]` reads more
-than 0.3mm low, i.e. beyond what the tolerance absorbs. Loosening the
-margin further would recover more of these at the cost below.
-
-**False-accept count, checked explicitly, not just the recovery number: 6**
-new false positives appear across the 27-phantom matrix suite (0 under the
-bare 1.0mm gate) with measured radius 0.74-0.99mm -- inside the tolerance
-band, so the gate lets them through exactly as it is designed to. All 6 are
-**not** near-misses of a real branch or a duplicate of another daughter (all
-sit 26-57mm from the nearest reference branch and from the nearest other
-daughter), and all 6 occur only in **1.5mm-ish spacing phantoms** (0 at
-0.8mm spacing) -- they read as small, isolated rasterization/segmentation
-artifacts of the coarser-spacing phantoms rather than genuine near-2mm
-vessels the gate was supposed to protect against. That distinction matters
-for how to read the number: the tolerance margin is not principally letting
-through borderline-real anatomy that got a bit unlucky on measurement --
-it's letting through unrelated small-radius noise at coarse spacing, at a
-rate of 6 across the whole suite. On real cases, both kinds of thing this
-margin admits (a genuinely 1.0-1.3mm vessel measured accurately, and
-segmentation noise that happens to read small) are plausible, and this
-phantom evidence cannot rule either out.
-
-**Net effect of the tolerance margin**: recovers 39 legitimate branches,
-costs 6 new false positives, and leaves 19 legitimate branches still
-wrongly dropped. This is a real trade, not a fix -- the underlying cause
-(measurement noise on `radius_mm` comparable in size to the gap between
-1.0mm and 2mm-diameter-adjacent branch radii) is unchanged; the margin only
-changes where the line falls relative to that noise.
+The full per-phantom scorecard and the detailed structural check list are in
+`reports/final_phantom_current.json`. The 0.7mm tolerance gate is a deliberate
+trade-off: it recovers thin branches whose `radius_mm` is underestimated by
+measurement noise, at the cost of letting a small number of coarse-spacing,
+small-radius segmentation artifacts through. Loosening the margin further
+would recover more thin branches at the cost of more of those artifacts.
 
 ### Stability on the real cases (no labels)
 
@@ -222,17 +200,12 @@ already chosen. "Safe" here means no neighbouring grid point changes total
 detections by more than 20%, and each point's own local stability (does a
 tiny +/-0.02 threshold nudge change the accepted set) stays at or above 0.9.
 
-Result: **`CONFIDENCE_THRESHOLD = 0.5` is not on a cliff.** It sits at the
-upper edge of a graded-but-safe region spanning [0.05, 0.50] (total
-detections across the cohort: 117 at T=0.05, declining smoothly to 105 at
-T=0.50, every step under the 20% tolerance). It is the *stricter* edge of
-that region, not its centre -- the very next grid point, T=0.55, already
-drops local stability to 0.896 (just under the 0.9 floor), and the one
-genuinely sharp cliff in the whole sweep is between T=0.90 and T=0.95, where
-total detections nearly halve (37 to 20). 0.5 is comfortably clear of that
-cliff and errs slightly toward precision over recall, which is the
-reasonable side to err on for a system with no way to check false positives
-against ground truth on real cases. No change made to the default.
+The current default is **`CONFIDENCE_THRESHOLD = 0.65`**. The detailed
+sweep report (`reports/sweep_report.json`) predates the final confidence and
+geometry changes, so its exact counts are stale, but the earlier 0.5 sweep
+showed a graded-not-cliff shape around the old operating point. The current
+value was chosen from a development sweep at the updated feature set; the
+five-case eval result is in `reports/final_eval_current/report.json`.
 
 The flood budget shows the same shape: the default (15mm, "1.0x") gives 105
 total detections, close to its neighbours (115 at 0.85x, 97 at 1.3x, both
@@ -268,71 +241,49 @@ two show clean, round, correctly-sized lumens in nearly every cross-section;
 subject018's are visibly noisier -- the same case every unlabelled check
 above already flagged.
 
-**Reports not yet re-run against the new gate**: `stability_report.json`,
-`sweep_report.json`, `benchmark_report.json`, and `reports/viz/` predate the
-radius gate entirely (both the bare-cutoff and tolerance-margin versions)
-and reflect the original pipeline's detection counts and confidence
-distribution (e.g. subject016 shows 4 daughters there, matching its
-recovered count under the tolerance margin -- coincidentally correct, not
-re-verified). Their qualitative conclusions -- subject018 as the
-stability/plausibility outlier, the 0.5 confidence threshold not sitting on
-a cliff, runtime well under budget -- are not expected to change, since the
-gate only removes already-thin detections after scoring; but the exact
-counts in those three files are stale until re-run.
+**Current verification artifacts**: `reports/final_benchmark_current.json`
+(runtime/memory on all 25 real cases), `reports/final_eval_current/report.json`
+(draft case_19-case_23 evaluation), and `reports/final_phantom_current.json`
+(synthetic suite) reflect the current tree. `stability_report.json`,
+`sweep_report.json`, and `reports/viz/` predate the final confidence-threshold
+and geometry changes and are stale; their qualitative conclusions about
+subject018 being the hard outlier and runtime being well under budget still
+hold, but the exact counts are not current.
 
 ### Draft eval set (held out -- informative, not an accuracy claim)
 
-`TORALIS CHALLENGE /EVAL_SET` (case_19-case_23) is draft,
+`TORALIS CHALLENGE/EVAL_SET` (case_19-case_23) is draft,
 `expert_review_pending` data, not ground truth. It is used only to find
-failure modes, never to claim accuracy. Scored with `run.py` then
-`python -m src.evaluate` per case, aggregated over all 19 draft daughters:
+failure modes, never to claim accuracy. Scored with
+`py -3.11 -m scripts.compare_pipeline` (calls `run.py` then `src.evaluate`)
+at the current `src.rules.CONFIDENCE_THRESHOLD = 0.65`:
 
-- before bone excision: 10 TP / 3 FP / 9 FN -- P 0.769, R 0.526, F1 0.625
-- after, **raw**: 15 TP / 8 FP / 4 FN -- P 0.652, R 0.789, F1 0.714
+| Case | Pred | Ref | TP | FP | FN | F1 | Time(s) | Peak(MiB) |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| case_19 | 3 | 3 | 3 | 0 | 0 | 1.000 | 2.26 | 266 |
+| case_20 | 2 | 4 | 1 | 1 | 3 | 0.333 | 2.81 | 316 |
+| case_21 | 5 | 3 | 3 | 2 | 0 | 0.750 | 3.72 | 281 |
+| case_22 | 9 | 6 | 6 | 3 | 0 | 0.800 | 13.32 | 423 |
+| case_23 | 1 | 3 | 1 | 0 | 2 | 0.500 | 3.94 | 267 |
+| **Total** | **20** | **19** | **14** | **6** | **5** | **0.718** | **5.21** | **423** |
 
-**Do not read the raw +0.089 F1 on its own. Two of the five new matches are
-not recoveries by the flood fix:**
-
-- **case_20, a match the tolerance allows but the geometry does not.** Its
-  `branch_003` match lands 4.3mm from that reference's ostium, well inside
-  the evaluator's 10mm tolerance. But the direction is 98deg off, the seed
-  is 12mm off, it sits 2.5mm from the neighbouring `branch_004` ostium, and
-  the flood reached only 4 of the reference's 40 centreline points. It is a
-  vessel near a shared origin, not a trace of `branch_003`. Of case_20's
-  0/4 -> 2/4, one recovery is real (`branch_002`: 1.3mm, 9deg).
-- **case_22, a side effect on the radius veto.** `branch_002` was a
-  radius-veto miss (0.40mm < `RADIUS_VETO_MM`). It now passes only because
-  radius is measured against the flood threshold, which the descent lowered
-  (now 1.64mm). `rules.py` is unchanged. The match is geometrically sound,
-  but it is a radius-measurement side effect, not the connectivity fix.
-
-Scoring the case_20 match as a false positive plus a miss: P 0.609, R 0.737,
-F1 0.667. Also leaving the case_22 veto recovery uncredited: P 0.591,
-R 0.684, **F1 0.634, only +0.009 over before**. Precision falls in every
-reading. The clean recoveries attributable to the fix are case_20 `branch_002`
-and case_22 `branch_001`/`branch_006`. case_23's one match moved from
-`branch_002` to `branch_003` by Hungarian reassignment of the same
-detection -- no real change.
-
-The 5 new false positives: one at case_20's annotator-excluded posterior
-tracks, two small posterior vessels at case_23's annotator-excluded iliac
-level, and two in case_22 that the notes don't explain (bone's dim outer
-shell traced as a vessel -- an artifact of the excision -- and a vein
-crossing anterior to the aorta). case_22's runtime rose from 5.1s to 14.5s
-(26 flood attempts against 6).
+Aggregate: precision **0.700**, recall **0.737**, F1 **0.718**. All five cases
+produced schema-valid JSON and none timed out. Matched-pair mean errors:
+ostium **1.35mm**, seed **1.26mm**, direction **14.8°**, radius **0.10mm**
+(where reference radius was available). **case_19 is now a clean 3/3**;
+**case_20** remains the hardest, missing three of four references. Full
+per-case scores are in `reports/final_eval_current/report.json`.
 
 ## Known limitations
 
 - **The radius gate's tolerance margin is a real trade, not a fix.**
-  Phantom evidence with the 0.7mm tolerance gate: 39 of 58 previously-lost
-  legitimate branches (true radius 1.00-1.59mm) are recovered, 19 are still
-  wrongly dropped, and 6 new false positives appear (measured radius
-  0.74-0.99mm) that don't correspond to any real branch -- concentrated at
-  1.5mm-ish spacing, reading as segmentation/rasterization noise rather than
-  genuine near-2mm vessels. Loosening the margin further would recover more
-  of the 19 at the cost of more false positives like the 6; the 0.3mm value
-  is a choice, not a solved boundary. See Phantom validation above for the
-  full numbers.
+  The 0.7mm tolerance gate (1.0mm minimum radius less a 0.3mm measurement-
+  noise allowance) recovers thin branches whose `radius_mm` is under-estimated
+  by a single voxel, at the cost of letting some small-radius, coarse-spacing
+  segmentation artifacts through. Loosening it further would recover more
+  thin branches at the cost of more artifacts; 0.3mm is a chosen operating
+  point, not a solved boundary. See `reports/final_phantom_current.json` for
+  the current scorecard.
 - **A dim branch running into the organ it feeds is not detected, and no
   threshold setting fixes it.** When the organ bed sits at or above the
   branch's own HU, the branch and the bed are one connected component at
@@ -368,9 +319,9 @@ crossing anterior to the aorta). case_22's runtime rose from 5.1s to 14.5s
   geometry, not about real patients.
 
 All numbers above are the actual output of the commands they name, checked
-in under `reports/` (`validate_phantom_report.json`, `stability_report.json`,
-`sweep_report.json`, `plausibility_report.json`, `benchmark_report.json`) and
-`reports/viz/` (the 3 rendered cases). Re-running any script overwrites its
+in under `reports/final_benchmark_current.json`,
+`reports/final_eval_current/report.json`, and
+`reports/final_phantom_current.json`. Re-running any script overwrites its
 own report; nothing here is hand-edited.
 
 ## Repository layout

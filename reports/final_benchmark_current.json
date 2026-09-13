@@ -1,0 +1,285 @@
+{
+  "summary": {
+    "n_cases": 25,
+    "n_schema_valid": 25,
+    "n_failures": 0,
+    "total_daughters": 148,
+    "target_seconds_per_case": 60.0,
+    "n_over_budget": 0,
+    "mean_elapsed_s": 8.289306316375733,
+    "median_elapsed_s": 6.641070365905762,
+    "max_elapsed_s": 21.46724557876587,
+    "mean_peak_rss_mb": 421.1178125,
+    "max_peak_rss_mb": 842.34765625
+  },
+  "cases": [
+    {
+      "case_id": "subject001",
+      "elapsed_s": 9.443886518478394,
+      "peak_rss_mb": 551.20703125,
+      "return_code": 0,
+      "n_daughters": 9,
+      "schema_valid": true,
+      "pipeline_failed": false,
+      "under_target": true
+    },
+    {
+      "case_id": "subject002",
+      "elapsed_s": 6.515469074249268,
+      "peak_rss_mb": 339.453125,
+      "return_code": 0,
+      "n_daughters": 7,
+      "schema_valid": true,
+      "pipeline_failed": false,
+      "under_target": true
+    },
+    {
+      "case_id": "subject003",
+      "elapsed_s": 7.5221569538116455,
+      "peak_rss_mb": 54.54296875,
+      "return_code": 0,
+      "n_daughters": 6,
+      "schema_valid": true,
+      "pipeline_failed": false,
+      "under_target": true
+    },
+    {
+      "case_id": "subject004",
+      "elapsed_s": 5.007559061050415,
+      "peak_rss_mb": 345.59375,
+      "return_code": 0,
+      "n_daughters": 6,
+      "schema_valid": true,
+      "pipeline_failed": false,
+      "under_target": true
+    },
+    {
+      "case_id": "subject005",
+      "elapsed_s": 9.05238151550293,
+      "peak_rss_mb": 377.34765625,
+      "return_code": 0,
+      "n_daughters": 9,
+      "schema_valid": true,
+      "pipeline_failed": false,
+      "under_target": true
+    },
+    {
+      "case_id": "subject006",
+      "elapsed_s": 7.528916120529175,
+      "peak_rss_mb": 395.30859375,
+      "return_code": 0,
+      "n_daughters": 9,
+      "schema_valid": true,
+      "pipeline_failed": false,
+      "under_target": true
+    },
+    {
+      "case_id": "subject007",
+      "elapsed_s": 4.940740346908569,
+      "peak_rss_mb": 336.4765625,
+      "return_code": 0,
+      "n_daughters": 2,
+      "schema_valid": true,
+      "pipeline_failed": false,
+      "under_target": true
+    },
+    {
+      "case_id": "subject008",
+      "elapsed_s": 7.681685447692871,
+      "peak_rss_mb": 560.62890625,
+      "return_code": 0,
+      "n_daughters": 4,
+      "schema_valid": true,
+      "pipeline_failed": false,
+      "under_target": true
+    },
+    {
+      "case_id": "subject009",
+      "elapsed_s": 5.461794376373291,
+      "peak_rss_mb": 374.25390625,
+      "return_code": 0,
+      "n_daughters": 7,
+      "schema_valid": true,
+      "pipeline_failed": false,
+      "under_target": true
+    },
+    {
+      "case_id": "subject010",
+      "elapsed_s": 8.046761274337769,
+      "peak_rss_mb": 429.546875,
+      "return_code": 0,
+      "n_daughters": 6,
+      "schema_valid": true,
+      "pipeline_failed": false,
+      "under_target": true
+    },
+    {
+      "case_id": "subject011",
+      "elapsed_s": 5.063352346420288,
+      "peak_rss_mb": 386.890625,
+      "return_code": 0,
+      "n_daughters": 6,
+      "schema_valid": true,
+      "pipeline_failed": false,
+      "under_target": true
+    },
+    {
+      "case_id": "subject012",
+      "elapsed_s": 6.641070365905762,
+      "peak_rss_mb": 572.90625,
+      "return_code": 0,
+      "n_daughters": 8,
+      "schema_valid": true,
+      "pipeline_failed": false,
+      "under_target": true
+    },
+    {
+      "case_id": "subject013",
+      "elapsed_s": 5.966946601867676,
+      "peak_rss_mb": 518.7734375,
+      "return_code": 0,
+      "n_daughters": 8,
+      "schema_valid": true,
+      "pipeline_failed": false,
+      "under_target": true
+    },
+    {
+      "case_id": "subject014",
+      "elapsed_s": 5.856701135635376,
+      "peak_rss_mb": 501.8203125,
+      "return_code": 0,
+      "n_daughters": 4,
+      "schema_valid": true,
+      "pipeline_failed": false,
+      "under_target": true
+    },
+    {
+      "case_id": "subject015",
+      "elapsed_s": 13.708019256591797,
+      "peak_rss_mb": 544.28125,
+      "return_code": 0,
+      "n_daughters": 10,
+      "schema_valid": true,
+      "pipeline_failed": false,
+      "under_target": true
+    },
+    {
+      "case_id": "subject016",
+      "elapsed_s": 9.001529693603516,
+      "peak_rss_mb": 387.625,
+      "return_code": 0,
+      "n_daughters": 7,
+      "schema_valid": true,
+      "pipeline_failed": false,
+      "under_target": true
+    },
+    {
+      "case_id": "subject017",
+      "elapsed_s": 2.874931573867798,
+      "peak_rss_mb": 296.0078125,
+      "return_code": 0,
+      "n_daughters": 0,
+      "schema_valid": true,
+      "pipeline_failed": false,
+      "under_target": true
+    },
+    {
+      "case_id": "subject018",
+      "elapsed_s": 21.46724557876587,
+      "peak_rss_mb": 810.02734375,
+      "return_code": 0,
+      "n_daughters": 8,
+      "schema_valid": true,
+      "pipeline_failed": false,
+      "under_target": true
+    },
+    {
+      "case_id": "subject019",
+      "elapsed_s": 3.778120994567871,
+      "peak_rss_mb": 267.93359375,
+      "return_code": 0,
+      "n_daughters": 3,
+      "schema_valid": true,
+      "pipeline_failed": false,
+      "under_target": true
+    },
+    {
+      "case_id": "subject020",
+      "elapsed_s": 5.325004816055298,
+      "peak_rss_mb": 316.61328125,
+      "return_code": 0,
+      "n_daughters": 2,
+      "schema_valid": true,
+      "pipeline_failed": false,
+      "under_target": true
+    },
+    {
+      "case_id": "subject021",
+      "elapsed_s": 6.08731746673584,
+      "peak_rss_mb": 291.7421875,
+      "return_code": 0,
+      "n_daughters": 5,
+      "schema_valid": true,
+      "pipeline_failed": false,
+      "under_target": true
+    },
+    {
+      "case_id": "subject022",
+      "elapsed_s": 15.094279289245605,
+      "peak_rss_mb": 420.76171875,
+      "return_code": 0,
+      "n_daughters": 9,
+      "schema_valid": true,
+      "pipeline_failed": false,
+      "under_target": true
+    },
+    {
+      "case_id": "subject023",
+      "elapsed_s": 5.242689609527588,
+      "peak_rss_mb": 259.91015625,
+      "return_code": 0,
+      "n_daughters": 1,
+      "schema_valid": true,
+      "pipeline_failed": false,
+      "under_target": true
+    },
+    {
+      "case_id": "subject024",
+      "elapsed_s": 10.105994701385498,
+      "peak_rss_mb": 345.9453125,
+      "return_code": 0,
+      "n_daughters": 4,
+      "schema_valid": true,
+      "pipeline_failed": false,
+      "under_target": true
+    },
+    {
+      "case_id": "subject025",
+      "elapsed_s": 19.818103790283203,
+      "peak_rss_mb": 842.34765625,
+      "return_code": 0,
+      "n_daughters": 8,
+      "schema_valid": true,
+      "pipeline_failed": false,
+      "under_target": true
+    }
+  ],
+  "python": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
+  "method": "Sequential CLI runs; four-core affinity; sampled process-tree RSS including supervisor; no reference scoring.",
+  "source_sha256": {
+    "run.py": "6015d86e0262abda8f3e09d3ef4b50137b3e0ff8fe0e99aec45da62feecaebd1",
+    "schema.py": "1ed1e1f2c607b5c1a7dcfe91025f68a5a78e40750bf25d7938e5e9034603be83",
+    "src\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src\\candidates.py": "c2a33823aa685f5dbddee1a427594f4448e0a126a851f071f4003e483a974b98",
+    "src\\evaluate.py": "68717f432505c2e7b8d4ed456d0af45876a6b11c67217e6f8cfe504057c7915e",
+    "src\\features.py": "779a25f9e4c5a8b393a91de3e53e3856147f3612a27d88309259008b84d0901a",
+    "src\\floodfill.py": "da9d7ff403a07ceb4ec003773db41ddd8d6d292bc5ff7caa0f8d11caf1bd06d1",
+    "src\\geometry.py": "06bc0789773abe0daeb58191093931e284e76eec36db82963b46f31f3ee6d2bd",
+    "src\\intensity.py": "e499fd34abc9080dd7e9f216ebd760298e5bc682cea0918a45672a088143a63d",
+    "src\\io_utils.py": "f87419d3ab374b36059543e8748e84a1dcbedda6048d01a543942e36220f3606",
+    "src\\lumen_evidence.py": "a09256dbd515606ba88f3aa81bcedf2f0456a2d4a5441b404550fe601021aaa7",
+    "src\\parentage.py": "20ad7bbdf964cfc5b0cba761c1f38ad96111bb9395a445416a51ca251bdf3951",
+    "src\\rules.py": "cd1968b75e1da70bb599825592ba3cf79fa32c930d511eddd7484ab6514e4a34",
+    "src\\tracing.py": "4aa940b0d44765375d9df1f5f3b8b5ba2c67e7e7827585a0c6920145aff2e11b"
+  }
+}
