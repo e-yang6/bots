@@ -543,6 +543,66 @@ function showBranchInfo(marker) {
         }
     }
 
+    // Rule breakdown
+    const rulesSection = document.getElementById('info-rules');
+    const vetoEl = document.getElementById('rule-veto');
+    const termsEl = document.getElementById('rule-terms');
+    const flatEl = document.getElementById('rule-flat-penalties');
+    const totalEl = document.getElementById('rule-total');
+
+    if (d.rule_breakdown) {
+        rulesSection.style.display = '';
+        const rb = d.rule_breakdown;
+
+        // Veto
+        if (rb.veto) {
+            vetoEl.innerHTML = `<span class="veto-badge">VETOED</span> <span class="veto-reason">${rb.veto}</span>`;
+            vetoEl.style.display = '';
+        } else {
+            vetoEl.style.display = 'none';
+        }
+
+        // Terms
+        termsEl.innerHTML = '';
+        for (const t of rb.terms) {
+            const pct = Math.round(t.ramp * 100);
+            // Color: green (low ramp) -> amber -> red (high ramp)
+            const hue = Math.round((1 - t.ramp) * 120); // 120=green, 0=red
+            const barColor = `hsl(${hue}, 70%, 45%)`;
+            const row = document.createElement('div');
+            row.className = 'rule-term';
+            row.innerHTML =
+                `<span class="rule-term-name">${t.name}</span>` +
+                `<div class="rule-term-bar-track">` +
+                    `<div class="rule-term-bar" style="width:${pct}%;background:${barColor}"></div>` +
+                `</div>` +
+                `<span class="rule-term-penalty">${t.penalty > 0 ? '-' : ''}${t.penalty.toFixed(2)}</span>` +
+                `<div class="rule-term-note">${t.note}</div>`;
+            termsEl.appendChild(row);
+        }
+
+        // Flat penalties
+        const flatParts = [];
+        if (rb.case_flood_leaking_penalty > 0) {
+            flatParts.push(`Flood leaking: -${rb.case_flood_leaking_penalty.toFixed(2)}`);
+        }
+        if (rb.shares_vessel_penalty > 0) {
+            flatParts.push(`Shared vessel: -${rb.shares_vessel_penalty.toFixed(2)}`);
+        }
+        flatEl.innerHTML = flatParts.length
+            ? flatParts.map(p => `<span class="flat-penalty">${p}</span>`).join('')
+            : '';
+
+        // Total
+        totalEl.innerHTML =
+            `<span class="rule-total-label">Total penalty</span>` +
+            `<span class="rule-total-value">-${rb.total_penalty.toFixed(2)}</span>` +
+            `<span class="rule-total-label">Confidence</span>` +
+            `<span class="rule-total-value">${d.confidence != null ? (d.confidence * 100).toFixed(0) + '%' : '---'}</span>`;
+    } else {
+        rulesSection.style.display = 'none';
+    }
+
     panel.classList.add('visible');
 }
 

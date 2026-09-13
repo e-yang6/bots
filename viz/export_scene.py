@@ -34,13 +34,27 @@ from src.geometry import crop_to_mask_bbox
 from schema import read_prediction
 
 
-def mask_to_mesh(mask_sitk, target_faces=15000, full_res=False):
+def _volume_center_mm(sitk_image):
+    """Physical center of the entire volume (not just the mask voxels)."""
+    size = np.array(sitk_image.GetSize(), dtype=float)     # x,y,z
+    spacing = np.array(sitk_image.GetSpacing())             # x,y,z
+    origin = np.array(sitk_image.GetOrigin())               # x,y,z
+    direction = np.array(sitk_image.GetDirection()).reshape(3, 3)
+    center_index_xyz = (size - 1.0) / 2.0 * spacing
+    return center_index_xyz @ direction.T + origin
+
+
+def mask_to_mesh(mask_sitk, target_faces=15000, full_res=False, centroid=None):
     """Convert a binary SimpleITK mask to a trimesh via marching cubes.
 
     Returns a trimesh.Trimesh in physical mm coordinates.  When full_res
     is False (default), the mesh is decimated to roughly target_faces for
     mobile-friendly rendering.  When True, decimation is skipped but
     Laplacian smoothing is still applied.
+
+    If centroid is provided, the mesh is centered at that point (so all
+    meshes sharing a centroid land in the same local frame).  Otherwise
+    the volume center is used.
     """
     import SimpleITK as sitk
     from skimage.measure import marching_cubes
@@ -60,8 +74,8 @@ def mask_to_mesh(mask_sitk, target_faces=15000, full_res=False):
     verts_xyz = verts_zyx[:, ::-1]  # now x,y,z in mm from array corner
     verts_physical = verts_xyz @ direction.T + origin
 
-    # Center the mesh at its own centroid for AR placement
-    centroid = verts_physical.mean(axis=0)
+    if centroid is None:
+        centroid = _volume_center_mm(mask_sitk)
     verts_centered = verts_physical - centroid
 
     mesh = trimesh.Trimesh(vertices=verts_centered, faces=faces, process=True)
@@ -73,12 +87,8 @@ def mask_to_mesh(mask_sitk, target_faces=15000, full_res=False):
     if not full_res and len(mesh.faces) > target_faces:
         try:
             mesh = mesh.simplify_quadric_decimation(face_count=target_faces)
-        except (ImportError, ModuleNotFoundError):
-            pitch = mesh.extents.max() / (target_faces ** 0.5) * 2
-            try:
-                mesh = mesh.voxelized(pitch).marching_cubes
-            except Exception:
-                pass  # keep the smoothed mesh as-is
+        except Exception:
+            pass  # keep the smoothed mesh as-is; voxel fallback destroys geometry
 
     # Final light smooth
     trimesh.smoothing.filter_laplacian(mesh, iterations=5, lamb=0.3)
@@ -179,7 +189,8 @@ def build_pipeline_scene_json(case_id, centroid, mesh_filename, scored, kept_set
 
     Every scored candidate gets an entry; accepted vs rejected is indicated
     by the 'accepted' flag. Each branch that produced a mesh gets a
-    'mesh_file' key.
+    'mesh_file' key. The full rule breakdown from src.rules.explain() is
+    included so the viewer can show per-term penalty details.
     """
     from src.rules import CONFIDENCE_THRESHOLD
 
@@ -216,6 +227,16 @@ def build_pipeline_scene_json(case_id, centroid, mesh_filename, scored, kept_set
                 branch["reject_reason"] = veto
             elif confidence < CONFIDENCE_THRESHOLD:
                 branch["reject_reason"] = f"below threshold ({confidence:.2f})"
+
+        # Full rule breakdown for the viewer's penalty detail panel
+        score = entry["score"]
+        branch["rule_breakdown"] = {
+            "veto": score.get("veto"),
+            "terms": score["terms"],
+            "case_flood_leaking_penalty": score["case_flood_leaking_penalty"],
+            "shares_vessel_penalty": score["shares_vessel_penalty"],
+            "total_penalty": score["total_penalty"],
+        }
 
         branches.append(branch)
 
@@ -274,28 +295,30 @@ def export_pipeline(image_path, mask_path, output_dir,
 
     os.makedirs(output_dir, exist_ok=True)
 
-    # --- Aorta mesh (same as legacy) ---
-    print(f"Loading volumes: {image_path}")
-    mask_sitk = read_volume(mask_path)
-    image_sitk = read_volume(image_path)
-    _, cropped_mask = crop_to_mask_bbox(image_sitk, mask_sitk, margin_mm=5)
+    # --- Run detection pipeline FIRST so we can use its resampled volumes ---
+    print(f"Running detection pipeline on: {image_path}")
+    context = analyze_case(image_path, mask_path, verbose=verbose)
+    daughters, scored = build_daughters(context, verbose=verbose)
+
+    # --- Aorta mesh from the pipeline's resampled mask ---
+    # Must use the same volume the branches come from so coordinates align.
+    resampled_mask = context["mask"]
+    resampled_image = context["image"]
+
+    # Compute a single centroid from the volume center so aorta + all
+    # branches share the exact same coordinate origin.
+    centroid = _volume_center_mm(resampled_image)
 
     label = "full-res" if full_res else f"target {target_faces} faces"
     print(f"Generating aorta mesh ({label})...")
-    aorta_mesh, centroid = mask_to_mesh(cropped_mask, target_faces=target_faces,
-                                        full_res=full_res)
-    del cropped_mask
+    aorta_mesh, centroid = mask_to_mesh(resampled_mask, target_faces=target_faces,
+                                        full_res=full_res, centroid=centroid)
 
     glb_filename = "aorta.glb"
     glb_path = os.path.join(output_dir, glb_filename)
     aorta_mesh.export(glb_path, file_type="glb")
     aorta_kb = os.path.getsize(glb_path) / 1024
     print(f"Aorta mesh: {glb_path} ({aorta_kb:.0f} KB, {len(aorta_mesh.faces)} faces)")
-
-    # --- Run detection pipeline ---
-    print("Running detection pipeline...")
-    context = analyze_case(image_path, mask_path, verbose=verbose)
-    daughters, scored = build_daughters(context, verbose=verbose)
 
     if not scored:
         print("No candidates found.")
@@ -320,9 +343,6 @@ def export_pipeline(image_path, mask_path, output_dir,
             if np.linalg.norm(ostium_mm - d_ostium) < 0.1:
                 kept_set.add(id(entry))
                 break
-
-    # The resampled image from context for coordinate transforms
-    resampled_image = context["image"]
 
     # --- Build mesh per candidate ---
     case_id = schema.case_id_from_path(image_path)

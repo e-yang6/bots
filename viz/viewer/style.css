@@ -343,3 +343,127 @@ body.companion #info-panel {
 .info-grid .reject-text {
     color: #c66;
 }
+
+/* ─── Rule breakdown ─── */
+
+#info-rules {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid #333;
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+#info-rules h3 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: #777;
+    margin-bottom: 8px;
+}
+
+/* Veto badge */
+.veto-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: #c44;
+    color: #fff;
+}
+
+.veto-reason {
+    font-size: 11px;
+    color: #c88;
+    margin-left: 4px;
+}
+
+#rule-veto {
+    margin-bottom: 6px;
+}
+
+/* Term rows */
+.rule-term {
+    display: grid;
+    grid-template-columns: 1fr 60px 36px;
+    grid-template-rows: auto auto;
+    gap: 0 6px;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.rule-term-name {
+    font-size: 11px;
+    color: #bbb;
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.rule-term-bar-track {
+    grid-column: 2;
+    grid-row: 1;
+    height: 6px;
+    background: #2a2a2a;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.rule-term-bar {
+    height: 100%;
+    border-radius: 3px;
+    min-width: 1px;
+}
+
+.rule-term-penalty {
+    grid-column: 3;
+    grid-row: 1;
+    font-size: 10px;
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    color: #999;
+    text-align: right;
+}
+
+.rule-term-note {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    font-size: 9px;
+    color: #555;
+    line-height: 1.3;
+    margin-bottom: 2px;
+}
+
+/* Flat penalties */
+.flat-penalty {
+    display: inline-block;
+    font-size: 10px;
+    color: #b88;
+    margin-right: 10px;
+    margin-top: 4px;
+}
+
+/* Total row */
+#rule-total {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 2px 8px;
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid #2a2a2a;
+}
+
+.rule-total-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: #666;
+}
+
+.rule-total-value {
+    font-size: 12px;
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    color: #ccc;
+    text-align: right;
+}
