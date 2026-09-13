@@ -26,7 +26,9 @@ import numpy as np
 
 sys.path.insert(0, ".")
 from run import analyze_case, build_daughters  # noqa: E402
-from scripts.make_phantom import build_suite, write_phantom_case  # noqa: E402
+from scripts.make_phantom import (  # noqa: E402
+    ORGAN_BED_REPRODUCING_VARIANTS, build_suite, write_phantom_case,
+)
 from src.evaluate import match_and_score  # noqa: E402
 
 # How close a daughter's ostium must be to a reference point to count as
@@ -101,6 +103,47 @@ def check_structural_claims(case_id, meta, daughters):
             f"nearest daughter {distance:.1f}mm from the {thin_branch['radius_mm']:.1f}mm-radius "
             f"thin branch's ostium (need > {MATCH_RADIUS_MM:.0f}mm)"
             + (f", instance {nearest['instance_id']}" if nearest else ""),
+        )
+
+    organ_bed = meta.get("distractors", {}).get("organ_bed")
+    if organ_bed is not None:
+        distance, nearest = _nearest_daughter_distance(organ_bed["centre"], daughters)
+        record(
+            "organ_bed_not_reported", distance > MATCH_RADIUS_MM,
+            f"nearest daughter {distance:.1f}mm from the organ bed's centre "
+            f"(need > {MATCH_RADIUS_MM:.0f}mm)"
+            + (f", instance {nearest['instance_id']}" if nearest else ""),
+        )
+
+        # The bright feeder into the same bed is the in-case control: if it
+        # ever stops being found, a miss on the dim branch stops being
+        # attributable to the bed.
+        feeder = next(b for b in meta["branches"] if b["label"] == "organ_feeder")
+        distance, nearest = _nearest_daughter_distance(feeder["ostium"], daughters)
+        record(
+            "organ_feeder_is_reported", distance <= MATCH_RADIUS_MM,
+            f"nearest daughter {distance:.1f}mm from the bright feeder's ostium "
+            f"(need <= {MATCH_RADIUS_MM:.0f}mm)"
+            + (f", instance {nearest['instance_id']}" if nearest else ""),
+        )
+
+        # The dim branch is a fully eligible daughter -- 1.8mm radius, 10mm
+        # long -- so this SHOULD pass and currently does not, on exactly the
+        # variants where the bed sits at or above the branch's own HU. It is
+        # the open failure this phantom exists to hold, not a phantom bug:
+        # see scripts/make_phantom.py's ORGAN_BED_HU_FRACTIONS and README's
+        # Known limitations. It flips to PASS when the flood can separate a
+        # vessel from the tissue it is contiguous with.
+        branch = next(b for b in meta["branches"] if b["label"] == "organ_bed_branch")
+        distance, nearest = _nearest_daughter_distance(branch["ostium"], daughters)
+        reproducing = organ_bed["variant"] in ORGAN_BED_REPRODUCING_VARIANTS
+        record(
+            "organ_bed_branch_is_reported", distance <= MATCH_RADIUS_MM,
+            f"nearest daughter {distance:.1f}mm from the {branch['radius_mm']:.1f}mm-radius dim "
+            f"branch's ostium (need <= {MATCH_RADIUS_MM:.0f}mm)"
+            + (f", instance {nearest['instance_id']}" if nearest else "")
+            + (" -- KNOWN OPEN: the bed is at or above the branch's own HU, so no threshold "
+               "separates them" if reproducing else " -- control variant, expected to pass"),
         )
 
     trunk = next((b for b in meta["branches"] if b["label"] == "bifurcation_trunk"), None)

@@ -36,7 +36,7 @@ Two structural tests are built into every phantom, per the brief:
     entries, because two genuine origins that happen to be near each other
     must stay two.
 
-Four distractors that must never appear in the reference:
+Five distractors that must never appear in the reference:
   - an IVC analogue: a lower-HU capsule running parallel to the parent for
     its whole length, touching it -- vein-likeness bait (angle-to-
     centerline, HU-relative-to-lumen) for src/rules.py.
@@ -50,6 +50,14 @@ Four distractors that must never appear in the reference:
   - a thin branch below the 2mm-diameter minimum (radius < 1.0mm) -- must
     never be reported; see THIN_BRANCH_RADIUS_MM's own comment for what this
     can and can't actually test about src.rules.RADIUS_VETO_MM.
+  - an organ bed: a large lobulated blob at the DISTAL end of a dim but
+    fully eligible daughter, at or above that daughter's own HU. Unlike
+    every distractor above, this one is not bait for a rule -- it
+    reproduces a detection failure found on the real eval set, where no
+    single intensity threshold can separate the branch from the organ it
+    feeds. See ORGAN_BED_HU_FRACTIONS for the mechanism and the three
+    brightness variants; opt-in via organ_bed_variant, so the 27 grid
+    cases and their recorded results are unaffected.
 
 And one truncation feature: with truncate=True the MASK stops
 TRUNCATION_MARGIN_MM before the parent capsule in the image does, so the
@@ -135,6 +143,88 @@ THIN_BRANCH_S_FRACTION = 0.09
 THIN_BRANCH_AZIMUTH_DEG = 45.0
 THIN_BRANCH_ELEVATION_DEG = 0.0
 
+# The organ-bed distractor: a dim daughter that runs into the organ it feeds.
+#
+# Found on the real eval set (EVAL_SET case_20's four missed ostia and
+# case_22's branch_001/branch_006): the branch's own lumen is dimmer than the
+# aorta, and the bed it terminates in is at or above the branch's HU, so the
+# two are ONE connected component at every threshold that reaches the branch
+# at all. Lowering the threshold to reach the branch therefore also admits the
+# whole bed, whose frontier growth src.floodfill.detect_leak correctly reports
+# as a leak, and the threshold search settles back above the branch. Measured
+# there: 96.8-99.8% of the territory a lower threshold newly reached was a
+# single connected component, and 41/41 of the missed branches' own centerline
+# points lay INSIDE that component -- so there is nothing for a leak-
+# sensitivity or threshold-range change to separate.
+#
+# The branch itself is deliberately eligible on every other axis -- radius
+# well above src.rules.RADIUS_VETO_MM and above the ~1.15mm calibre floor
+# noted at THIN_BRANCH_RADIUS_MM, length well above the 5mm minimum -- so a
+# miss here is attributable to connectivity alone.
+# Both vessels leave the wall at the same arc length, a little apart in
+# azimuth, and run into the same bed -- two arteries feeding one organ, one
+# of them poorly opacified. The FEEDER is at full lumen HU, so the bed stays
+# reachable through it no matter what the dim branch does: that is what
+# forces the threshold search up above the dim branch's own level and keeps
+# the trap closed. Without it the bed is reachable only via the dim branch,
+# a clean threshold window opens between them, and the case does not
+# reproduce -- measured, not assumed.
+# Placed in the stretch past arc fraction 0.70, which the organ-bed cases
+# keep clear by running n_branches=3 with no close pair, and far enough apart
+# along the parent that the two ostia cannot cross-match inside
+# validate_phantom's 10mm radius (0.095 * 150mm = 14.2mm of wall between
+# them). Far enough from the parent's own end (arc fraction 1.0) that the
+# bed never reaches the end cap.
+ORGAN_FEEDER_S_FRACTION = 0.720
+ORGAN_BRANCH_S_FRACTION = 0.815
+ORGAN_BED_AZIMUTH_DEG = 70.0      # clear of every other structure's azimuth
+ORGAN_BRANCH_RADIUS_MM = 1.8      # top of the 1.2-1.8mm dim-branch range: comfortably past the
+                                  # ~1.15mm calibre floor, so the binary opening is not the
+                                  # binding constraint and a miss means connectivity
+ORGAN_FEEDER_RADIUS_MM = 2.6
+ORGAN_BRANCH_LENGTH_MM = 10.0     # the 10mm the brief traces, and > SEED_DISTANCE_MM + margin
+ORGAN_BED_STANDOFF_MM = 2.0       # past the vessel ends to the bed centre
+# A union of jittered spheres: lobulated and non-tubular, so the bed's shape
+# signature (low aspect ratio, large cross-section) differs from either
+# vessel's own. Sized so that admitting it ALWAYS trips detect_leak's growth
+# rule: at a smaller bed the threshold the search settled on was set by the
+# rest of the phantom instead, the bed's own HU made no difference to the
+# outcome, and whether the dim branch was missed came down to the seed.
+ORGAN_BED_LOBES = 12
+ORGAN_BED_LOBE_RADIUS_RANGE_MM = (6.0, 9.0)
+ORGAN_BED_LOBE_SCATTER_MM = 6.0
+
+# HU as fractions of (lumen_hu - background_hu) above background, never an
+# absolute HU -- this cohort's HU floor is not standard (see CLAUDE.md).
+# 0.45 puts the branch at roughly half the lumen reference, which is where
+# the real missed branches sat (case_20's guides ran 0.54-0.56 of their
+# case's lumen reference).
+ORGAN_BRANCH_HU_FRACTION = 0.45
+# The three brightness variants. The first two reproduce the failure; the
+# third is its NEGATIVE CONTROL and is expected to be detected normally.
+#
+# Measured, at this bed size, over six seeds each: the failure needs
+# bed >= branch, and it is then deterministic -- both reproducing variants
+# miss the dim branch on every seed, and the threshold the search settles on
+# tracks the BED's own level (bed at 0.60 of the span settles at 0.634 of the
+# lumen reference; bed level with the branch settles at 0.494-0.509), which
+# is what says the bed, and not the rest of the phantom, is what forces it.
+#
+# The boundary is sharp and sits just below equality. A bed 0.05 of the span
+# under the branch -- "a bit brighter", within one GAUSSIAN_NOISE_SIGMA_HU --
+# is already seed-dependent: found on 5 of 6 seeds, missed on the sixth. The
+# control therefore sits a clear 0.15 below the branch, so it is a control
+# and not a coin flip. Keeping it guards against a "fix" that merely lowers
+# thresholds everywhere.
+ORGAN_BED_HU_FRACTIONS = {
+    "bed_brighter": 0.60,
+    "equal_hu": ORGAN_BRANCH_HU_FRACTION,
+    "branch_brighter_control": 0.30,
+}
+# The variants that must reproduce the miss; the rest are controls that must
+# still be detected. scripts/validate_phantom.py asserts both directions.
+ORGAN_BED_REPRODUCING_VARIANTS = ("bed_brighter", "equal_hu")
+
 TRUNCATION_MARGIN_MM = 27.0      # the mask stops this far short of the parent's own end -- far
                                  # enough past the last real branch (arc fraction 0.74) that its
                                  # legitimate ostium isn't mistaken for a spurious cut-face branch
@@ -215,6 +305,7 @@ def generate_phantom(
     include_bone_slab=True,
     include_leak_bridge=True,
     include_thin_branch=True,
+    organ_bed_variant=None,
     truncate=False,
     non_contrast=False,
 ):
@@ -226,6 +317,8 @@ def generate_phantom(
     non_contrast overrides lumen_hu/background_hu to a barely-enhanced,
     branch-free case that must come back empty (is_contrast_enhanced's own
     gate, not a geometry test).
+    organ_bed_variant, one of ORGAN_BED_HU_FRACTIONS, adds the dim-branch-
+    into-organ-bed pair; the branch IS a reference daughter, the bed is not.
 
     Returns (image, mask, reference, meta): SimpleITK images (image int16,
     mask uint8), reference a schema.make_prediction dict, and meta a plain
@@ -239,6 +332,13 @@ def generate_phantom(
         background_hu = NON_CONTRAST_BACKGROUND_HU
         n_branches, include_bifurcation, include_close_pair = 0, False, False
         include_ivc = include_bone_slab = include_leak_bridge = include_thin_branch = False
+        organ_bed_variant = None
+
+    if organ_bed_variant is not None and organ_bed_variant not in ORGAN_BED_HU_FRACTIONS:
+        raise ValueError(
+            f"unknown organ_bed_variant {organ_bed_variant!r}; "
+            f"expected one of {sorted(ORGAN_BED_HU_FRACTIONS)}"
+        )
 
     sx, sy, sz = (float(s) for s in spacing)
     nz = int(round((PARENT_LENGTH_MM + 20.0) / sz))
@@ -379,6 +479,70 @@ def generate_phantom(
             image_flat[nearest] = lumen_hu
         distractors["leak_blob"] = {"centre": blob_centre.tolist(), "radius_mm": LEAK_BLOB_RADIUS_MM}
 
+    if organ_bed_variant is not None:
+        branch_hu = background_hu + ORGAN_BRANCH_HU_FRACTION * (lumen_hu - background_hu)
+        bed_hu = background_hu + ORGAN_BED_HU_FRACTIONS[organ_bed_variant] * (lumen_hu - background_hu)
+
+        dim = _branch_geometry(ORGAN_BRANCH_S_FRACTION * PARENT_LENGTH_MM, ORGAN_BED_AZIMUTH_DEG,
+                               0.0, ORGAN_BRANCH_RADIUS_MM, ORGAN_BRANCH_LENGTH_MM)
+        feeder = _branch_geometry(ORGAN_FEEDER_S_FRACTION * PARENT_LENGTH_MM, ORGAN_BED_AZIMUTH_DEG,
+                                  0.0, ORGAN_FEEDER_RADIUS_MM, ORGAN_BRANCH_LENGTH_MM)
+
+        # Lobes scattered about a centre past both vessels' ends -- a union of
+        # spheres, so the bed is lobulated rather than a sphere or a box. The
+        # scatter is only ever outward (never back down the vessels), which is
+        # both how an organ sits relative to its artery and what keeps the bed
+        # off the parent wall.
+        outward = dim["direction"] + feeder["direction"]
+        outward = outward / np.linalg.norm(outward)
+        bed_centre = 0.5 * (dim["end"] + feeder["end"]) + ORGAN_BED_STANDOFF_MM * outward
+        bed_inside = np.zeros(grid_points.shape[0], dtype=bool)
+        lobes = []
+        for _ in range(ORGAN_BED_LOBES):
+            offset = rng.normal(0.0, ORGAN_BED_LOBE_SCATTER_MM, size=3)
+            offset -= min(0.0, float(offset @ outward)) * outward
+            lobe_centre = bed_centre + offset
+            lobe_radius = float(rng.uniform(*ORGAN_BED_LOBE_RADIUS_RANGE_MM))
+            bed_inside |= np.sum((grid_points - lobe_centre) ** 2, axis=1) <= lobe_radius ** 2
+            lobes.append({"centre": lobe_centre.tolist(), "radius_mm": lobe_radius})
+
+        # Bed first, then the vessels over it: wherever they overlap at the
+        # junction the voxels carry the VESSEL's own HU, so "the dim branch is
+        # at branch_hu" is true of the rendered voxels, not just of the intent.
+        image_flat[bed_inside & ~lumen_flat] = bed_hu
+        image_flat[_capsule_mask(grid_points, dim["ostium"], dim["end"],
+                                 ORGAN_BRANCH_RADIUS_MM) & ~lumen_flat] = branch_hu
+        # The feeder is ordinary lumen, so it joins lumen_flat and is painted
+        # at lumen_hu with everything else.
+        lumen_flat[_capsule_mask(grid_points, feeder["ostium"], feeder["end"],
+                                 ORGAN_FEEDER_RADIUS_MM)] = True
+
+        # The bed must reach the parent only THROUGH a vessel; a lobe touching
+        # the parent directly would be an unintended extra origin and the case
+        # would stop testing what it claims to.
+        gap_to_parent_mm = float(distance_to_axis[bed_inside].min() - PARENT_RADIUS_MM)
+        if gap_to_parent_mm <= 0.0:
+            raise ValueError(
+                f"organ bed touches the parent (gap {gap_to_parent_mm:.1f}mm); "
+                "raise ORGAN_BRANCH_LENGTH_MM or lower ORGAN_BED_LOBE_SCATTER_MM"
+            )
+
+        for label, geometry in (("organ_feeder", feeder), ("organ_bed_branch", dim)):
+            instance_id = f"branch_{len(daughters) + 1:03d}"
+            daughters.append(schema.make_daughter(
+                instance_id=instance_id, ostium_xyz_mm=geometry["ostium"],
+                seed_xyz_mm=geometry["seed"], radius_mm=geometry["radius_mm"],
+                direction_xyz=geometry["direction"],
+            ))
+            meta_branches.append({"label": label, "instance_id": instance_id, **geometry})
+
+        distractors["organ_bed"] = {
+            "variant": organ_bed_variant, "centre": bed_centre.tolist(), "lobes": lobes,
+            "bed_hu": float(bed_hu), "branch_hu": float(branch_hu),
+            "lumen_hu": float(lumen_hu), "gap_to_parent_mm": gap_to_parent_mm,
+            "n_bed_voxels": int(bed_inside.sum()),
+        }
+
     image_flat[lumen_flat] = lumen_hu
 
     noise = rng.normal(0.0, GAUSSIAN_NOISE_SIGMA_HU, size=image_flat.shape)
@@ -395,6 +559,8 @@ def generate_phantom(
         volume.SetOrigin(tuple(origin_mm.tolist()))
 
     case_id = f"phantom_seed{seed}_sp{sx:.2g}x{sy:.2g}x{sz:.2g}_hu{int(lumen_hu)}_n{n_branches}"
+    if organ_bed_variant is not None:
+        case_id += f"_organbed_{organ_bed_variant}"
     if truncate:
         case_id += "_trunc"
     if non_contrast:
@@ -409,7 +575,8 @@ def generate_phantom(
     meta = {
         "case_id": case_id, "seed": seed, "spacing": (sx, sy, sz), "lumen_hu": lumen_hu,
         "background_hu": background_hu, "n_branches": n_branches, "truncate": truncate,
-        "non_contrast": non_contrast, "branches": meta_branches,
+        "non_contrast": non_contrast, "organ_bed_variant": organ_bed_variant,
+        "branches": meta_branches,
         "distractors": distractors, "truncation_point_mm": truncation_point,
     }
     return image, mask, reference, meta
@@ -464,6 +631,23 @@ def build_suite(base_seed=0):
     cases.append(generate_phantom(seed=base_seed + index, spacing=(0.8, 0.8, 0.8), truncate=True))
     index += 1
     cases.append(generate_phantom(seed=base_seed + index, spacing=(0.8, 0.8, 0.8), non_contrast=True))
+    index += 1
+
+    # The organ-bed variants, appended last and with their own seeds so every
+    # case above keeps the exact geometry and recorded result it had before
+    # this distractor existed. One bright branch from the ordinary tables
+    # rides along as a control: the same case must still find it, so a miss
+    # on the dim branch is attributable to the bed and not to the phantom.
+    for variant in ORGAN_BED_HU_FRACTIONS:
+        # The IVC analogue is off here and only here: at IVC_HU_FRACTION it
+        # sits near the bed's own level, and measurement showed it -- not the
+        # bed -- was what the threshold search was settling against, which
+        # would have made a miss unattributable. Every other distractor stays.
+        cases.append(generate_phantom(
+            seed=base_seed + index, spacing=(0.8, 0.8, 0.8), n_branches=3,
+            include_ivc=False, include_close_pair=False, organ_bed_variant=variant,
+        ))
+        index += 1
     return cases
 
 
