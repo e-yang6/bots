@@ -11,6 +11,31 @@ from src.geometry import (
 from tests.synthetic import make_cylinder_with_stub
 
 
+def test_vectorized_coordinates_match_simpleitk_on_an_oblique_grid():
+    from src.geometry import _indices_to_physical
+
+    image = sitk.Image([7, 8, 9], sitk.sitkFloat32)
+    image.SetSpacing((0.7, 1.5, 0.8))
+    image.SetOrigin((12., -37., 91.))
+    rotation = sitk.Euler3DTransform()
+    rotation.SetRotation(0.2, -0.3, 0.4)
+    image.SetDirection(rotation.GetMatrix())
+    indices = np.array([[0, 0, 0], [2, 1, 3], [3, 2, 4]])
+    expected = [image.TransformIndexToPhysicalPoint(tuple(map(int, point))) for point in indices]
+    np.testing.assert_allclose(_indices_to_physical(indices, image), expected, atol=1e-9)
+
+
+def test_resampling_rejects_an_oversized_working_grid(monkeypatch):
+    import pytest
+    from src import geometry
+
+    monkeypatch.setattr(geometry, "MAX_WORKING_VOXELS", 1)
+    image = sitk.Image([4, 4, 4], sitk.sitkFloat32)
+    mask = sitk.Image([4, 4, 4], sitk.sitkUInt8)
+    with pytest.raises(MemoryError, match="working grid"):
+        geometry.resample_isotropic(image, mask)
+
+
 def test_crop_to_mask_bbox_shrinks_volume_and_keeps_mask_intact():
     image, mask = make_cylinder_with_stub(shape_zyx=(90, 60, 60), stub=False, noise_speck=False)
     cropped_image, cropped_mask = crop_to_mask_bbox(image, mask, margin_mm=5)

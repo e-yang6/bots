@@ -1,0 +1,129 @@
+diff --git a/schema.py b/schema.py
+index ed31df6..441b219 100644
+--- a/schema.py
++++ b/schema.py
+@@ -18,7 +18,9 @@ Schema:
+ """
+ 
+ import json
++import math
+ import os
++from numbers import Real
+ 
+ PARENT_INSTANCE_ID = "aorta"
+ 
+@@ -66,10 +68,47 @@ def make_prediction(case_id, daughters=None):
+     }
+ 
+ 
++def submission_prediction(prediction):
++    if not isinstance(prediction.get("case_id"), str) or not prediction["case_id"]:
++        raise ValueError("case_id must be a nonempty string")
++    if prediction.get("parent") != {"instance_id": PARENT_INSTANCE_ID}:
++        raise ValueError("parent must identify the aorta")
++    if not isinstance(prediction.get("daughters"), list):
++        raise ValueError("daughters must be a list")
++
++    def finite_number(value):
++        return isinstance(value, Real) and not isinstance(value, bool) and math.isfinite(value)
++
++    daughters = []
++    for index, daughter in enumerate(prediction["daughters"], start=1):
++        if daughter.get("instance_id") != f"branch_{index:03d}":
++            raise ValueError("daughter IDs must be unique and sequential: branch_001, branch_002, ...")
++        if daughter.get("parent_instance_id") != PARENT_INSTANCE_ID:
++            raise ValueError("every daughter must link to aorta")
++        for field in ("ostium_xyz_mm", "seed_xyz_mm", "direction_xyz"):
++            value = daughter.get(field)
++            if not isinstance(value, (list, tuple)) or len(value) != 3 or not all(map(finite_number, value)):
++                raise ValueError(f"{field} must contain three finite numbers")
++        radius = daughter.get("radius_mm")
++        if not finite_number(radius) or radius <= 0:
++            raise ValueError("radius_mm must be finite and positive")
++        direction = daughter["direction_xyz"]
++        if not math.isclose(math.hypot(*direction), 1.0, abs_tol=1e-6):
++            raise ValueError("direction_xyz must be a unit vector")
++        outward = [s - o for s, o in zip(daughter["seed_xyz_mm"], daughter["ostium_xyz_mm"])]
++        if math.hypot(*outward) == 0 or sum(d * v for d, v in zip(direction, outward)) < -1e-6:
++            raise ValueError("direction_xyz must point from the ostium into the daughter")
++        daughters.append(make_daughter(
++            daughter["instance_id"], daughter["ostium_xyz_mm"], daughter["seed_xyz_mm"], radius, direction
++        ))
++    return make_prediction(prediction["case_id"], daughters)
++
++
+ def write_prediction(prediction, output_path):
+     """Write a prediction dict to output_path as JSON."""
+-    with open(output_path, "w") as f:
+-        json.dump(prediction, f, indent=2)
++    payload = json.dumps(submission_prediction(prediction), indent=2, allow_nan=False)
++    with open(output_path, "w", encoding="utf-8") as f:
++        f.write(payload)
+ 
+ 
+ def read_prediction(path):
+diff --git a/tests/test_schema.py b/tests/test_schema.py
+index 3eb13db..a2ba975 100644
+--- a/tests/test_schema.py
++++ b/tests/test_schema.py
+@@ -1,3 +1,7 @@
++import json
++
++import pytest
++
+ import schema
+ 
+ 
+@@ -9,3 +13,52 @@ def test_case_id_from_path_uses_parent_folder_name():
+ def test_case_id_from_path_falls_back_to_filename_with_no_parent_dir():
+     assert schema.case_id_from_path("orig1.nii.gz") == "orig1"
+     assert schema.case_id_from_path("orig1.nii") == "orig1"
++
++
++def prediction():
++    return schema.make_prediction("subject001", [schema.make_daughter(
++        "branch_001", [0, 0, 0], [5, 0, 0], 1.2, [1, 0, 0]
++    )])
++
++
++def test_submission_strips_diagnostic_fields(tmp_path):
++    data = prediction()
++    data["daughters"][0]["confidence"] = 0.9
++    output = tmp_path / "prediction.json"
++    schema.write_prediction(data, output)
++    written = json.loads(output.read_text())
++    assert set(written) == {"case_id", "parent", "daughters"}
++    assert set(written["daughters"][0]) == {
++        "instance_id", "parent_instance_id", "ostium_xyz_mm", "seed_xyz_mm", "radius_mm", "direction_xyz"
++    }
++    assert data["daughters"][0]["confidence"] == 0.9
++
++
++@pytest.mark.parametrize("field,value", [
++    ("radius_mm", float("nan")), ("radius_mm", -1), ("radius_mm", True),
++    ("ostium_xyz_mm", [0, float("inf"), 0]), ("seed_xyz_mm", [1, 2]),
++    ("direction_xyz", [0, 0, 0]), ("direction_xyz", [2, 0, 0]),
++    ("direction_xyz", [-1, 0, 0]), ("parent_instance_id", "other"),
++    ("instance_id", "renal"),
++])
++def test_invalid_prediction_is_rejected_before_writing(tmp_path, field, value):
++    data = prediction()
++    data["daughters"][0][field] = value
++    output = tmp_path / "prediction.json"
++    with pytest.raises(ValueError):
++        schema.write_prediction(data, output)
++    assert not output.exists()
++
++
++def test_duplicate_ids_are_rejected(tmp_path):
++    data = prediction()
++    data["daughters"].append(dict(data["daughters"][0]))
++    with pytest.raises(ValueError):
++        schema.write_prediction(data, tmp_path / "prediction.json")
++
++
++def test_empty_submission_roundtrip(tmp_path):
++    data = schema.make_prediction("subject001")
++    output = tmp_path / "prediction.json"
++    schema.write_prediction(data, output)
++    assert schema.read_prediction(output) == data

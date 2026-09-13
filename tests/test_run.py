@@ -8,6 +8,31 @@ import run
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
+def test_supervisor_timeout_does_not_reuse_stale_output(tmp_path):
+    output = tmp_path / "prediction.json"
+    output.write_text('{"case_id": "stale", "daughters": []}')
+    status = run.supervise_cli([sys.executable, "-c", "import time; time.sleep(5)"], output, "subject001", timeout_s=0.15)
+    assert status["stop_reason"] == "deadline"
+    assert json.loads(output.read_text()) == {"case_id": "subject001", "parent": {"instance_id": "aorta"}, "daughters": []}
+
+
+def test_supervisor_preserves_a_valid_checkpoint(tmp_path):
+    import schema
+
+    output = tmp_path / "prediction.json"
+    expected = schema.make_prediction("subject001", [schema.make_daughter("branch_001", [0, 0, 0], [5, 0, 0], 1., [1, 0, 0])])
+    code = f"import time; from pathlib import Path; Path({str(output)!r}).write_text({json.dumps(expected)!r}); time.sleep(5)"
+    status = run.supervise_cli([sys.executable, "-c", code], output, "subject001", timeout_s=1.0)
+    assert status["stop_reason"] == "deadline"
+    assert json.loads(output.read_text()) == expected
+
+
+def test_supervisor_enforces_memory_budget(tmp_path):
+    status = run.supervise_cli([sys.executable, "-c", "import time; time.sleep(5)"], tmp_path / "prediction.json",
+                               "subject001", memory_limit_mib=0.01)
+    assert status["stop_reason"] == "memory"
+
+
 def test_run_end_to_end_stub_pipeline_emits_valid_empty_json(tmp_path):
     case_dir = tmp_path / "subject001"
     case_dir.mkdir()

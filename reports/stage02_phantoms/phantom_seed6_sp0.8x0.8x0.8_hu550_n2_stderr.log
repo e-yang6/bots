@@ -1,0 +1,23 @@
+  radius disagreement 69% on instance 5: distance transform 0.40mm vs frontier 1.28mm
+lumen HU median=549 p25=535 p75=564 contrast_enhanced=True
+components kept=1 dropped=0 caps=2 surface_points=17712
+flood: T=323HU (0.588 x lumen ref 549HU) retries=6 leak=none growth=0.74 reached=2501
+  search: 0.400->LEAK:growth 0.650->ok 0.525->LEAK:growth 0.588->ok 0.556->LEAK:growth 0.572->LEAK:growth
+  bone descent (ceiling 600HU, excised 0 voxels in 0 components): 0.562->LEAK:growth
+components=7 candidates=6 neck=2.0mm rejected: no_contact_patch=0 end_cap=0 aortic_continuation=0 too_short=1
+instances=6 from 6 candidates (split_components=0 absorbed_narrow_pieces=0 instance_too_short=0)
+  # 0 comp=3 len=15.0mm traced=9.9mm (max_length) ostium=(3.8,8.6,44.4) patch=43mm2 disagree=2.7mm r=3.64mm (dt=2.89 frontier=3.64 vesselness=3.33) vness=5.3e-05
+  # 1 comp=5 len=15.0mm traced=9.6mm (max_length) ostium=(10.2,-8.2,92.4) patch=18mm2 disagree=3.1mm r=2.62mm (dt=1.88 frontier=2.62 vesselness=2.22) vness=0.000162
+  # 2 comp=2 len=15.0mm traced=9.6mm (max_length) ostium=(-7.4,1.4,30.0) patch=20mm2 disagree=3.4mm r=2.54mm (dt=1.90 frontier=2.54 vesselness=2.22) vness=0.000186
+  # 3 comp=4 len=14.9mm traced=9.2mm (max_length) ostium=(-5.8,-2.6,53.2) patch=14mm2 disagree=5.4mm r=1.78mm (dt=1.50 frontier=1.78 vesselness=2.22) vness=0.000217
+  # 4 comp=6 len=14.9mm traced=9.2mm (max_length) ostium=(6.2,-8.2,93.2) patch=6mm2 disagree=2.6mm r=1.24mm (dt=1.09 frontier=1.24 vesselness=1.48) vness=0.000419
+  # 5 comp=7 len=12.2mm traced=6.5mm (bifurcation@7.9mm) ostium=(30.2,-0.2,142.8) patch=6mm2 disagree=2.6mm r=1.28mm (dt=0.40 frontier=1.28 MISMATCH) vness=2.84e-07
+timings: load_and_prepare_s=0.4s geometry_s=0.5s flood_s=0.9s candidates_s=0.5s parentage_s=0.0s tracing_s=0.2s
+scoring: 6 instances, confidence threshold=0.50
+  instance=  0 comp=3 confidence=0.87 status=KEPT
+  instance=  1 comp=5 confidence=0.83 status=KEPT
+  instance=  2 comp=2 confidence=0.88 status=KEPT
+  instance=  3 comp=4 confidence=0.87 status=KEPT
+  instance=  4 comp=6 confidence=0.87 status=KEPT
+  instance=  5 comp=7 confidence=0.62 status=KEPT
+kept 6/6 as daughters

@@ -50,6 +50,7 @@ FLARE_WINDOW_MM = 1.0
 # expressed as a fraction of the (threshold, lumen_reference) gap so it
 # scales with the case's own contrast the same way the threshold search does.
 LEAK_MARGIN_REFERENCE_FRACTION = 1.0
+ORIGIN_RADIUS_UNCERTAINTY_MM = 0.3
 
 
 def _num(value, default=0.0):
@@ -90,7 +91,7 @@ def build_centerline_lookup(centerline):
     points, each tagged with its own normalized (0..1) arc-length position.
     Built once per case, like build_cap_trees.
     """
-    all_points, normalized = [], []
+    all_points, normalized, tangents = [], [], []
     for component in centerline.get("kept", []):
         points = component["points_mm"]
         if points.shape[0] == 0:
@@ -100,9 +101,11 @@ def build_centerline_lookup(centerline):
         total = cumulative[-1] if cumulative[-1] > 0 else 1.0
         all_points.append(points)
         normalized.append(cumulative / total)
+        tangents.append(component["tangents_mm"])
     if not all_points:
         return None
-    return {"tree": cKDTree(np.vstack(all_points)), "normalized": np.concatenate(normalized)}
+    return {"tree": cKDTree(np.vstack(all_points)), "normalized": np.concatenate(normalized),
+            "tangents_mm": np.vstack(tangents)}
 
 
 def _normalized_position(point_mm, centerline_lookup):
@@ -209,7 +212,8 @@ def build_feature_vector(instance, trace, bifurcation, ostium, seed, candidate, 
     threshold_hu = flood["threshold_hu"]
     lumen_reference = flood["lumen_reference_hu"]
 
-    hu_along_trace = sampler.sample("hu", trace["points_mm"]) if trace["points_mm"].shape[0] else np.zeros(0)
+    proximal_path = seed.get("proximal_path_mm", trace["points_mm"])
+    hu_along_trace = sampler.sample("hu", proximal_path) if proximal_path.shape[0] else np.zeros(0)
     hu_relative = hu_along_trace - lumen_reference if hu_along_trace.size else np.zeros(0)
 
     flare_area = np.pi * frontier_radius_mm(
@@ -218,6 +222,11 @@ def build_feature_vector(instance, trace, bifurcation, ostium, seed, candidate, 
     flare_ratio = instance["patch_area_mm2"] / flare_area if flare_area > 0 else 0.0
 
     seed_direction = np.asarray(seed["direction_xyz"], dtype=np.float64)
+    angle = _num(candidate.get("angle_to_centerline_deg"), default=90.0)
+    if centerline_lookup is not None:
+        _distance, index = centerline_lookup["tree"].query(ostium["ostium_mm"])
+        tangent = centerline_lookup["tangents_mm"][int(index)]
+        angle = float(np.degrees(np.arccos(np.clip(abs(np.dot(seed_direction, tangent)), 0.0, 1.0))))
     flatness = _cross_section_flatness(sampler, seed["seed_mm"], seed_direction, threshold_hu)
 
     patch_centroid = np.asarray(instance["patch_centroid_mm"], dtype=np.float64)
@@ -229,10 +238,18 @@ def build_feature_vector(instance, trace, bifurcation, ostium, seed, candidate, 
     nearby_radius = float(local_radius) if nearby_radius_is_local else case_aorta_radius_mm
 
     vesselness = instance.get("vesselness") or {}
+    origin_bands = instance.get("neck_mm", 2.0) + 0.5 * RADIUS_WINDOW_MM + np.arange(3) * 0.5
+    origin_radius = float(np.median([
+        frontier_radius_mm(instance["voxels_dist"], voxel_volume, position, RADIUS_WINDOW_MM)
+        for position in origin_bands
+    ]))
+    proximal_length = float(seed.get("proximal_arc_mm", trace["arc_lengths_mm"])[-1])
+    if trace["truncated_by"] == "bifurcation":
+        proximal_length = min(proximal_length, float(trace["traced_length_mm"]))
 
     return {
         # --- geometry of the trace itself ---
-        "traced_length_mm": float(trace["traced_length_mm"]),
+        "traced_length_mm": proximal_length,
         "truncated_by_bifurcation": float(trace["truncated_by"] == "bifurcation"),
         "truncated_by_vessel_end": float(trace["truncated_by"] == "vessel_end"),
         "reached_seed_distance": float(bool(seed["reached_seed_distance"])),
@@ -243,6 +260,8 @@ def build_feature_vector(instance, trace, bifurcation, ostium, seed, candidate, 
 
         # --- radius ---
         "radius_at_seed_mm": float(seed["radius_mm"]),
+        "origin_radius_mm": float(origin_radius),
+        "origin_radius_uncertainty_mm": ORIGIN_RADIUS_UNCERTAINTY_MM,
         "radius_consistency_cv": _radius_consistency(instance, voxel_volume),
         "radius_disagreement": float(seed["radius_disagreement"]),
         "radius_disagreement_flag": float(bool(seed["radius_disagreement_flag"])),
@@ -255,7 +274,7 @@ def build_feature_vector(instance, trace, bifurcation, ostium, seed, candidate, 
         "cross_section_flatness": float(flatness),
 
         # --- orientation relative to the aorta ---
-        "angle_to_centerline_deg": _num(candidate.get("angle_to_centerline_deg"), default=90.0),
+        "angle_to_centerline_deg": angle,
         "normalized_position_along_aorta": _num(normalized_position, default=0.5),
 
         # --- caps ---

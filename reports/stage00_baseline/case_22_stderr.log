@@ -1,0 +1,36 @@
+  radius disagreement 86% on instance 0: distance transform 1.31mm vs frontier 9.51mm
+  radius disagreement 61% on instance 5: distance transform 0.55mm vs frontier 1.40mm
+  radius disagreement 56% on instance 10: distance transform 0.46mm vs frontier 1.07mm
+lumen HU median=242 p25=222 p75=268 contrast_enhanced=True
+components kept=1 dropped=0 caps=2 surface_points=24779
+flood: T=124HU (0.512 x lumen ref 242HU) retries=25 leak=none growth=1.18 reached=20251
+  search: 0.400->LEAK:growth 0.650->LEAK:growth 0.775->LEAK:growth 0.838->ok 0.806->LEAK:growth 0.822->LEAK:growth
+  bone descent (ceiling 312HU, excised 30183 voxels in 13 components): 0.812->LEAK:growth 0.812(-2622bone)->ok 0.787(-2622bone)->ok 0.762(-2622bone)->ok 0.737(-2622bone)->ok 0.712(-2622bone)->ok 0.687(-2622bone)->LEAK:growth 0.687(-7465bone)->ok 0.662(-7465bone)->ok 0.637(-7465bone)->LEAK:growth 0.637(-9817bone)->ok 0.612(-9817bone)->ok 0.587(-9817bone)->LEAK:growth 0.587(-18006bone)->ok 0.562(-18006bone)->ok 0.537(-18006bone)->ok 0.512(-18006bone)->LEAK:growth 0.512(-30183bone)->ok 0.487(-30183bone)->LEAK:growth 0.487(-30506bone)->LEAK:growth
+components=14 candidates=10 neck=2.0mm rejected: no_contact_patch=0 end_cap=1 aortic_continuation=0 too_short=3
+  rejected end_cap: label=1 len=15.0mm r~5.8mm (88% of patch on the low end face)
+instances=11 from 10 candidates (split_components=1 absorbed_narrow_pieces=0 instance_too_short=0)
+  # 0 comp=7 len=15.0mm traced=6.4mm (bifurcation@6.9mm) ostium=(17.6,-151.7,303.3) patch=251mm2 disagree=7.1mm r=9.51mm (dt=1.31 frontier=9.51 vesselness=6.66 MISMATCH) vness=1.04e-06 split=disjoint_patches shares=#1@13.0mm
+  # 1 comp=7 len=15.0mm traced=9.2mm (max_length@10.4mm) ostium=(4.0,-143.7,314.5) patch=61mm2 disagree=2.0mm r=3.27mm (dt=2.63 frontier=3.27 vesselness=3.33) vness=1.04e-06 split=disjoint_patches shares=#0@13.0mm
+  # 2 comp=2 len=14.7mm traced=9.1mm (max_length) ostium=(7.2,-150.9,218.5) patch=6mm2 disagree=1.8mm r=2.19mm (dt=2.42 frontier=2.19 vesselness=3.33) vness=1.94e-07
+  # 3 comp=10 len=15.0mm traced=9.6mm (max_length) ostium=(16.0,-150.1,323.3) patch=136mm2 disagree=5.5mm r=4.69mm (dt=3.42 frontier=4.69 vesselness=4.81) vness=1.75e-05
+  # 4 comp=11 len=15.0mm traced=9.6mm (max_length) ostium=(16.8,-148.5,337.7) patch=99mm2 disagree=3.0mm r=4.48mm (dt=3.33 frontier=4.48 vesselness=3.33) vness=2.35e-05
+  # 5 comp=8 len=15.0mm traced=3.0mm (bifurcation@4.4mm) ostium=(12.0,-135.7,311.3) patch=12mm2 disagree=3.5mm r=1.40mm (dt=0.55 frontier=1.40 MISMATCH) vness=0 seed<5mm
+  # 6 comp=9 len=15.0mm traced=9.5mm (max_length) ostium=(22.4,-139.7,307.3) patch=36mm2 disagree=2.7mm r=2.02mm (dt=1.65 frontier=2.02 vesselness=2.22) vness=4.78e-05
+  # 7 comp=5 len=15.0mm traced=9.2mm (max_length) ostium=(19.2,-154.9,251.3) patch=26mm2 disagree=2.3mm r=1.78mm (dt=1.50 frontier=1.78 vesselness=1.48) vness=8.18e-05
+  # 8 comp=4 len=14.9mm traced=8.3mm (max_length) ostium=(15.2,-162.1,243.3) patch=26mm2 disagree=4.2mm r=2.10mm (dt=1.27 frontier=2.10 vesselness=1.48) vness=1.89e-05
+  # 9 comp=6 len=14.9mm traced=8.4mm (max_length) ostium=(12.0,-143.7,278.5) patch=27mm2 disagree=4.3mm r=0.95mm (dt=0.60 frontier=0.95) vness=0
+  #10 comp=13 len=6.9mm traced=6.1mm (vessel_end) ostium=(17.6,-118.1,379.3) patch=13mm2 disagree=4.7mm r=1.07mm (dt=0.46 frontier=1.07 MISMATCH) vness=8.6e-05
+timings: load_and_prepare_s=0.9s geometry_s=0.8s flood_s=7.5s candidates_s=1.7s parentage_s=0.1s tracing_s=0.2s
+scoring: 11 instances, confidence threshold=0.50
+  instance=  0 comp=7 confidence=0.47 status=BELOW_THRESHOLD (confidence 0.47 < 0.50)
+  instance=  1 comp=7 confidence=0.88 status=KEPT
+  instance=  2 comp=2 confidence=0.97 status=KEPT
+  instance=  3 comp=10 confidence=0.54 status=KEPT
+  instance=  4 comp=11 confidence=0.81 status=KEPT
+  instance=  5 comp=8 confidence=0.00 status=VETOED (traced length 3.0mm < 5mm)
+  instance=  6 comp=9 confidence=0.97 status=KEPT
+  instance=  7 comp=5 confidence=0.96 status=KEPT
+  instance=  8 comp=4 confidence=0.58 status=KEPT
+  instance=  9 comp=6 confidence=0.73 status=KEPT
+  instance= 10 comp=13 confidence=0.78 status=KEPT
+kept 9/11 as daughters

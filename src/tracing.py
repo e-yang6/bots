@@ -79,6 +79,8 @@ MAURER_UPSAMPLE = 2
 RADIUS_DISAGREEMENT_LOG_FRACTION = 0.5
 OSTIUM_OPENING_WINDOW_MM = 1.0
 OSTIUM_OPENING_EXTENT_MM = 6.0
+REFINEMENT_START_MM = 2.5
+MAX_RECENTRE_SHIFT_MM = 2.0
 
 
 def _crop_of(component, volume=None, margin=1):
@@ -452,6 +454,30 @@ def _maurer_radius_at(point_mm, reference_image, hu_array, mask_arr, threshold_h
     return raw, max(raw, 0.0) + MAURER_CORRECTION_VOXELS * fine_voxel
 
 
+def refine_proximal_trace(trace, ostium_mm, sampler, flood, max_length_mm=MAX_TRACE_MM):
+    points = np.array(trace["points_mm"], dtype=np.float64, copy=True)
+    for i, arc in enumerate(trace["arc_lengths_mm"]):
+        tangent = _tangent_at_arc(trace, float(arc))
+        if arc < REFINEMENT_START_MM or tangent is None:
+            continue
+        centre, _area, found = _recentre_on_lumen(
+            sampler, points[i], tangent, flood["threshold_hu"], flood["lumen_reference_hu"]
+        )
+        if found and np.linalg.norm(centre - points[i]) <= MAX_RECENTRE_SHIFT_MM:
+            points[i] = centre
+    ostium = np.asarray(ostium_mm, dtype=np.float64)
+    start = int(np.searchsorted(trace["arc_lengths_mm"], min(REFINEMENT_START_MM, trace["arc_lengths_mm"][-1])))
+    points = np.vstack([ostium, points[start:]])
+    keep = np.r_[True, np.linalg.norm(np.diff(points, axis=0), axis=1) > 1e-8]
+    points = points[keep]
+    arc = np.r_[0., np.cumsum(np.linalg.norm(np.diff(points, axis=0), axis=1))]
+    if arc[-1] > max_length_mm:
+        end, _ = _point_at_arc({"points_mm": points, "arc_lengths_mm": arc}, max_length_mm)
+        points = np.vstack([points[arc < max_length_mm], end])
+        arc = np.r_[0., np.cumsum(np.linalg.norm(np.diff(points, axis=0), axis=1))]
+    return {**trace, "points_mm": points, "arc_lengths_mm": arc, "traced_length_mm": float(arc[-1])}
+
+
 def extract_seed_direction_radius(component, trace, ostium_mm, reference_image, sampler, flood,
                                   mask_arr, seed_distance_mm=SEED_DISTANCE_MM,
                                   fit_length_mm=DIRECTION_FIT_LENGTH_MM, verbose=False, file=sys.stderr):
@@ -480,10 +506,11 @@ def extract_seed_direction_radius(component, trace, ostium_mm, reference_image, 
     ideally "traversal"); flood: the floodfill.robust_flood result.
     """
     threshold_hu = flood["threshold_hu"]
+    fit_points = trace["points_mm"][trace["arc_lengths_mm"] <= fit_length_mm + 1e-9]
+    trace = refine_proximal_trace(trace, ostium_mm, sampler, flood)
     seed_point, reached = _point_at_arc(trace, seed_distance_mm)
     seed_arc = min(seed_distance_mm, float(trace["arc_lengths_mm"][-1]))
 
-    fit_points = trace["points_mm"][trace["arc_lengths_mm"] <= fit_length_mm + 1e-9]
     outward = seed_point - np.asarray(ostium_mm, dtype=np.float64)
     direction = fit_line_direction(fit_points, outward)
     if direction is None:
@@ -493,9 +520,10 @@ def extract_seed_direction_radius(component, trace, ostium_mm, reference_image, 
     local_direction = _tangent_at_arc(trace, seed_arc)
     if local_direction is None:
         local_direction = direction
-    seed, section_area_mm2, recentred = _recentre_on_lumen(
+    _centre, section_area_mm2, recentred = _recentre_on_lumen(
         sampler, seed_point, local_direction, threshold_hu, flood["lumen_reference_hu"]
     )
+    seed = seed_point
 
     # re-orient on the final seed: the fit is over the path, the sign is not
     if np.dot(direction, seed - np.asarray(ostium_mm)) < 0:
@@ -532,8 +560,10 @@ def extract_seed_direction_radius(component, trace, ostium_mm, reference_image, 
         "recentred": recentred,
         "reached_seed_distance": reached,
         "seed_arc_mm": seed_arc,
+        "proximal_path_mm": trace["points_mm"],
+        "proximal_arc_mm": trace["arc_lengths_mm"],
         "direction_xyz": direction,
-        "radius_mm": radius_frontier if radius_frontier > 0 else radius_dt,
+        "radius_mm": float(np.sqrt(section_area_mm2 / np.pi)) if section_area_mm2 > 0 else radius_dt,
         "radius_from_distance_transform_mm": radius_dt,
         "radius_distance_transform_raw_mm": raw_dt,
         "radius_from_frontier_mm": radius_frontier,

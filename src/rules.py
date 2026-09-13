@@ -139,7 +139,7 @@ CASE_LEAK_PENALTY = 0.15
 SHARED_VESSEL_PENALTY = 0.05
 
 # Prompt 5's threshold sweep starts here.
-CONFIDENCE_THRESHOLD = 0.5
+CONFIDENCE_THRESHOLD = 0.65
 
 
 def _ramp(value, onset, full):
@@ -153,7 +153,15 @@ def _ramp(value, onset, full):
 def _check_veto(features):
     if features["traced_length_mm"] < MIN_GEODESIC_LENGTH_MM:
         return f"traced length {features['traced_length_mm']:.1f}mm < {MIN_GEODESIC_LENGTH_MM:.0f}mm"
-    if features["radius_at_seed_mm"] < RADIUS_VETO_MM:
+    if features.get("reached_seed_distance", 1.0) < 0.5:
+        return "proximal path does not reach the 5mm seed"
+    if "origin_radius_mm" in features:
+        uncertainty = features.get("origin_radius_uncertainty_mm", 0.0)
+        if features["origin_radius_mm"] + uncertainty + 1e-6 < MIN_RADIUS_MM:
+            return f"origin radius {features['origin_radius_mm']:.2f}mm + {uncertainty:.2f}mm uncertainty < {MIN_RADIUS_MM:.1f}mm"
+        if features["radius_at_seed_mm"] <= 0:
+            return "no measurable lumen at the seed"
+    elif features["radius_at_seed_mm"] < RADIUS_VETO_MM:
         return (f"radius {features['radius_at_seed_mm']:.2f}mm < {RADIUS_VETO_MM:.2f}mm "
                 f"({MIN_RADIUS_MM:.1f}mm minimum less {RADIUS_VETO_MEASUREMENT_TOLERANCE_MM:.1f}mm "
                 f"measurement-noise margin)")

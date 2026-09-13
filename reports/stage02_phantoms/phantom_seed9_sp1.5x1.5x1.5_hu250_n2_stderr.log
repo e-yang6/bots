@@ -1,0 +1,25 @@
+  radius disagreement 78% on instance 2: distance transform 0.43mm vs frontier 1.96mm
+lumen HU median=249 p25=243 p75=255 contrast_enhanced=True
+components kept=1 dropped=0 caps=2 surface_points=18352
+flood: T=162HU (0.650 x lumen ref 249HU) retries=6 leak=none growth=0.78 reached=3364
+  search: 0.400->LEAK:growth 0.650->ok 0.525->LEAK:growth 0.588->LEAK:growth 0.619->LEAK:growth 0.634->LEAK:growth
+  bone descent (ceiling 271HU, excised 0 voxels in 0 components): 0.625->LEAK:growth
+components=7 candidates=7 neck=2.0mm rejected: no_contact_patch=0 end_cap=0 aortic_continuation=0 too_short=0
+instances=7 from 7 candidates (split_components=0 absorbed_narrow_pieces=0 instance_too_short=0)
+  # 0 comp=3 len=15.0mm traced=9.6mm (max_length) ostium=(3.1,7.9,45.2) patch=38mm2 disagree=3.6mm r=3.62mm (dt=2.80 frontier=3.62 vesselness=3.33) vness=2.68e-05
+  # 1 comp=2 len=15.0mm traced=9.9mm (max_length) ostium=(-8.1,2.3,30.8) patch=34mm2 disagree=2.6mm r=3.15mm (dt=2.45 frontier=3.15 vesselness=3.33) vness=3.4e-05
+  # 2 comp=7 len=14.9mm traced=4.9mm (bifurcation@6.4mm) ostium=(30.3,-0.1,142.8) patch=47mm2 disagree=3.3mm r=1.96mm (dt=0.43 frontier=1.96 MISMATCH) vness=1.2e-07
+  # 3 comp=5 len=15.0mm traced=9.6mm (max_length) ostium=(10.3,-8.1,92.4) patch=17mm2 disagree=5.3mm r=2.39mm (dt=1.57 frontier=2.39 vesselness=2.22) vness=5.62e-05
+  # 4 comp=4 len=15.0mm traced=9.5mm (max_length) ostium=(-4.9,-3.3,53.2) patch=12mm2 disagree=3.6mm r=1.43mm (dt=0.86 frontier=1.43 vesselness=1.48) vness=6.71e-05
+  # 5 comp=6 len=9.5mm traced=8.3mm (vessel_end) ostium=(6.3,-8.1,92.4) patch=4mm2 disagree=6.2mm r=1.40mm (dt=0.96 frontier=1.40 vesselness=1.48) vness=7.82e-05
+  # 6 comp=1 len=6.7mm traced=6.0mm (vessel_end) ostium=(9.5,-0.1,7.6) patch=1mm2 disagree=5.9mm r=1.14mm (dt=0.89 frontier=1.14 vesselness=1.48) vness=1.61e-07
+timings: load_and_prepare_s=0.1s geometry_s=0.4s flood_s=0.8s candidates_s=0.4s parentage_s=0.0s tracing_s=0.2s
+scoring: 7 instances, confidence threshold=0.50
+  instance=  0 comp=3 confidence=0.81 status=KEPT
+  instance=  1 comp=2 confidence=0.94 status=KEPT
+  instance=  2 comp=7 confidence=0.00 status=VETOED (traced length 4.9mm < 5mm)
+  instance=  3 comp=5 confidence=0.75 status=KEPT
+  instance=  4 comp=4 confidence=0.94 status=KEPT
+  instance=  5 comp=6 confidence=0.83 status=KEPT
+  instance=  6 comp=1 confidence=0.53 status=KEPT
+kept 6/7 as daughters

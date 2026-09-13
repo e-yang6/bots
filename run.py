@@ -17,8 +17,13 @@ than crashing or producing no output at all.
 
 import argparse
 import json
+import os
+from pathlib import Path
+import subprocess
 import sys
 import time
+
+import psutil
 
 import numpy as np
 import SimpleITK as sitk
@@ -64,11 +69,14 @@ OSTIUM_MERGE_DISTANCE_MM = 3.0
 # resolution, so this never fires on patches that only look close because
 # their centroids happen to line up.
 PATCH_DISJOINT_TOLERANCE_MM = 1.5
+WORKER_TIMEOUT_SECONDS = 55.0
+PROCESS_TREE_MEMORY_MIB = 6144.0
+CPU_CORE_LIMIT = 4
 
 
 def analyze_case(image_path, aorta_mask_path, target_spacing=0.8, max_instances=MAX_INSTANCES_TO_TRACE,
                  flood_budget_mm=None, flood_fraction_range=None, min_length_mm=None,
-                 verbose=False):
+                 verbose=False, progress=None):
     """Run the full detection chain and return everything it found.
 
     flood_budget_mm / flood_fraction_range / min_length_mm are the tunable
@@ -94,13 +102,13 @@ def analyze_case(image_path, aorta_mask_path, target_spacing=0.8, max_instances=
         resampled_image, resampled_mask, original_grid=original_grid,
         max_instances=max_instances, flood_budget_mm=flood_budget_mm,
         flood_fraction_range=flood_fraction_range, min_length_mm=min_length_mm,
-        verbose=verbose, timings=timings,
+        verbose=verbose, timings=timings, progress=progress,
     )
 
 
 def analyze_volumes(resampled_image, resampled_mask, original_grid=None, max_instances=MAX_INSTANCES_TO_TRACE,
                     flood_budget_mm=None, flood_fraction_range=None, min_length_mm=None,
-                    verbose=False, timings=None):
+                    verbose=False, timings=None, progress=None):
     """The detection chain on an already cropped and resampled image/mask pair.
 
     Split out of analyze_case so the synthetic phantoms in tests/ run exactly
@@ -196,6 +204,8 @@ def analyze_volumes(resampled_image, resampled_mask, original_grid=None, max_ins
         context["traces"].append(trace)
         context["ostium_estimates"].append(ostium)
         context["seed_estimates"].append(seed)
+        if progress is not None:
+            progress(context)
     timings["tracing_s"] = time.time() - started
 
     if verbose:
@@ -401,11 +411,16 @@ def log_scoring(scored, kept, merges, threshold, file=sys.stderr):
     print(f"kept {len(kept)}/{len(scored)} as daughters", file=file)
 
 
-def detect_branches(image_path, aorta_mask_path, threshold=CONFIDENCE_THRESHOLD, verbose=False):
+def detect_branches(image_path, aorta_mask_path, threshold=CONFIDENCE_THRESHOLD, verbose=False, checkpoint_path=None):
     """Returns the daughter dicts to report: the full flood -> candidates ->
     origins -> trace -> features -> rules chain, thresholded and deduped.
     """
-    context = analyze_case(image_path, aorta_mask_path, verbose=verbose)
+    def checkpoint(context):
+        partial, _ = build_daughters(context, threshold=threshold)
+        schema.write_prediction(schema.make_prediction(schema.case_id_from_path(image_path), partial), checkpoint_path)
+
+    context = analyze_case(image_path, aorta_mask_path, verbose=verbose,
+                           progress=checkpoint if checkpoint_path is not None else None)
     daughters, _scored = build_daughters(context, threshold=threshold, verbose=verbose)
     return daughters
 
@@ -417,6 +432,7 @@ def parse_args(argv=None):
     parser.add_argument("--image", required=True, help="Path to the CT scan (NIfTI).")
     parser.add_argument("--aorta-mask", required=True, help="Path to the aorta-only mask (NIfTI).")
     parser.add_argument("--output", required=True, help="Path to write the output prediction JSON.")
+    parser.add_argument("--worker", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument(
         "--verbose", action="store_true", help="Log intermediate detection results to stderr."
     )
@@ -430,7 +446,7 @@ def main(argv=None):
     daughters = []
     try:
         case_id = schema.case_id_from_path(args.image)
-        daughters = detect_branches(args.image, args.aorta_mask, verbose=args.verbose)
+        daughters = detect_branches(args.image, args.aorta_mask, verbose=args.verbose, checkpoint_path=args.output)
     except Exception as exc:
         print(f"warning: pipeline failed, emitting empty daughters list ({exc})", file=sys.stderr)
 
@@ -449,5 +465,62 @@ def main(argv=None):
             json.dump(fallback, f, indent=2)
 
 
+def supervise_cli(command, output_path, case_id, timeout_s=WORKER_TIMEOUT_SECONDS,
+                  memory_limit_mib=PROCESS_TREE_MEMORY_MIB):
+    schema.write_prediction(schema.make_prediction(case_id), output_path)
+    env = dict(os.environ, ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS=str(CPU_CORE_LIMIT),
+               OMP_NUM_THREADS=str(CPU_CORE_LIMIT), OPENBLAS_NUM_THREADS="1", MKL_NUM_THREADS="1")
+    started = time.monotonic()
+    process = subprocess.Popen(command, env=env, stdin=subprocess.DEVNULL)
+    watcher = psutil.Process(process.pid)
+    if hasattr(watcher, "cpu_affinity"):
+        watcher.cpu_affinity(watcher.cpu_affinity()[:CPU_CORE_LIMIT])
+    peak, reason = 0, None
+    while process.poll() is None:
+        children = []
+        try:
+            children = watcher.children(recursive=True)
+            rss = watcher.memory_info().rss + psutil.Process().memory_info().rss
+            rss += sum(child.memory_info().rss for child in children)
+            peak = max(peak, rss)
+            if rss > memory_limit_mib * 1024 ** 2:
+                reason = "memory"
+        except psutil.NoSuchProcess:
+            pass
+        if time.monotonic() - started >= timeout_s:
+            reason = "deadline"
+        if reason is not None:
+            for child in children:
+                try:
+                    child.kill()
+                except psutil.NoSuchProcess:
+                    pass
+            if process.poll() is None:
+                process.kill()
+            break
+        time.sleep(0.02)
+    return_code = process.wait()
+    try:
+        prediction = schema.submission_prediction(schema.read_prediction(output_path))
+        if prediction["case_id"] != case_id:
+            raise ValueError("checkpoint case_id mismatch")
+    except (ValueError, OSError, KeyError, TypeError):
+        schema.write_prediction(schema.make_prediction(case_id), output_path)
+    if reason is not None or return_code != 0:
+        print(f"warning: pipeline failed to complete ({reason or return_code}); preserving the last valid checkpoint", file=sys.stderr)
+    return {"stop_reason": reason, "return_code": return_code, "peak_rss_mib": peak / 1024 ** 2,
+            "elapsed_s": time.monotonic() - started}
+
+
+def supervised_main(argv=None):
+    argv = sys.argv[1:] if argv is None else argv
+    args = parse_args(argv)
+    if args.worker:
+        return main(argv)
+    command = [sys.executable, str(Path(__file__).resolve()), *argv, "--worker"]
+    supervise_cli(command, args.output, schema.case_id_from_path(args.image))
+    return 0
+
+
 if __name__ == "__main__":
-    main()
+    raise SystemExit(supervised_main())

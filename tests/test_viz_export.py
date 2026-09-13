@@ -156,3 +156,39 @@ def test_scene_json_coordinates_are_centered(synthetic_case):
     actual = np.array(branch["ostium"])
 
     np.testing.assert_allclose(actual, expected_centered, atol=0.1)
+
+
+def test_viewer_import_map_is_offline():
+    import re
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1] / "viz" / "viewer"
+    html = (root / "index.html").read_text(encoding="utf-8")
+    assert "stun:" not in (root / "app.js").read_text(encoding="utf-8")
+    imports = json.loads(re.search(r'<script type="importmap">(.*?)</script>', html, re.S).group(1))["imports"]
+    for target in imports.values():
+        assert not target.startswith(("http:", "https:", "//"))
+        assert (root / target.lstrip("/")).exists()
+    for asset in ("loaders/GLTFLoader.js", "controls/OrbitControls.js", "webxr/ARButton.js", "utils/BufferGeometryUtils.js"):
+        assert (root / imports["three/addons/"].lstrip("/") / asset).is_file()
+
+
+def test_viewer_cannot_serve_paths_outside_its_roots(tmp_path):
+    from pathlib import Path
+    from viz.serve import ViewerHandler
+
+    handler = object.__new__(ViewerHandler)
+    handler.viewer_dir = str(tmp_path / "viewer")
+    handler.scene_dir = str(tmp_path / "scene")
+    for request in ("/data/../../private.txt", "/../../private.txt", "/data/%2e%2e/%2e%2e/private.txt"):
+        path = Path(handler.translate_path(request)).resolve()
+        assert path.is_relative_to(Path(handler.viewer_dir)) or path.is_relative_to(Path(handler.scene_dir))
+
+
+def test_visual_checks_work_without_pyvista(synthetic_case, monkeypatch):
+    from scripts import visualize_case
+
+    monkeypatch.setattr(visualize_case, "pv", None)
+    image, mask, prediction, root = synthetic_case
+    paths = visualize_case.visualize_case(image, mask, prediction, str(root / "qc"))
+    assert all(os.path.getsize(path) > 1000 for path in paths)

@@ -22,6 +22,34 @@ def stub(z=45.0, length_beyond_wall=18.0, radius=3.0, y=32.0):
     return {"start": (36.0, y, z), "end": (WALL_X + length_beyond_wall, y, z), "radius": radius}
 
 
+def test_refined_trace_is_anchored_and_measures_physical_arc(monkeypatch):
+    from src import tracing
+
+    monkeypatch.setattr(tracing, "_recentre_on_lumen", lambda sampler, point, *args, **kwargs: (point, 4.0, True))
+    points = np.array([[2., 1., 0.], [4., 2., 0.], [6., 3., 1.], [9., 4., 3.]])
+    trace = {"points_mm": points, "arc_lengths_mm": np.arange(4.) * 3,
+             "truncated_by": "max_length", "traced_length_mm": 9.0}
+    refined = tracing.refine_proximal_trace(trace, np.zeros(3), None,
+                                          {"threshold_hu": 100., "lumen_reference_hu": 400.})
+    assert refined["points_mm"][0] == pytest.approx(np.zeros(3))
+    assert np.diff(refined["arc_lengths_mm"]) == pytest.approx(np.linalg.norm(np.diff(refined["points_mm"], axis=0), axis=1))
+    assert refined["arc_lengths_mm"][-1] <= 10.0 + 1e-8
+    seed, reached = tracing._point_at_arc(refined, 5.)
+    assert reached
+    assert np.linalg.norm(seed) <= 5.0 + 1e-8
+
+
+def test_reported_seed_belongs_to_path_starting_at_reported_ostium():
+    context = analyze(branches=[stub()])
+    seed = context["seed_estimates"][0]
+    ostium = context["ostium_estimates"][0]["ostium_mm"]
+    assert seed["proximal_path_mm"][0] == pytest.approx(ostium)
+    assert np.linalg.norm(seed["seed_mm"] - ostium) <= 5.0 + 1e-8
+    path = {"points_mm": seed["proximal_path_mm"], "arc_lengths_mm": seed["proximal_arc_mm"]}
+    from src.tracing import _point_at_arc
+    assert _point_at_arc(path, 5.)[0] == pytest.approx(seed["seed_mm"])
+
+
 def analyze(**phantom):
     image, mask = make_capsule_phantom(**phantom)
     return analyze_volumes(image, mask)
@@ -41,6 +69,53 @@ def test_single_stub_is_one_candidate_and_one_instance():
     assert candidate["max_distance_mm"] >= 15.0
     assert context["instances"][0]["split"] == "none"
     assert rejected(context, "end_cap") == [] and rejected(context, "aortic_continuation") == []
+
+
+def test_scoring_uses_the_reported_proximal_geometry():
+    from src.features import build_feature_matrix
+
+    context = analyze(branches=[
+        {"start": (36., 32., 45.), "end": (46., 32., 45.), "radius": 2.5},
+        {"start": (46., 32., 45.), "end": (46., 32., 60.), "radius": 2.5},
+    ])
+    feature = build_feature_matrix(context)[0]
+    seed = context["seed_estimates"][0]
+    expected_angle = np.degrees(np.arccos(abs(seed["direction_xyz"][2])))
+    assert feature["angle_to_centerline_deg"] == pytest.approx(expected_angle, abs=1.)
+    hu = context["sampler"].sample("hu", seed["proximal_path_mm"])
+    assert feature["mean_hu_relative_to_lumen"] == pytest.approx(float(hu.mean()) - context["flood"]["lumen_reference_hu"])
+
+
+def test_minimum_diameter_is_checked_at_origin_not_at_seed():
+    from src.rules import _check_veto
+
+    features = {"traced_length_mm": 8., "radius_at_seed_mm": 0.6, "origin_radius_mm": 1.2,
+                "touches_cap": 0., "reached_seed_distance": 1.}
+    assert _check_veto(features) is None
+    features.update(radius_at_seed_mm=2.0, origin_radius_mm=0.8)
+    assert _check_veto(features) is not None
+    features.update(origin_radius_mm=1.2, reached_seed_distance=0.)
+    assert _check_veto(features) is not None
+
+
+@pytest.mark.parametrize("angles", [(0., 0., 15.), (0., 20., 0.), (-12., 0., 0.)])
+def test_rotated_anatomy_preserves_two_direct_origins(angles):
+    import SimpleITK as sitk
+    from run import build_daughters
+
+    image, mask = make_capsule_phantom(branches=[stub(z=30.), stub(z=60.)])
+    transform = sitk.Euler3DTransform()
+    transform.SetCenter((32., 32., 45.))
+    transform.SetRotation(*np.deg2rad(angles))
+    rotated_image = sitk.Resample(image, image, transform, sitk.sitkLinear, float(sitk.GetArrayViewFromImage(image).min()))
+    rotated_mask = sitk.Resample(mask, mask, transform, sitk.sitkNearestNeighbor, 0)
+    context = analyze_volumes(rotated_image, rotated_mask)
+    daughters, _ = build_daughters(context)
+    assert len(daughters) == 2
+    inverse = transform.GetInverse()
+    for z in (30., 60.):
+        expected = np.array(inverse.TransformPoint((WALL_X, 32., z)))
+        assert min(np.linalg.norm(np.array(d["ostium_xyz_mm"]) - expected) for d in daughters) < 2.0
 
 
 def test_plain_tube_has_no_candidates():

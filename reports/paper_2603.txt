@@ -1,0 +1,742 @@
+Medical & Biological Engineering & Computing (2022) 60:2639­2654
+https://doi.org/10.1007/s11517-022-02603-2
+
+  ORIGINAL ARTICLE
+
+Automatic branch detection of the arterial system from abdominal
+aortic segmentation
+
+Sébastien Riffaud1 · Gwladys Ravon1 · Thibault Allard2 · Florian Bernard2 · Angelo Iollo1,3 · Caroline Caradu4
+
+Received: 10 January 2022 / Accepted: 7 June 2022 / Published online: 7 July 2022
+© International Federation for Medical and Biological Engineering 2022
+
+Abstract
+We present a new method to automatically identify the different arteries present in an abdominal aortic segmentation. In
+this approach, the arterial system is first represented by a vascular tree, extracted from the segmentation and containing the
+topologic and geometric features (branch position, branch direction, branch length, branch diameter) of the arterial system.
+Then, the branches of the vascular tree are matched with the main arteries originating from the aorta: celiac artery, superior
+mesenteric artery, renal arteries and common iliac arteries. This match is determined by maximizing a similarity measure
+between the different branches and corresponding arteries. We evaluate this method on 239 segmentations obtained from
+102 different patients. The results demonstrate the accuracy of the proposed method, capable of delivering an error of less
+than 2.5% for the identification of the celiac and superior mesenteric arteries, 8.4% for the renal arteries, and 2.1% for the
+common iliac arteries.
+
+Keywords Computed tomography · Abdominal aortic aneurysm · Automatic branch detection · Graph matching method ·
+Aortic root
+
+1Introduction                                                        Several methods have been proposed to automatically
+                                                                  identify anatomical reference points (landmarks) commonly
+Abdominal aortic aneurysm (AAA) is associated with a high         used in medical imaging analysis. In the works of Elattar [4]
+mortality rate if not treated immediately after its rupture [2,   and Lalys [5], the authors proposed methods for locating
+6]. Measuring geometric characteristics (length, diameter,        landmarks on the surface of the aortic arch to facilitate the
+volume) of an AAA is therefore vital in diagnostic assess-        planning of transcatheter aortic valve implantation. These
+ment or surgical intervention planning. However, manual           landmarks are used to find the sizing parameters of the pro-
+extraction of anatomical structures in an abdominal aortic        thesis. Both approaches rely on the centerline and segmenta-
+segmentation is time consuming, requires a certain level of       tion of the aorta. However, they do not focus on the vascular
+experience and can introduce inter-observer variations in         region we are considering. In Tahoces [8], they developed
+the results.                                                      a method to find similar landmarks and added the identi-
+                                                                  fication of the celiac artery. The superior mesenteric and
+Sébastien Riffaud and Gwladys Ravon contributed equally to this   principal renal arteries are also identified without the need
+work.                                                             to assume their presence. Closer to our problem, Dehmeshki
+                                                                  [3] developed an AAA detection method. They look for
+* Sébastien Riffaud                                               AAAs between the celiac artery and the aortic bifurcation.
+     sebastien.riffaud@inria.fr                                   After extracting the lumen, they identify an approximate
+                                                                  position for the celiac artery as the end of the lung region.
+1 Inria - Bordeaux Sud-Ouest, Team MEMPHIS,                       Bifurcating branches are separated from the main aorta
+     33405 Talence, France                                        using a projection in the sagittal view into one 2D image
+                                                                  and morphological operations on the lumen segmentation.
+2 Nurea, 33000 Bordeaux, France                                   The first isolated branch from the top of the 2D image is then
+3 IMB, UMR 5251, Université de Bordeaux, 33405 Talence,           defined as the celiac artery. The aortic bifurcation is finally
+                                                                  localized from the centerline using cluster connectivity and
+     France
+4 Vascular Surgery Department, Bordeaux University Hospital,
+
+     33000 Bordeaux, France
+
+                                                                  1 3 Vol.:(0123456789)
+2640                                                             Medical & Biological Engineering & Computing (2022) 60:2639­2654
+
+rule-based techniques. Oda [7] developed a more complete                       Tomography scan images
+method since they label 14 upper and lower abdominal
+arteries. From the segmentation of the arterial system, they                   Segmentation (lumen and thrombus)
+extract the centerline and deduce the vascular tree structure.
+The method then relies on rule-based methods, classifiers                      Computation of the vascular tree
+and correction process. The classifiers use features such as
+diameter, curvature and direction of the branches.               Present work
+
+   This work aims to develop a new method to identify in         Matching algorithm: identification of the CA, SMA, RAs and CIAs.
+a fully automatic way the different arteries present in an
+abdominal aortic segmentation. In this approach, the arterial    Decision rule-based algorithm: identification of extra RAs.
+system is first represented by the vascular tree extracted from
+the segmentation, as illustrated in Fig. 1. The branches of the  Fig.2Schematic diagram illustrating the automatic branch detection
+vascular tree are then matched with the main arteries origi-     of the arterial system
+nating from the aorta. In particular, we focus on the detec-
+tion and identification of the celiac artery (CA), superior      different branches and corresponding arteries. In the second
+mesenteric artery (SMA), principal and polar renal arteries      step, a decision rule-based algorithm detects possible extra RAs
+(RAs) and common iliac arteries (CIAs). Moreover, except         to obtain the complete description of the arterial system. To
+for the CIAs, we do not need to assume the presence of the       this end, we extract the branches that have not already been
+other arteries. The accuracy and robustness of the present       matched, and decision rules are employed to determine whether
+method are finally demonstrated on a large dataset including     these branches correspond to additional RAs or not (Fig. 2).
+239 segmentations from 102 different patients.
+                                                                 2.1Dataset
+2Methodology
+                                                                 The present work is restricted to segmentations that contain the
+In order to annotate the branches of the vascular tree, our      aortic bifurcation. The study includes 239 segmentations from
+method proceeds in two steps. The first step employs a match-    102 different patients. Segmentations are obtained from pre-oper-
+ing algorithm to identify the CA, SMA, a first left and right    ative and post-endovascular aneurysm repair computed tomog-
+RAs, and the CIAs. In this approach, the branches that best      raphy scan images. These images contain the entire abdominal
+match the different arteries originating from the aorta are
+determined by maximizing a similarity measure between the
+
+Fig.1Example of segmentation
+(blue) and vascular tree (black)
+obtained from tomography scan
+images
+
+13
+Medical & Biological Engineering & Computing (2022) 60:2639­2654                                                                                            2641
+
+aorta and may extend to the aortic arch. In addition 24 segmenta-                          n-1
+tions present additional RAs for a total of 29 polar RAs.                 dist(v1, vn) =  i+1 - i2,
+
+   The segmentations and vascular trees are provided by                                           i=1
+Nurea (https://www.nurea-soft.com) using the software
+PRAEVAorta [1]. This software employs deep learning                       where i = (vix, vyi , viz)T  3 denote the spatial coordinates
+approaches to automatically identify the voxels correspond-               of vertex vi.
+ing to lumen and thrombus in tomography scan images. The
+vascular tree is then extracted from the full segmentation,               Definition 3 (Leaf and bifurcation nodes) In a tree, a leaf
+that is lumen and thrombus. This one corresponds to a tree                is a vertex with exactly one neighbour. Similarly, a bifurca-
+(i.e. a connected acyclic undirected graph), where the nodes              tion node is a vertex with at least three neighbours.
+are located along the central lines of the segmentation and
+the edges represent the topology of the arterial system. In               Definition 4 (Tree branch) The tree branch starting from
+this way, the vascular tree contains the topologic and geo-               the bifurcation node b and containing the vertex um is defined
+metric features (branch position, branch direction, branch                as the set of vertices v1, ... , vn such that the path between
+length, branch diameter) of the segmentation.                             b and vi contains the vertex u1, where (b, u1, ... , um) is the
+                                                                          path connecting b and um.
+2.2Matching algorithm
+                                                                          Definition 5 (Directions of a branch) Let v1, ... , vn be
+2.2.1Notations and definitions                                            the vertices of the branch starting from the bifurcation node
+                                                                          b and containing the vertex um. The direction of this branch is
+Before describing the matching algorithm, we need                         defined as the vector with origin that best approximates the
+to introduce the definitions and notations used in the                    vertices v1, ... , vn . More precisely, considering the matrix
+following (Fig. 3).
+                                                                                  =     v1x  - bx  vy1  - by  vz1  -  bz           n×3                          (1)
+Definition 1 (Graph path) A sequence of vertices                                        vx2  - bx  v2y  - by  vz2  -  bz  
+(v1, ... , vn) is a graph path if {vi, vi+1} is an edge of the graph                                                      
+for i = 1, ... , n - 1.                                                                                                   
+                                                                                       vnx - bx vny - by vnz - bz 
+Theorem 1 Two vertices of a tree are connected by exactly
+one path.                                                                 and the eigenvector  3 associated with the largest eigen-
+                                                                          value of T  3×3, the direction with origin that best
+Definition 2 (Distance between two nodes) Let v1 and vn                   approximates vertices v1, ... , vn is given by
+be two vertices of the vascular tree. There exists a unique
+path (v1, ... , vn) connecting these two vertices according to            opt(b, v1, ... , vn) = sign T                     ,
+Theorem 1. The distance between v1 and vn is then defined
+as the sum of the Euclidean distances between two adjacent                where = (1, ... , 1)T  n. The global direction of the
+vertices of the path (v1, ... , vn):                                      branch starting from b and containing um is then defined as
+
+Fig.3Illustration of the dif-                       1                                                                             1
+ferent definitions: bifurcation
+nodes (red), leaf nodes (green),                                                  15                                                                    15
+graph path between vertices 4
+and 15 (yellow) and tree branch            2                                                                     2
+starting from node 7 and con-     3                                                                     3
+taining vertex 8 (blue)
+                                                               7                                                                     7
+                                                                          12                 16                                                12               16
+
+                                  4                                   13                                4                                  13
+
+                                     6                            8                     14                            6                 8                   14
+
+                                     5                                        11                                   5                                11
+                                                 9                   10                                                        9           10
+
+                                                                                                                                                        13
+2642                                                                              Medical & Biological Engineering & Computing (2022) 60:2639­2654
+
+glob(b, um) = opt(b, v1, ... , vn).                                               lengthD(b, um,            ,
+                                                                                                  )=     2
+Similarly, we define the local direction loc(b, um), represent-
+                                                                                  where the matrix is given in Eq. (1). In particular, we will
+ing the direction of the beginning of the branch (i.e. when                       consider in the next sections the branch lengths in the fol-
+                                                                                  lowing anatomical directions:
+the corresponding artery leaves the aorta). This direction is
+
+computed in the same way as the global direction except that
+
+only the vertices located at the beginning of the branch are                      ­ left to right:
+used. More precisely, given the path (b, n1, ... , nk), where                         x-(b, um) = lengthD b, um, (-1, 0, 0)T ;
+nk denotes the first bifurcation or leaf encountered start-
+ing from b and going to u1, we only consider the vertices                         ­ right to left:
+ni    l        n1, ... , nk , such that ni is at most 3r from b:                      x+(b, um) = lengthD b, um, (1, 0, 0)T ;
+
+                                                                                  ­ posterior to anterior:
+                                                                                      y-(b, um) = lengthD b, um, (0, -1, 0)T ;
+      i=1
+                                                                                  ­ superior to inferior:
+dist(b, ni)  3r,                                                                     z-(b, um) = lengthD b, um(0, 0, -1)T ;
+
+where r is the radius of the artery at node b. The local direc-                   ­ inferior to superior:
+tion is then given by                                                                 z+(b, um) = lengthD b, um, (0, 0, 1)T .
+
+ loc(b, um) = opt(b, n1, ... , nl).
+
+Definition 6 (Angle between two directions) Notably, the
+global and local directions allow to measure the angle of a
+branch with different anatomical directions. In particular, we
+will consider in the following the angle between two vec-
+tors 1, 2  3 in the horizontal and frontal planes defined
+respectively by
+
+                                                                               
+                                                                               
+anglex,y(  1,  2)  =  cos-1             2     dx1dx2 2+dy1dy2  2          2       2.2.2Enumeration of valid pairings
+                                   dx1                                    dy2  
+                                           +  dy1  dx2                +           The matching algorithm aims to find the branches of the vas-
+                                                                                  cular tree that best match the arteries located along the aorta.
+and                                                                               To this end, a branch is represented as a pair (u, v), where
+                                                                                  u denotes the bifurcation from which the branch originates
+                                           + dx1ddz1x22+dz1 ddz2x2 2              and v denotes a node belonging to this branch. Since there
+                                                                                  are six branches to identify, a pairing is then defined as a set
+anglex,z(  1,  2)  =  cos-1             2                                dz22  .  , where each {(uca, vca), (usma, vsma), (ulra, vlra), (urra, vrra), (ulcia, vlcia), (urcia, vrcia)}
+                                   dx1                                            pair represents respectively the CA, MSA, left RA, right RA,
+                                                                      +           left CIA and right CIA.
+
+In case of vanishing denominator, the angle in the horizontal                     Bifurcation pairing In order to enumerate every possible
+or frontal plane is replaced by the angle in 3D space:                            pairing, we first determine the nodes (uca, ... , urcia). As
+                                                                                  these nodes are located at the beginning of a branch, they
+                            1T 2                                                  either correspond to a bifurcation node or are left empty
+angle( 1, 2) = cos-1  12 22 .                                                     (i.e. u = ) in order to take into account the case where the
+                                                                                  associated artery is not present in the vascular tree. In addi-
+Definition 7 (Lengths of a branch) Let v1, ... , vn be the                        tion, since the arteries of interest originate from the aorta,
+nodes of the branch starting from the bifurcation node b and                      we consider only the bifurcation nodes located along the
+containing the vertex um. The length of this branch is defined                    aorta. To this end, we exploit the fact that the aorta is the
+as the maximum distance between the bifurcation node b and                        only artery connecting the part above the RAs with the part
+the different nodes v1, ... , vn :                                                below the aortic bifurcation. The path between the highest
+                                                                                  and lowest nodes thus passes through the part of the aorta of
+length(b, um) = max dist(b, vi).                                                  interest, and we consider only the bifurcations {b1, ... , bn}
+                                                                                  located along this path, as illustrated in Fig. 4. The nodes
+                           i{1,...,n}
+
+In addition, we also define the length of this branch in a
+direction  3:
+
+13
+Medical & Biological Engineering & Computing (2022) 60:2639­2654                                               2643
+
+Fig.4Example illustrating the
+selection of valid bifurcation
+nodes: vascular tree (black),
+path between the lowest and
+highest nodes (blue) and valid
+bifurcation nodes (red)
+
+(uca, ... , urcia) finally belong to the set {, b1, ... , bn} and      dist(ui, uj)  70 mm i, j  {ca, sma, lra, rra}; (6)
+since the same bifurcation b can be associated with several
+nodes u, there are (n + 1)6 possible pairings. However, in             ­ if both the left and right RAs are present, then the dis-
+order to represent a valid pairing, the nodes (uca, ... , urcia)          tance between the two RAs is less than 35 mm:
+must satisfy the following anatomical constraints:
+                                                                       ulra, urra    dist(ulra, urra)  35 mm;  (7)
+
+­ the left and right CIAs start from the same bifurcation              ­ if both the left and right RAs are present, then the bifur-
+   (i.e. the aortic bifurcation):                                         cation of the SMA is above the bifurcations of the lowest
+                                                                          RA:
+ulcia = urcia;                                                    (2)
+
+­ the bifurcation of the CA is above the bifurcation of the            ulra, urra    uzsma  ulzra  uzsma  urzra ; (8)
+   SMA and strictly above the bifurcations of the other
+   arteries:                                                           ­ if there is only one RA, then the bifurcation of the SMA
+                                                                          is at most 35 mm under this RA:
+uzca  uszma,
+                                                                  (3)
+ucza > uzi i  {lra, rra, lcia, rcia};                                  ulra    urra =     usma    ulra    dist(usma, ulra)  35 mm ,
+
+                                                                                            z       z
+
+                                                                       ulra =   urra      usma    urra    dist(usma, urra)  35 mm .
+
+                                                                                            z       z
+
+­ the aortic bifurcation is strictly below the bifurcations of                                                 (9)
+   the other arteries:
+                                                                       These conditions involve three parameters: the maximum
+uzlcia = urzcia < uiz i  {ca, sma, lra, rra};                     (4)  distance between the bifurcations of the different arteries
+                                                                       (250 mm), the maximum distance between the bifurcations
+­ the distance between the bifurcations of the different               of the CA, SMA and RAs (70 mm) and the maximum dis-
+   arteries is lower than 250 millimetres (mm):                        tance between the RAs (35 mm). These parameters were
+                                                                       chosen based on reference anatomic values and are consist-
+dist(ui, uj)  250 mm i, j  {ca, sma, lra, rra, lcia, rcia};       (5)  ent with the current dataset according to Table 1. In practice,
+                                                                       uncertainties in these thresholds have a small influence on the
+­ the distance between the bifurcations of the CA, SMA                 accuracy of the method. For example, the maximum distance
+   and RAs is lower than 70 mm:
+
+                                                                                                               13
+2644                                                                 Medical & Biological Engineering & Computing (2022) 60:2639­2654
+
+Table1Statistics used to determine the parameters involved in conditions (2)­(9). These statistics were computed from the 239 segmentations
+of the dataset
+
+                                                                     Mean      Standard deviation  Maximum
+
+Maximum distance between the bifurcations of the different arteries  157.7 mm  19.2 mm             206.9 mm
+Maximum distance between the bifurcations of the CA, SMA and RAs     35.0 mm   10.9 mm             68.7 mm
+Maximum distance between the principal RAs                           9.5 mm    5.1 mm              31.9 mm
+
+between the bifurcations of the different arteries is set to 250     from umax and containing the neighbour w. The radius of this
+mm; but if we had chosen 210 mm, the result would have               branch is defined as the mean radius of the nodes between
+been the same according to Table 1. We just need to make             umax and the first bifurcation or leaf encountered starting
+sure that these parameters are sufficiently large to not exclude     from umax and going to w. Finally, given the set of neigh-
+valid cases while being small enough to eliminate outliers.          bours {n1, ... , nm} that do not belong to the aorta, the nodes
+Additionally, note that these thresholds could also be param-        (vca, ... , vrcia) are a subset of {, n1, ... , nm}. However, in
+eterized, with respect to patient size for example, in order to      order to obtain a valid pairing, the nodes (vca, ... , vrcia) must
+increase the robustness of the method to new datasets. (Fig. 5)      verify the following conditions:
+
+Branch pairingOnce (uca, ... , urcia) are fixed, we only have        ­ if u is left empty, then v is also left empty:
+to determine (vca, ... , vrcia). Each node v corresponds to a
+neighbour of u, and the pair (u, v) thus represents the branch           ui =   vi =  i  {ca, sma, lra, rra, lcia, rcia};
+starting from the bifurcation u and containing the node v.                                                                              (10)
+Moreover, as the branches associated with the arteries of
+interest are not part of the aorta, (vca, ... , vrcia) corresponds   ­ the nodes v associated with a branch are distinct in order
+to the neighbours of vertices (uca, ... , urcia) that do not             to represent different branches:
+belong to the aorta. To this end, let umax and umin be respec-
+tively the highest and lowest bifurcations of (uca, ... , urcia).         i  j  vi    vj    vi  vj i, j 
+We consider the neighbours of vertices (uca, ... , urcia) that                                       {ca, sma, lra, rra, lcia, rcia}.
+do not belong to the path between umax and umin. In addi-                                                                               (11)
+tion, we still need to remove the branch corresponding to
+the aorta that could be above umax, as shown in Fig. 6. To do        2.2.3Score evaluation
+this, if umax has at least one neighbour whose corresponding
+branch is directed upwards, we remove the neighbour vmax             In order to find the branches of the vascular tree that best
+associated to the branch with the largest radius, and thus           match the arterial system, a score is assigned to every valid
+corresponding to the aorta. In particular, let a branch starting     pairing. This score measures the similarity between the dif-
+                                                                     ferent branches (u, v) and their corresponding arteries:
+
+Fig.5Example of bifurcation
+pairing: valid bifurcation pair-
+ing (left) and invalid bifurcation
+pairing (right)
+
+13
+Medical & Biological Engineering & Computing (2022) 60:2639­2654  2645
+
+Fig.6Example of branch pair-
+ing: path between umax = uca
+and umin = ulcia = urcia cor-
+responding to the aorta (black)
+and branch (umax, vmax) located
+above umax which corresponds
+to the aorta (black)
+
+score = CAscore(uca, vca)                                         the enumeration of the different pairings results in a small
+         + SMAscore(usma, vsma)                                   number of valid pairings, this solution can be determined in
+         + LRAscore(ulra, vlra)                                   a few seconds by a brute-force search, which compares the
+         + RRAscore(urra, vrra)                                   scores of all valid pairings. In the case where the optimal
+         + CIAscore(ulcia, vlcia, urcia, vrcia),                  solution is not unique, we consider the optimal solution that
+                                                                  contains the least number of branches (i.e. the first one con-
+and the valid pairing with the maximum score is finally           taining the most nodes v equal to ). In the following, we
+considered as the solution of the matching problem. Since         detail the score evaluation for each artery.
+
+Fig.7Example illustrating
+the RAs score evaluation:
+vascular tree (grey), branches
+corresponding to the RAs
+(black), x-(urra, vrra) (blue) and
+x+(ulra, vlra) (red)
+
+                                                                  13
+2646                                                                  Medical & Biological Engineering & Computing (2022) 60:2639­2654
+
+Fig.8Example illustrating the CIAs score evaluation: vascular tree (grey), branches corresponding to the aorta and CIAs (black),
+  (x-(urcia, vrcia))2 + (z-(urcia, vrcia))2 (blue), (x+(ulcia, vlcia))2 + (z-(ulcia, vlcia))2 (green) and z+(ulcia, naorta) (red)
+
+Renal arteries score The RAs branch off from the aorta to the left    Common iliac arteries score The CIAs originate from the
+and right as illustrated in Fig. 7. For this reason, we first impose  aortic bifurcation and run in the left-inferior and right-infe-
+that the global and local directions of the branch corresponding      rior directions as shown in Fig. 8. We therefore impose that
+to the left (resp. right) RA points to the left (resp. right) :       the global direction of the branch corresponding to the left
+                                                                      (resp. right) CIA is oriented in the left-inferior (resp. right-
+anglex,y  glob(ulra, vlra),  1         and                            inferior) direction:
+                                <
+                                                     (12)
+                                   3  <
+
+      anglex,y loc(ulra, vlra), 1        3                            anglex,z  glob(ulcia, vlcia),  1         and
+                                                                                                        <
+                                                                                                                                   (14)
+                                                                                                           4  <
+
+          glob(urra, vrra),  2                                        anglex,z glob(urcia, vrcia), 2             4
+                                <
+anglex,y                               and
+                                   3
+                                                     (13)             with 1 = (1, 0, -1)T and 2 = (-1, 0, -1)T. The score of the
+      anglex,y loc(urra, vrra), 2     <                               left (resp. right) CIA then corresponds to the branch length
+                                                                      in the left (resp. right) and inferior directions. However, as
+                                         3                            the RA score considers the branch length in only one direc-
+                                                                      tion, we weight the CIAscore by taking the diagonal formed
+with 1 = (1, 0, 0)T and 2 = (-1, 0, 0)T. The score of the left        by these two lengths: (x+(ulcia, vlcia))2 + (z-(ulcia, vlcia))2
+(resp. right) RA then corresponds to the length of the branch         and (x-(urcia, vrcia))2 + (z-(urcia, vrcia))2 for the left and
+in the left (resp. right) direction:                                  right CIAs, respectively. Moreover, we add the contribution
+                                                                      of the aorta: z+(ulcia, naorta) with naorta = umax if ulcia  umax
+LRAscore =  x+(ulra, vlra) if ulra, vlra   and (12)                   and naorta = vmax otherwise, in order to find the bifurcation
+                                                                      that forms the largest inverted "Y" in the vascular tree. The
+            0                   otherwise,                            score of the CIAs is finally defined by
+
+and         x-(urra, vrra) if urra, vrra   and (13)
+RRAscore =
+            0                   otherwise.
+
+13
+Medical & Biological Engineering & Computing (2022) 60:2639­2654                                                                       2647
+
+                                                                    if ulcia, vlcia, urcia, vrcia, naorta  
+                 (x+(ulcia, vlcia))2 + (z-(ulcia, vlcia))2         and (14)
+CIAscore  =    + (x-(urcia, vrcia))2 + (z-(urcia, vrcia))2
+               +z+(ulcia, naorta)                                 otherwise.
+             
+              0
+
+Superior mesenteric artery score The SMA leaves the aorta         then we add the contribution of the branch length in the infe-
+in the anterior direction and then tends to the inferior direc-   rior direction z-(usma, vsma). This notably allows to contrast
+tion as illustrated in Fig. 9. For this reason, we first impose   the score of the SMA with that of the CA. The SMA score
+that the local direction of the branch corresponds to the ante-   is thus defined by
+rior direction:
+                                                                  
+                                                                   y-(usma, vsma) + z-(usma, vsma) if usma, vsma   and (15) and ((16) or (17))
+                                                                  
+anglex,y loc(usma, vsma),  <                                (15)  SMAscore =  y-(usma, vsma)                 if usma, vsma   and (15)
+                                                                  
+                              3                                    0
+                                                                                                             otherwise.
+
+with = (0, -1, 0)T. The score is then given by the length
+of the branch in the anterior direction y-(usma, vsma). In addi-
+tion, if the local direction verifies
+
+anglex,y loc(usma, vsma),                                   (16)  Celiac artery score The CA starts from the aorta in the
+                           <                                      anterior direction and then tends to go to the left and right
+                                                                  as shown in Fig. 10. As for the SMA, we impose that the
+                              6                                   local direction of the branch is directed towards the anterior
+                                                                  direction:
+with = (0, -1, 0)T, or if the main length of the branch cor-
+responds to the anterior or inferior direction:
+
+max (y-(usma, vsma), z-(usma, vsma))                        (17)  anglex,z loc(uca, vca),                                              (18)
+> max x+(usma, vsma), x-(usma, vsma) ,                                                        <
+
+                                                                                                 3
+
+Fig.9Example illustrating
+the SMA score evaluation:
+vascular tree (grey), branch
+corresponding to the SMA
+(black), y-(usma, vsma) (blue) and
+z-(usma, vsma) (red)
+
+                                                                                                                                       13
+2648                                                                                               Medical & Biological Engineering & Computing (2022) 60:2639­2654
+
+Fig.10Example illustrating the
+CA score evaluation: vascular
+tree (grey), branch corre-
+sponding to the CA (black),
+x-(uca, vca) (blue), x+(uca, vca)
+(red) and y-(uca, vca) (green)
+
+with = (0, -1, 0)T, and the score is given by the length of the
+branch in the anterior direction y-(uca, vca). However, the additional
+contribution is based on the branch lengths in the left x+(uca, vca)
+and right x-(uca, vca) directions to contrast with the SMA score.
+This contribution is added only if the local direction verifies:
+
+anglex,z loc(uca, vca),  <  ,                           (19)
+                            6
+
+with = (0, -1, 0)T, or if the main length of the branch cor-
+responds to the anterior, left or right direction:
+
+max y+(uca, vca), x+(uca, vca), x-(uca, vca) > z-(uca, vca).
+
+                                                                   (20)
+
+However, as the SMA additional contribution considers only
+one direction, the contribution of the branch lengths in the
+left and right directions is divided by two in order to weight
+the score. The score of the CA is finally given by
+
+  y-(uca, vca) +         x+ (uca ,vca )+x- (uca ,vca )  if uca, vca   and (18) and ((19) or (20))
+                                      2                 if uca, vca   and (18)
+                                                        otherwise.
+CAscore =  y-(uca, vca)
+
+ 0
+
+2.2.4Detection of nonanatomic branches
+
+Since the aorta is not perfectly cylindrical, the vascular tree                                    Fig.11Example of non-anatomic branch: segmentation (grey), vas-
+may contain non-anatomic branches resulting from small                                             cular tree (black) and non-anatomic branch (red)
+
+13
+Medical & Biological Engineering & Computing (2022) 60:2639­2654                                                                   2649
+
+bumps on the surface of the aorta. As shown in Fig. 11,              with = (0, -1, 0)T.
+these branches are small and do not correspond to any artery.           For the left renal artery (resp. right) we kept branches
+For these reasons, we check the length of the branches
+{(uca, vca), ... , (urcia, vrcia)} to detect potential non-anatomic  whose local direction respected:
+branches. If the length of a branch (u, v) is less than 3 times
+the radius r of the aorta at node u or if the length is less than    anglex,y loc(b, p4),                                          (23)
+20 mm plus the radius r:                                                                         <
+
+length(u, v) < 3r  length(u, v) < r + 20 mm, (21)                                                   3
+
+then a warning is sent to signal that this branch is small and       with = (1, 0, 0)T (resp. = (-1, 0, 0)T).
+may correspond to a non-anatomic branch. Condition (21)                 For each candidate we had the following indicator:
+involves two parameters: the minimum relative length of the
+branch (3r) and the minimum absolute length of the branch            Table2Distribution of the branches according to the 5 conditions
+(r + 20 mm). These parameters were determined according              described in Section 2.3
+to Fig. 12 in order to be large enough to detect non-anatomic
+branches.                                                            Condition                   Total number of branches  Non-
+                                                                                                                           anatomic
+2.3Decision rulebased algorithm                                                                                            branches
+
+                                                                     1                           21                        19
+
+                                                                     2                           3                         3
+
+                                                                     3                           2                         2
+
+Definition 8 Given a branch starting from b and going to             4                           11                        11
+n1, we call primary branch the path (b, n1, ..., nk) where nk
+denotes the first bifurcation or leaf encountered. Let's p4 be       5                           2                         2
+the fourth point of the primary branch.
+                                                                            
+Once we had the pairing with the highest score, we looked                     x+(b,  p4)  -  bz  -  urzra  for left RA if urra  
+for one extra left and one extra right renal artery among the                 x+(b,  p4)                   for left RA if urra = 
+branches that were not already identified by the matching            IC  =    x-(b,  p4)                   for right RA.           (24)
+algorithm. Among the remaining bifurcation points on the
+aorta, we kept those that were above the highest supra-renal         What was left to determine was if the remaining branches
+artery and less than 20 mm far and those that were above the         fitted other exclusion criteria. We rejected a branch in the
+aortic bifurcation and more than 80 mm far, along the vas-           following cases:
+cular tree. We then removed branches that went to the front
+of the body, that is branches with a local direction such that:      ­ the primary branch ended with a leaf, dist(b, nk) < 22 mm
+                                                                              IC
+                         3                                               and  IRA   0.94,
+                      >
+anglex,y loc(b, p4),         (22)
+                          4
+
+Fig.12Left: statistics used to determine the parameters involved in condition (21). Right: zoom of the left figure. These statistics were com-
+puted from the 239 segmentations of the dataset
+
+                                                                                           13
+2650                                                             Medical & Biological Engineering & Computing (2022) 60:2639­2654
+
+Table3Summary of the results         Common iliac arteries                                                      Accuracy
+of the proposed method over          Celiac and superior mesenteric arteries
+the 239 segmentations of the         Renal arteries (cases without polar renal artery)                          97.9%
+dataset                              Renal arteries (cases with polar renal arteries)                           97.5%
+                                                                                                                94.4%
+                                                                                        Principal renal artery  95.8%
+                                                                                        Polar renal artery      70.8%
+                                                                                                                94.6%
+                                     Infrarenal zone                                                            89.1%
+                                     All arteries
+
+­ the primary branch ended with a bifurcation node and           annotated by the method correspond to the manually anno-
+   dist(b, nk) < 15 mm,                                          tated branches and incorrect otherwise. Among the 239 seg-
+                                                                 mentations, 213 cases (89.1%) were correctly annotated by
+­ IC  -19,                                    IC                 our automatic branch detection method. In the remaining 26
+             15, dist(b, nk)                  IRA                cases, at least one of the arteries was misidentified. We detail
+­  0  IC                      <  25  mm  and          0.2,       the reason for these errors in the following (Table 3) (Fig. 13).
+­
+   IC    1,                                                      Common iliac arteries The CIAs and the correspond-
+   IRA                                                           ing aortic bifurcation were correctly identified by the
+                                                                 matching algorithm in 234 cases (97.9%). Of the incor-
+where IRA is the indicator (24) of the left (resp. right) renal  rect cases, 3 are due to the presence of non-anatomic
+artery identified by the matching algorithm. If more than        bifurcations as illustrated in Fig. 14. These ones result
+one branch remained, we kept the longest. The distribution       from a contact point between the CIAs and divide the left
+of the branches according to the 5 conditions can be found       or right CIA into two separate branches. The vascular
+in Table 2. All the thresholds were determined by experience     tree then no longer properly represents the topology of
+on our dataset.                                                  the arterial system, and the matching algorithm iden-
+                                                                 tified the longest branches since they lead to a higher
+   Finally we checked the euclidean distance between the         score. These branches represent a large portion of the
+lowest renal artery and the aortic bifurcation: if it was less   left and right CIAs, respectively, but they do not origi-
+than 75 mm, a warning was sent to ask for validation.            nate from the aortic bifurcation. In the 2 other cases, the
+                                                                 segmentation was cut just below the aortic bifurcation.
+3Results                                                         It results that the CIAs are very short (less than 33 mm),
+                                                                 and the matching algorithm identified a bifurcation with
+The accuracy of the proposed method was evaluated by
+comparing the results with manual annotations provided by
+human experts. A result is considered correct if the branches
+
+Fig.13Example of vascu-
+lar tree correctly annotated:
+vascular tree (black), branches
+corresponding to the CA (blue),
+SMA (red), left RAs (yellow),
+right RA (orange) and CIAs
+(green)
+
+13
+Medical & Biological Engineering & Computing (2022) 60:2639­2654    2651
+
+                                                                    Fig.15Example of non-anatomic branch identified as a second left
+                                                                    RA: segmentation (grey), vascular tree (black), RAs (blue) and non-
+                                                                    anatomic branch (red)
+
+Fig.14Example of non-anatomic bifurcation: segmentation (grey),     Renal arteries Over the 215 cases without polar RAs, the
+vascular tree (black), branch corresponding to the left CIA (red),  method correctly identified the RAs in 203 cases (94.4%).
+branches corresponding to the right CIA (blue and green), aortic    On the one hand, the matching algorithm wrongly identi-
+bifurcation (yellow) and non-anatomic bifurcation (orange)          fied the RAs in 6 cases. Of the incorrect cases, 4 are due to
+                                                                    the presence of non-anatomic bifurcations or non-anatomic
+longer branches. In these two cases, a warning suggest-             branches, 1 is due to a RA that points to the anterior direc-
+ing to check the result was raised because of the small             tion, and 1 is due to a SMA oriented to left and mistaken for
+distance between the wrong aortic bifurcation and the               a left RA. On the other hand, the decision rule-based algo-
+other bifurcations.                                                 rithm wrongly identified non-anatomic branches as addi-
+                                                                    tional RAs in 6 cases. These branches have the same char-
+Celiac and superior mesenteric arteries The CA and SMA              acteristics (position, angle, length) as a small RA and could
+were correctly identified in 233 cases (97.5%). Of the cases        not be distinguished from a real one as shown in Fig. 15.
+in which at least one of the two arteries was misidentified, 2
+are due to the presence of non-anatomic bifurcations occur-            Over the 24 cases with polar RAs, the method correctly
+ring when the SMA descends and comes too close to the               identified the principal and polar RAs in 16 cases (66.7%).
+aorta. As for the CIAs, the matching algorithm identified           In all cases, a first (principal or polar) RAs was correctly
+the branch originating from the non-anatomic bifurcation            identified by the matching algorithm. Of the cases where
+and corresponding to the longest part of the SMA. In 3              the second RAs were not identified, 1 is due to very short
+other cases, the segmentation did not contain CA or SMA,            CIAs. As a result, the second left RAs was already identified
+but a non-anatomic branch was identified as a CA or SMA             as the left CIA by the matching algorithm. In addition, the
+because it leads to a higher score. Finally, the last incorrect     decision rule-based algorithm missed to identify the second
+case is due to a SMA which is oriented to the left and was          left or right RA in 7 cases. The three main reasons were an
+mistaken for a left RA.                                             angle that did not fit in the predetermined interval, an artery
+
+                                                                    13
+2652                                                                 Medical & Biological Engineering & Computing (2022) 60:2639­2654
+
+                                                                     Fig.17Comparison of vascular trees extracted from the lumen (left)
+                                                                     and full segmentations (right): segmentation (grey), vascular tree
+                                                                     (black) and aortic bifurcation (green)
+
+Fig.16Example of additional RAs identified as non-anatomic           our method will no longer identify them. This means that
+branches: segmentation (grey), vascular tree (black), RAs correctly  any improvement in the quality of both the segmentation and
+identified (blue) and RAs wrongly identified (red)                   the vascular tree could lead to better results. Nevertheless,
+                                                                     our method is robust with respect to non-anatomic branches.
+that was too close to the aortic bifurcation or one that was         Indeed, there were a total of 185 non-anatomic branches
+too short (less than 25 mm) as illustrated in Fig. 16.               in the 239 segmentations, and only 18 (5 for the matching
+                                                                     algorithm and 13 for the decision rule-based algorithm) led
+Infrarenal zone The infrarenal zone is defined as the por-           to errors, i.e. 9.7%. Regarding the direction of the branches,
+tion of the aorta between the lowest RA and the aortic               we have chosen large angle intervals to prevent this kind of
+bifurcation. The lowest RA was well identified in 229 cases          error as much as possible. However, if an artery has a very
+(95.8%). Combined with the results concerning the aortic             atypical angle, our method will fail to identify it.
+bifurcation, we recovered the infrarenal zone in 226 cases
+(94.6%).                                                                In this work, the vascular trees were extracted from the full
+                                                                     segmentation, that is lumen and thrombus. Nevertheless, our
+4Discussion                                                          method can also be applied to vascular trees computed only from
+                                                                     the lumen. However, these vascular trees contain more non-
+The previous results show that the errors of our method              anatomic bifurcations and non-anatomic branches, as shown in
+come mainly from the presence of non-anatomic bifurca-               Fig. 17. It follows that our method makes more errors. For exam-
+tions, non-anatomic branches, and arteries that do not have          ple, a non-anatomic branch was identified as a second RA in 12
+the direction they are supposed to have. In particular, we           cases, against 7 cases for the full segmentation. In addition, the
+identified 3 cases where a non-anatomic bifurcation was mis-         vascular trees extracted from the lumen do not contain the aortic
+taken for the aortic bifurcation. However when we removed            bifurcation in 5 cases. This is due to either the absence of a CIA
+this non-anatomic bifurcation from the vascular tree, the            in the lumen segmentation or the presence of an endoprothesis
+aortic bifurcation was correctly identified. Similarly, if the       in the post-operative scan, as illustrated in Fig. 17.
+non-anatomic branches are removed from the vascular trees,
+                                                                        Although an error on the aortic bifurcation does not nec-
+                                                                     essarily lead to errors on the other branches, we check the
+                                                                     distance between the lowest RA and the aortic bifurcation
+                                                                     to detect potential errors. A warning was raised in 6 cases
+                                                                     because of the small distance between the aortic bifurcation
+                                                                     and the other bifurcations. In 2 cases the aortic bifurcation
+                                                                     was wrongly identified; in 2 other cases, the distance was
+                                                                     short because of a low polar renal artery. In the 2 last cases
+                                                                     there was no renal artery found nor segmented. We expose
+                                                                     the distance between the lowest renal artery and the aortic
+                                                                     bifurcation for all the segmentations of the dataset in Fig. 18.
+
+13
+Medical & Biological Engineering & Computing (2022) 60:2639­2654  2653
+
+Fig.18Distance between the identified lowest renal artery and the aortic bifurcation. The black line represents the threshold value at 75mm.
+The separation between rising or not a warning is clear
+
+The method proposed in [7] is evaluated by                        full segmentation, that is lumen and thrombus. Then, a
+                                                                  matching algorithm finds the branches of the vascular tree
+the precision rate =  TP       % and                              that best anatomically match the different arteries located
+                                                                  along the aorta: CA, SMA, RAs, and CIAs. A decision
+                      TP + FP                                     rule-based algorithm finally looks for the presence of
+                                                                  additional RAs to obtain the complete description of the
+the recall rate =              TP  %,                             arterial system.
+
+                          TP + FN                                    The method has been evaluated on 239 segmentations
+                                                                  from 102 different patients. The results demonstrate the
+where TP denotes the number of branches correctly labeled,        accuracy of the method, capable of delivering an error of
+FP denotes the number of branches incorrectly labeled and         less than 2.5% for the identification of the CA and SMA,
+FN denotes the number of branches that should be labeled          2.1% for the CIAs, 8.4% for the RAs, 5.4% for the infra-
+but not labeled. In comparison with our approach, those rates     renal zone and 10.9% for all arteries. In addition, we have
+were 94.7% and 65% for the CIAs while we obtain 97.9%             seen that these errors come mainly from the presence of
+and 100% respectively. Similarly, for the CA and SMA, our         non-anatomic bifurcations or non-anatomic branches, so
+method results in precision and recall rates of 97.9% and         any improvement in the quality of both the segmentation
+99.6% against at most 80.8% and 89.1%. Concerning the             and the vascular tree could lead to better results.
+RAs, the precision and recall rates were 63.3% and 41.3%,
+while we achieve 95% and 96% respectively. Our method                The accuracy of the method could be further improved
+was not only tested on a larger dataset, it also showed better    by exploiting more information from branch diameters.
+precision and recall.                                             These could notably avoid confusing the CIAs with smaller
+                                                                  RAs. Moreover, the diameters could also be used to iden-
+5Conclusions                                                      tify the aorta, allowing to extend the method to vascular
+                                                                  trees that do not contain the aortic bifurcation, for example,
+In this work, we have presented a new method to automati-         when the segmentation is cut in the middle of the sac.
+cally identify different arteries present in an abdominal
+aortic segmentation. In this approach, the arterial system        Author contributions Method: Sébastien Riffaud (matching algorithm),
+is first represented by the vascular tree extracted from the      Gwladys Ravon (decision rule-based algorithm). Supervision: Florian
+
+                                                                  13
+2654                                                                     Medical & Biological Engineering & Computing (2022) 60:2639­2654
+
+Bernard, Angelo Iollo. Results: Sébastien Riffaud, Gwladys Ravon,            Imaging 2012: Image Processing, vol. 8314, p. 83142F. Interna-
+Thibault Allard, Caroline Caradu. Initial draft writing: Sébastien Rif-      tional Society for Optics and Photonics
+faud, Gwladys Ravon. All authors contribute to editing and improving     8. Tahoces PG, Santana-Cedrés D, Alvarez L, Alemán-Flores M,
+the manuscript.                                                              Agustín T, Carmelo C, Carreira JM (2020) Automatic detection
+                                                                             of anatomical landmarks of the aorta in CTA images. Med Biol
+Declarations                                                                 Eng Comput 58(5):903­919
+
+Conflict of interest The authors declare no competing interests.         Sébastien Riffaud is a postdoctoral researcher at Inria - Bordeaux
+                                                                         Sud-Ouest in Memphis team. He graduated with a PhD in applied
+References                                                               mathematics and scientific computing from University of Bordeaux in
+                                                                         2020. His current research focuses on the development of efficient and
+ 1. Caradu C, Spampinato B, Vrancianu AM, Bérard X, Ducasse              accurate methods for modeling blood flow in the aorta.
+      E (2021) Fully automatic volume segmentation of infrarenal
+      abdominal aortic aneurysm computed tomography images with          Gwladys Ravon completed a PhD in applied mathematics at the Uni-
+      deep learning approaches versus physician controlled manual        versity of Bordeaux. The subject mixed inverse problems and cardiac
+      segmentation. J Vasc Surg 74(1):246­256                            electrophysiology. She has currently a postdoctoral position at Inria
+                                                                         Bordeaux Sud-Ouest in Memphis Team. Her main research topic is
+ 2. Chaikof EL, Dalman RL, Eskandari MK, Jackson BM, Lee WA,             applied mathematics to medicine and health care.
+      Mansour MA, Mastracci TM, Mell M, Murad MH, Nguyen LL
+      et al (2018) The Society for Vascular Surgery practice guidelines  Thibault Allard graduated from University of Technology of Troyes as
+      on the care of patients with an abdominal aortic aneurysm. J Vasc  materials engineer. After getting an experience in big companies such
+      Surg 67(1):2­77                                                    as l'Oreal and an MBA in Data Science from MBA ESG, he joined
+                                                                         Nurea as Data Scientist. He is very enthusiastic about new technologies
+ 3. Dehmeshki J, Amin H, Ebadian-Dehkordi M, Jouannic A, Qanadi          and considers that artifical intelligence is a great resource that can help
+      S (2009) Automatic detection, segmentation and quantification of   improving patient care.
+      abdominal aortic aneurysm using computed tomography angiog-
+      raphy. Proc Med Image Understand Anal: 32­36                       Florian Bernard completed a PhD in applied mathematics at University
+                                                                         of Bordeaux and a PhD in fluid dynamics at Politecnico di Torino in
+ 4. Elattar M, Wiegerinck E, van Kesteren F, Dubois L, Planken N,        2015. He is now CEO of Nurea, a company dedicated to the develop-
+      Vanbavel E, Baan J, Marquering H (2016) Automatic aortic root      ment of decision-making support software for physicians to improve
+      landmark detection in CTA images for preprocedural planning        diagnostic, follow-up and pronostic of cardiovascular diseases.
+      of transcatheter aortic valve implantation. Int J Card Imaging
+      32(3):501­511                                                      Angelo Iollo is professor of Applied Mathematics at the University of
+                                                                         Bordeaux and head of team Memphis at Inria, the national institute for
+ 5. Lalys F, Esneault S, Castro M, Royer L, Haigron P, Auffret V,        applied mathematics and computer science.
+      Tomasi J (2019) Automatic aortic root segmentation and ana-
+      tomical landmarks detection for TAVI procedure planning. Minim     Dr. Caroline Caradu is a MD P.D working as a vascular surgeon at
+      Invasive Ther Allied Technol 28(3):157­164                         the University Hospital of Bordeaux. Her research interests include
+                                                                         the endovascular treatment of complex aortic aneurysms, the use of
+ 6. Nordon IM, Hinchliffe RJ, Loftus IM, Thompson MM (2011)              artificial intelligence in the treatment of vascular pathologies, aortic
+      Pathophysiology and epidemiology of abdominal aortic aneu-         infections, and the role of endothelial cell dysfunction in the patho-
+      rysms. Nat Rev Cardiol 8(2):92­102                                 physiology of critical limb ischemia.
+
+ 7. Oda M, Hoang BH, Kitasaka T, Misawa K, Fujiwara M, Mori
+      K (2012) Automated anatomical labeling method for abdominal
+      arteries extracted from 3D abdominal CT images. In: Medical
+
+13
+

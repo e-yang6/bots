@@ -1,0 +1,29 @@
+  radius disagreement 100% on instance 0: distance transform 0.00mm vs frontier 3.11mm
+  radius disagreement 78% on instance 1: distance transform 0.50mm vs frontier 2.28mm
+  radius disagreement 100% on instance 3: distance transform 0.00mm vs frontier 1.74mm
+lumen HU median=399 p25=386 p75=412 contrast_enhanced=True
+components kept=1 dropped=0 caps=2 surface_points=17712
+flood: T=234HU (0.588 x lumen ref 399HU) retries=6 leak=none growth=1.34 reached=3840
+  search: 0.400->LEAK:growth 0.650->ok 0.525->LEAK:growth 0.588->ok 0.556->LEAK:growth 0.572->LEAK:growth
+  bone descent (ceiling 443HU, excised 0 voxels in 0 components): 0.562->LEAK:growth
+components=7 candidates=7 neck=2.0mm rejected: no_contact_patch=0 end_cap=0 aortic_continuation=0 too_short=0
+instances=8 from 7 candidates (split_components=1 absorbed_narrow_pieces=0 instance_too_short=0)
+  # 0 comp=1 len=14.9mm traced=3.4mm (bifurcation@5.4mm) ostium=(8.6,-1.0,0.4) patch=21mm2 disagree=4.5mm r=3.11mm (dt=0.00 frontier=3.11 MISMATCH) vness=2.07e-07 split=watershed shares=#1@0.8mm
+  # 1 comp=1 len=15.0mm traced=3.2mm (bifurcation@3.4mm) ostium=(8.6,-0.2,4.4) patch=10mm2 disagree=3.0mm r=2.28mm (dt=0.50 frontier=2.28 MISMATCH) vness=2.07e-07 split=watershed shares=#0@0.8mm
+  # 2 comp=3 len=15.0mm traced=9.9mm (max_length) ostium=(3.8,8.6,44.4) patch=43mm2 disagree=2.7mm r=3.64mm (dt=2.88 frontier=3.64 vesselness=3.33) vness=4.76e-05
+  # 3 comp=7 len=14.9mm traced=3.5mm (bifurcation@3.9mm) ostium=(30.2,-0.2,144.4) patch=25mm2 disagree=3.2mm r=1.74mm (dt=0.00 frontier=1.74 MISMATCH) vness=2.6e-07
+  # 4 comp=5 len=15.0mm traced=9.6mm (max_length) ostium=(10.2,-8.2,92.4) patch=18mm2 disagree=3.1mm r=2.62mm (dt=1.90 frontier=2.62 vesselness=2.22) vness=0.000144
+  # 5 comp=4 len=14.9mm traced=9.2mm (max_length) ostium=(-5.8,-2.6,53.2) patch=10mm2 disagree=5.9mm r=1.48mm (dt=1.07 frontier=1.48 vesselness=1.48) vness=0.000197
+  # 6 comp=6 len=14.9mm traced=9.2mm (max_length) ostium=(6.2,-8.2,93.2) patch=6mm2 disagree=2.6mm r=1.24mm (dt=1.15 frontier=1.24 vesselness=1.48) vness=0.000366
+  # 7 comp=2 len=14.8mm traced=9.6mm (max_length) ostium=(-7.4,1.4,30.8) patch=5mm2 disagree=1.3mm r=1.03mm (dt=0.78 frontier=1.03 vesselness=1.48) vness=0.000331
+timings: load_and_prepare_s=0.4s geometry_s=0.4s flood_s=0.9s candidates_s=1.1s parentage_s=0.0s tracing_s=0.2s
+scoring: 8 instances, confidence threshold=0.50
+  instance=  0 comp=1 confidence=0.00 status=VETOED (traced length 3.4mm < 5mm)
+  instance=  1 comp=1 confidence=0.00 status=VETOED (traced length 3.2mm < 5mm)
+  instance=  2 comp=3 confidence=0.87 status=KEPT
+  instance=  3 comp=7 confidence=0.00 status=VETOED (traced length 3.5mm < 5mm)
+  instance=  4 comp=5 confidence=0.83 status=KEPT
+  instance=  5 comp=4 confidence=0.85 status=KEPT
+  instance=  6 comp=6 confidence=0.87 status=KEPT
+  instance=  7 comp=2 confidence=1.00 status=KEPT
+kept 5/8 as daughters

@@ -31,7 +31,10 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
-import pyvista as pv
+try:
+    import pyvista as pv
+except ImportError:
+    pv = None
 import SimpleITK as sitk
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -40,7 +43,8 @@ import schema  # noqa: E402
 from src.io_utils import load_case  # noqa: E402
 from src.lumen_evidence import VolumeSampler, perpendicular_basis  # noqa: E402
 
-pv.OFF_SCREEN = True
+if pv is not None:
+    pv.OFF_SCREEN = True
 
 CROSS_SECTION_HALF_EXTENT_MM = 8.0
 CROSS_SECTION_STEP_MM = 0.25
@@ -73,7 +77,34 @@ def _mesh_from_mask(mask_image):
     return contour
 
 
+def render_3d_cpu(mask_image, daughters, case_id, out_path):
+    from skimage.measure import marching_cubes
+    from src.geometry import _indices_to_physical
+
+    array = sitk.GetArrayFromImage(mask_image)
+    vertices, faces, _normals, _values = marching_cubes(array, level=0.5, step_size=2)
+    points = _indices_to_physical(vertices[:, ::-1], mask_image)
+    figure = plt.figure(figsize=(10, 9))
+    axis = figure.add_subplot(111, projection="3d")
+    axis.plot_trisurf(*points.T, triangles=faces, color="tan", alpha=0.25, linewidth=0)
+    for index, daughter in enumerate(daughters):
+        colour = plt.cm.tab10.colors[index % 10]
+        ostium = np.asarray(daughter["ostium_xyz_mm"])
+        direction = np.asarray(daughter["direction_xyz"])
+        axis.scatter(*ostium, color=colour, s=30)
+        axis.scatter(*daughter["seed_xyz_mm"], color=colour, s=12)
+        axis.quiver(*ostium, *direction, length=ARROW_LENGTH_MM, color=colour)
+        axis.text(*ostium, daughter["instance_id"], color=colour, fontsize=7)
+    axis.set_box_aspect(np.maximum(np.ptp(points, axis=0), 1.0))
+    axis.set(xlabel="LPS X (mm)", ylabel="LPS Y (mm)", zlabel="LPS Z (mm)",
+             title=f"{case_id}: {len(daughters)} daughters")
+    figure.savefig(out_path, dpi=120)
+    plt.close(figure)
+
+
 def render_3d(mask_image, daughters, case_id, out_path):
+    if pv is None:
+        return render_3d_cpu(mask_image, daughters, case_id, out_path)
     mesh = _mesh_from_mask(mask_image)
     plotter = pv.Plotter(off_screen=True, window_size=(1400, 1100))
     plotter.set_background("white")

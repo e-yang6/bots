@@ -412,7 +412,7 @@ function buildMetricsPanel(branches) {
         item.dataset.index = i;
         item.style.borderLeftColor = '#' + color.getHexString();
 
-        const conf = branch.confidence != null ? (branch.confidence * 100).toFixed(0) + '%' : '---';
+        const conf = branch.confidence != null ? branch.confidence.toFixed(2) : '---';
         const statusBadge = accepted
             ? '<span class="branch-badge accepted">accepted</span>'
             : '<span class="branch-badge rejected-badge">rejected</span>';
@@ -526,9 +526,10 @@ function showBranchInfo(marker) {
     document.getElementById('info-id').textContent = d.id;
     document.getElementById('info-radius').textContent = d.radius_mm.toFixed(1) + ' mm';
     document.getElementById('info-confidence').textContent =
-        d.confidence != null ? (d.confidence * 100).toFixed(0) + '%' : '---';
+        d.confidence != null ? d.confidence.toFixed(2) : '---';
+    const physicalOstium = d.ostium.map((v, axis) => v + (sceneData.centroid_mm?.[axis] ?? 0));
     document.getElementById('info-ostium').textContent =
-        `(${d.ostium[0].toFixed(1)}, ${d.ostium[1].toFixed(1)}, ${d.ostium[2].toFixed(1)})`;
+        `(${physicalOstium.map(v => v.toFixed(1)).join(', ')}) mm LPS`;
     document.getElementById('info-direction').textContent =
         `(${d.direction[0].toFixed(2)}, ${d.direction[1].toFixed(2)}, ${d.direction[2].toFixed(2)})`;
 
@@ -598,7 +599,7 @@ function showBranchInfo(marker) {
             `<span class="rule-total-label">Total penalty</span>` +
             `<span class="rule-total-value">-${rb.total_penalty.toFixed(2)}</span>` +
             `<span class="rule-total-label">Confidence</span>` +
-            `<span class="rule-total-value">${d.confidence != null ? (d.confidence * 100).toFixed(0) + '%' : '---'}</span>`;
+            `<span class="rule-total-value">${d.confidence != null ? d.confidence.toFixed(2) : '---'}</span>`;
     } else {
         rulesSection.style.display = 'none';
     }
@@ -699,6 +700,7 @@ function onGesturePointerUp(event) {
 // ─── WebSocket sync ─────────────────────────────────────────────────────────
 
 function connectWebSocket() {
+    if (params.get('sync') !== '1') return;
     const loc = window.location;
     const wsProto = loc.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsPort = parseInt(loc.port || (loc.protocol === 'https:' ? '443' : '80')) + 1;
@@ -773,7 +775,7 @@ async function startCameraStream() {
         });
 
         peerConnection = new RTCPeerConnection({
-            iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+            iceServers: [],
         });
 
         stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
@@ -802,7 +804,7 @@ async function startCameraStream() {
 
 async function handleWebRTCOffer(msg) {
     peerConnection = new RTCPeerConnection({
-        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+        iceServers: [],
     });
 
     peerConnection.onicecandidate = (event) => {

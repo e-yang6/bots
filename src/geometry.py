@@ -17,6 +17,7 @@ from scipy.spatial import cKDTree
 # than a genuine (possibly interrupted) piece of the aorta. See
 # _connected_components_filtered for how this was chosen.
 MIN_COMPONENT_VOLUME_FRACTION = 0.01
+MAX_WORKING_VOXELS = 20_000_000
 
 
 def _direction_matrix(image):
@@ -27,10 +28,9 @@ def _indices_to_physical(indices_xyz, image):
     """Vectorized equivalent of image.TransformIndexToPhysicalPoint for an
     (N, 3) array of (x, y, z) index coordinates -> (N, 3) physical mm.
     """
-    spacing = np.array(image.GetSpacing())
-    origin = np.array(image.GetOrigin())
-    direction = _direction_matrix(image)
-    return (indices_xyz * spacing) @ direction.T + origin
+    origin = np.asarray(image.TransformIndexToPhysicalPoint((0, 0, 0)))
+    basis = np.array([image.TransformIndexToPhysicalPoint(index) for index in ((1, 0, 0), (0, 1, 0), (0, 0, 1))]) - origin
+    return np.asarray(indices_xyz) @ basis + origin
 
 
 def _mm_to_voxel_radius(margin_mm, spacing_xyz):
@@ -90,6 +90,8 @@ def resample_isotropic(image, mask, target_spacing=0.8):
         for osz, osp in zip(original_size, original_spacing)
     ]
 
+    if np.prod(new_size, dtype=np.float64) > MAX_WORKING_VOXELS:
+        raise MemoryError("resampled working grid exceeds the memory budget")
     image_arr = sitk.GetArrayViewFromImage(image)
     background_hu = float(image_arr.min())  # per-case, never a hardcoded HU floor
 

@@ -18,7 +18,11 @@ Schema:
 """
 
 import json
+import math
 import os
+from numbers import Real
+from pathlib import Path
+import tempfile
 
 PARENT_INSTANCE_ID = "aorta"
 
@@ -66,10 +70,60 @@ def make_prediction(case_id, daughters=None):
     }
 
 
+def submission_prediction(prediction):
+    if not isinstance(prediction, dict):
+        raise ValueError("prediction must be an object")
+    if not isinstance(prediction.get("case_id"), str) or not prediction["case_id"]:
+        raise ValueError("case_id must be a nonempty string")
+    if prediction.get("parent") != {"instance_id": PARENT_INSTANCE_ID}:
+        raise ValueError("parent must identify the aorta")
+    if not isinstance(prediction.get("daughters"), list):
+        raise ValueError("daughters must be a list")
+
+    def finite_number(value):
+        return isinstance(value, Real) and not isinstance(value, bool) and math.isfinite(value)
+
+    daughters = []
+    for index, daughter in enumerate(prediction["daughters"], start=1):
+        if not isinstance(daughter, dict):
+            raise ValueError("every daughter must be an object")
+        if daughter.get("instance_id") != f"branch_{index:03d}":
+            raise ValueError("daughter IDs must be unique and sequential: branch_001, branch_002, ...")
+        if daughter.get("parent_instance_id") != PARENT_INSTANCE_ID:
+            raise ValueError("every daughter must link to aorta")
+        for field in ("ostium_xyz_mm", "seed_xyz_mm", "direction_xyz"):
+            value = daughter.get(field)
+            if not isinstance(value, (list, tuple)) or len(value) != 3 or not all(map(finite_number, value)):
+                raise ValueError(f"{field} must contain three finite numbers")
+        radius = daughter.get("radius_mm")
+        if not finite_number(radius) or radius <= 0:
+            raise ValueError("radius_mm must be finite and positive")
+        direction = daughter["direction_xyz"]
+        if not math.isclose(math.hypot(*direction), 1.0, abs_tol=1e-6):
+            raise ValueError("direction_xyz must be a unit vector")
+        outward = [s - o for s, o in zip(daughter["seed_xyz_mm"], daughter["ostium_xyz_mm"])]
+        if math.hypot(*outward) == 0 or sum(d * v for d, v in zip(direction, outward)) < -1e-6:
+            raise ValueError("direction_xyz must point from the ostium into the daughter")
+        daughters.append(make_daughter(
+            daughter["instance_id"], daughter["ostium_xyz_mm"], daughter["seed_xyz_mm"], radius, direction
+        ))
+    return make_prediction(prediction["case_id"], daughters)
+
+
 def write_prediction(prediction, output_path):
     """Write a prediction dict to output_path as JSON."""
-    with open(output_path, "w") as f:
-        json.dump(prediction, f, indent=2)
+    payload = json.dumps(submission_prediction(prediction), indent=2, allow_nan=False)
+    destination = Path(output_path)
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=destination.parent,
+                                         prefix=".branchseed-", suffix=".tmp", delete=False) as f:
+            temporary = f.name
+            f.write(payload)
+        os.replace(temporary, destination)
+    finally:
+        if temporary is not None and os.path.exists(temporary):
+            os.unlink(temporary)
 
 
 def read_prediction(path):

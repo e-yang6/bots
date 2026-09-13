@@ -24,6 +24,8 @@ import ssl
 import subprocess
 import sys
 import threading
+from pathlib import Path
+from urllib.parse import unquote, urlsplit
 
 
 class ViewerHandler(http.server.SimpleHTTPRequestHandler):
@@ -33,18 +35,19 @@ class ViewerHandler(http.server.SimpleHTTPRequestHandler):
         super().__init__(*args, **kwargs)
 
     def translate_path(self, path):
-        path = path.split('?')[0].split('#')[0]
-        path = path.lstrip('/')
-
+        path = unquote(urlsplit(path).path).lstrip('/')
+        viewer = Path(self.viewer_dir).resolve()
+        scene = Path(self.scene_dir).resolve()
         if path.startswith('data/'):
-            rel = path[len('data/'):]
-            return os.path.join(self.scene_dir, rel)
-
-        scene_path = os.path.join(self.scene_dir, path)
-        if path and os.path.exists(scene_path):
-            return scene_path
-
-        return os.path.join(self.viewer_dir, path)
+            candidate = (scene / path[5:]).resolve()
+            return str(candidate if candidate.is_relative_to(scene) else viewer / '.blocked')
+        candidate = (scene / path).resolve()
+        if not candidate.is_relative_to(scene):
+            return str(viewer / '.blocked')
+        if path and candidate.is_file():
+            return str(candidate)
+        candidate = (viewer / path).resolve()
+        return str(candidate if candidate.is_relative_to(viewer) else viewer / '.blocked')
 
     def end_headers(self):
         self.send_header('Access-Control-Allow-Origin', '*')
@@ -150,6 +153,9 @@ def ensure_cert(cert_dir):
 def main():
     parser = argparse.ArgumentParser(description='Serve the WebXR aorta viewer over HTTPS')
     parser.add_argument('--port', type=int, default=8080)
+    parser.add_argument('--host', default='127.0.0.1')
+    parser.add_argument('--ssl', action='store_true', help='Enable optional HTTPS for WebXR')
+    parser.add_argument('--ws', action='store_true', help='Enable optional WebSocket companion sync')
     parser.add_argument('--scene-dir', default='viz/output',
                         help='Directory containing exported scene')
     parser.add_argument('--no-ssl', action='store_true',
@@ -157,6 +163,8 @@ def main():
     parser.add_argument('--no-ws', action='store_true',
                         help='Disable WebSocket sync server')
     args = parser.parse_args()
+    args.no_ssl = args.no_ssl or not args.ssl
+    args.no_ws = args.no_ws or not args.ws
 
     viewer_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'viewer')
     scene_dir = os.path.abspath(args.scene_dir)
@@ -168,12 +176,12 @@ def main():
         scene_dir=scene_dir,
     )
 
-    ip = get_local_ip()
+    ip = args.host
     protocol = 'http' if args.no_ssl else 'https'
     ws_port = args.port + 1
     ssl_context = None
 
-    with socketserver.TCPServer(('', args.port), handler) as httpd:
+    with socketserver.TCPServer((args.host, args.port), handler) as httpd:
         if not args.no_ssl:
             try:
                 cert_file, key_file = ensure_cert(cert_dir)

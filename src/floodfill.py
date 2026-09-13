@@ -60,6 +60,7 @@ from scipy.sparse.csgraph import dijkstra
 from src.intensity import SKEW_IQR_THRESHOLD_HU
 
 DEFAULT_BUDGET_MM = 15.0
+MAX_GRAPH_NODES = 2_000_000
 BAND_MM = 0.5
 
 # Threshold search range, as fractions of the per-case lumen reference HU. The
@@ -217,6 +218,8 @@ def _flood(traversal, source, aorta_mask, spacing, budget_mm, candidate_region=N
     if candidate_region is not None:
         outside &= candidate_region
     nodes = outside | source
+    if np.count_nonzero(nodes) > MAX_GRAPH_NODES:
+        raise MemoryError("flood graph budget exceeded")
     node_flat = np.flatnonzero(nodes).astype(np.int32)
     if node_flat.size == 0 or not source.any():
         if return_nearest_source:

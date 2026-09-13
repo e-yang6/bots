@@ -40,6 +40,17 @@ def test_geodesic_distance_is_in_millimetres_on_an_anisotropic_grid():
     assert np.isinf(dist[0, 2, 5])
 
 
+def test_graph_budget_is_checked_before_sparse_allocation(monkeypatch):
+    from src import floodfill
+
+    monkeypatch.setattr(floodfill, "MAX_GRAPH_NODES", 2)
+    volume = np.ones((1, 1, 10), dtype=bool)
+    seeds = np.zeros_like(volume)
+    seeds[0, 0, 0] = True
+    with pytest.raises(MemoryError, match="graph budget"):
+        floodfill.geodesic_bfs(volume, seeds, (1., 1., 1.))
+
+
 def test_parent_chain_leads_back_to_the_seed():
     B = np.zeros((1, 1, 10), dtype=bool)
     B[0, 0, :] = True
