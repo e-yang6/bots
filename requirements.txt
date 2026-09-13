@@ -4,3 +4,5 @@ pytest
 SimpleITK
 nibabel
 matplotlib
+pyvista
+psutil

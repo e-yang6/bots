@@ -1,0 +1,1827 @@
+{
+  "overall": {
+    "n_cases": 20,
+    "n_cases_with_detections": 18,
+    "mean_case_stability_score": 0.9173474206349206,
+    "n_perturbations_per_case": 19
+  },
+  "cases": [
+    {
+      "case_id": "subject001",
+      "n_baseline_daughters": 6,
+      "case_stability_score": 0.9208333333333333,
+      "spurious_appearance_rate_when_empty": null,
+      "detections": [
+        {
+          "instance_id": "branch_001",
+          "ostium_xyz_mm": [
+            20.168992221355435,
+            29.12299802303314,
+            -1030.43994140625
+          ],
+          "stability": 0.947,
+          "disappeared_in": [
+            "gaussian_noise_sigma50hu"
+          ],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_002",
+          "ostium_xyz_mm": [
+            9.768992221355433,
+            31.52299802303314,
+            -986.43994140625
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_003",
+          "ostium_xyz_mm": [
+            16.168992221355435,
+            29.12299802303314,
+            -995.23994140625
+          ],
+          "stability": 0.842,
+          "disappeared_in": [
+            "gaussian_noise_sigma15hu",
+            "gaussian_noise_sigma30hu",
+            "gaussian_noise_sigma50hu"
+          ],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_004",
+          "ostium_xyz_mm": [
+            16.968992221355435,
+            37.92299802303314,
+            -1053.63994140625
+          ],
+          "stability": 0.947,
+          "disappeared_in": [
+            "gaussian_noise_sigma50hu"
+          ],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_005",
+          "ostium_xyz_mm": [
+            14.568992221355433,
+            30.722998023033135,
+            -975.23994140625
+          ],
+          "stability": 0.947,
+          "disappeared_in": [
+            "confidence_threshold+20%"
+          ],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_006",
+          "ostium_xyz_mm": [
+            19.368992221355434,
+            29.922998023033138,
+            -1064.8399414062499
+          ],
+          "stability": 0.842,
+          "disappeared_in": [
+            "confidence_threshold+10%",
+            "confidence_threshold+20%",
+            "gaussian_noise_sigma30hu"
+          ],
+          "moved_in": []
+        }
+      ],
+      "appearance_events": [
+        {
+          "perturbation": "gaussian_noise_sigma15hu",
+          "n_appeared": 1
+        },
+        {
+          "perturbation": "gaussian_noise_sigma30hu",
+          "n_appeared": 1
+        },
+        {
+          "perturbation": "gaussian_noise_sigma50hu",
+          "n_appeared": 1
+        }
+      ],
+      "elapsed_s": 17.196086168289185
+    },
+    {
+      "case_id": "subject002",
+      "n_baseline_daughters": 6,
+      "case_stability_score": 0.9298333333333334,
+      "spurious_appearance_rate_when_empty": null,
+      "detections": [
+        {
+          "instance_id": "branch_001",
+          "ostium_xyz_mm": [
+            -15.41549642086029,
+            8.669701218605034,
+            1525.1900146484375
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_002",
+          "ostium_xyz_mm": [
+            -3.41549642086029,
+            10.269701218605036,
+            1517.1900146484375
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_003",
+          "ostium_xyz_mm": [
+            -5.015496420860291,
+            -2.5302987813949613,
+            1465.1900146484375
+          ],
+          "stability": 0.789,
+          "disappeared_in": [
+            "min_length_mm+10%",
+            "min_length_mm+20%",
+            "gaussian_noise_sigma30hu",
+            "gaussian_noise_sigma50hu"
+          ],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_004",
+          "ostium_xyz_mm": [
+            -7.41549642086029,
+            7.869701218605037,
+            1541.1900146484375
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_005",
+          "ostium_xyz_mm": [
+            -1.815496420860292,
+            -12.130298781394963,
+            1462.7900146484376
+          ],
+          "stability": 0.895,
+          "disappeared_in": [
+            "confidence_threshold+20%"
+          ],
+          "moved_in": [
+            "gaussian_noise_sigma50hu"
+          ]
+        },
+        {
+          "instance_id": "branch_006",
+          "ostium_xyz_mm": [
+            -5.815496420860292,
+            12.669701218605034,
+            1557.1900146484375
+          ],
+          "stability": 0.895,
+          "disappeared_in": [
+            "confidence_threshold+10%",
+            "confidence_threshold+20%"
+          ],
+          "moved_in": []
+        }
+      ],
+      "appearance_events": [],
+      "elapsed_s": 17.536301851272583
+    },
+    {
+      "case_id": "subject003",
+      "n_baseline_daughters": 7,
+      "case_stability_score": 0.9472857142857143,
+      "spurious_appearance_rate_when_empty": null,
+      "detections": [
+        {
+          "instance_id": "branch_001",
+          "ostium_xyz_mm": [
+            21.91699464321136,
+            -4.893999457359321,
+            1421.4599853515626
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_002",
+          "ostium_xyz_mm": [
+            13.91699464321136,
+            8.70600054264068,
+            1503.0599853515625
+          ],
+          "stability": 0.947,
+          "disappeared_in": [
+            "gaussian_noise_sigma15hu"
+          ],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_003",
+          "ostium_xyz_mm": [
+            3.516994643211362,
+            5.5060005426406775,
+            1478.2599853515626
+          ],
+          "stability": 0.895,
+          "disappeared_in": [
+            "flood_fraction_range+20%",
+            "gaussian_noise_sigma30hu"
+          ],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_004",
+          "ostium_xyz_mm": [
+            20.31699464321136,
+            3.906000542640683,
+            1526.2599853515626
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_005",
+          "ostium_xyz_mm": [
+            20.31699464321136,
+            7.906000542640683,
+            1542.2599853515626
+          ],
+          "stability": 0.842,
+          "disappeared_in": [
+            "flood_fraction_range+20%",
+            "gaussian_noise_sigma30hu",
+            "gaussian_noise_sigma50hu"
+          ],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_006",
+          "ostium_xyz_mm": [
+            -0.4830053567886381,
+            3.906000542640683,
+            1507.0599853515625
+          ],
+          "stability": 0.947,
+          "disappeared_in": [
+            "gaussian_noise_sigma15hu"
+          ],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_007",
+          "ostium_xyz_mm": [
+            26.71699464321136,
+            10.306000542640682,
+            1550.2599853515626
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        }
+      ],
+      "appearance_events": [
+        {
+          "perturbation": "gaussian_noise_sigma50hu",
+          "n_appeared": 3
+        }
+      ],
+      "elapsed_s": 29.491333961486816
+    },
+    {
+      "case_id": "subject004",
+      "n_baseline_daughters": 6,
+      "case_stability_score": 0.8683333333333333,
+      "spurious_appearance_rate_when_empty": null,
+      "detections": [
+        {
+          "instance_id": "branch_001",
+          "ostium_xyz_mm": [
+            16.47499389648437,
+            20.71089630126953,
+            1607.82001953125
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_002",
+          "ostium_xyz_mm": [
+            3.6749938964843736,
+            18.31089630126953,
+            1613.42001953125
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_003",
+          "ostium_xyz_mm": [
+            11.67499389648437,
+            7.110896301269527,
+            1540.6200195312501
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_004",
+          "ostium_xyz_mm": [
+            10.074993896484372,
+            -1.6891036987304773,
+            1553.42001953125
+          ],
+          "stability": 0.842,
+          "disappeared_in": [
+            "gaussian_noise_sigma30hu"
+          ],
+          "moved_in": [
+            "flood_fraction_range+20%",
+            "gaussian_noise_sigma50hu"
+          ]
+        },
+        {
+          "instance_id": "branch_005",
+          "ostium_xyz_mm": [
+            17.27499389648437,
+            19.110896301269527,
+            1643.82001953125
+          ],
+          "stability": 0.789,
+          "disappeared_in": [
+            "flood_fraction_range+20%",
+            "confidence_threshold+10%",
+            "confidence_threshold+20%"
+          ],
+          "moved_in": [
+            "gaussian_noise_sigma30hu"
+          ]
+        },
+        {
+          "instance_id": "branch_006",
+          "ostium_xyz_mm": [
+            13.274993896484371,
+            15.910896301269524,
+            1627.82001953125
+          ],
+          "stability": 0.579,
+          "disappeared_in": [
+            "flood_budget_mm-20%",
+            "flood_fraction_range-20%",
+            "flood_fraction_range-10%",
+            "flood_fraction_range+20%",
+            "confidence_threshold+10%",
+            "confidence_threshold+20%",
+            "gaussian_noise_sigma15hu",
+            "gaussian_noise_sigma30hu"
+          ],
+          "moved_in": []
+        }
+      ],
+      "appearance_events": [
+        {
+          "perturbation": "flood_fraction_range+20%",
+          "n_appeared": 1
+        },
+        {
+          "perturbation": "gaussian_noise_sigma30hu",
+          "n_appeared": 3
+        }
+      ],
+      "elapsed_s": 18.783193826675415
+    },
+    {
+      "case_id": "subject005",
+      "n_baseline_daughters": 7,
+      "case_stability_score": 0.9472857142857143,
+      "spurious_appearance_rate_when_empty": null,
+      "detections": [
+        {
+          "instance_id": "branch_001",
+          "ostium_xyz_mm": [
+            38.03400843143463,
+            17.199996042251584,
+            1429.77998046875
+          ],
+          "stability": 0.684,
+          "disappeared_in": [
+            "flood_budget_mm+20%",
+            "flood_fraction_range-20%",
+            "flood_fraction_range-10%",
+            "flood_fraction_range+10%",
+            "flood_fraction_range+20%",
+            "gaussian_noise_sigma30hu"
+          ],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_002",
+          "ostium_xyz_mm": [
+            31.634008431434623,
+            8.39999604225158,
+            1492.97998046875
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_003",
+          "ostium_xyz_mm": [
+            51.63400843143462,
+            15.599996042251583,
+            1498.5799804687501
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_004",
+          "ostium_xyz_mm": [
+            44.43400843143463,
+            5.999996042251581,
+            1512.17998046875
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_005",
+          "ostium_xyz_mm": [
+            32.43400843143463,
+            12.39999604225158,
+            1504.17998046875
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_006",
+          "ostium_xyz_mm": [
+            47.63400843143462,
+            12.39999604225158,
+            1526.5799804687501
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_007",
+          "ostium_xyz_mm": [
+            36.43400843143463,
+            0.3999960422515798,
+            1439.37998046875
+          ],
+          "stability": 0.947,
+          "disappeared_in": [
+            "gaussian_noise_sigma50hu"
+          ],
+          "moved_in": []
+        }
+      ],
+      "appearance_events": [
+        {
+          "perturbation": "flood_budget_mm-20%",
+          "n_appeared": 3
+        },
+        {
+          "perturbation": "flood_budget_mm-10%",
+          "n_appeared": 3
+        }
+      ],
+      "elapsed_s": 26.60705304145813
+    },
+    {
+      "case_id": "subject006",
+      "n_baseline_daughters": 7,
+      "case_stability_score": 0.8421428571428571,
+      "spurious_appearance_rate_when_empty": null,
+      "detections": [
+        {
+          "instance_id": "branch_001",
+          "ostium_xyz_mm": [
+            33.53500286340713,
+            -30.23280009031296,
+            1501.3200439453126
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_002",
+          "ostium_xyz_mm": [
+            23.13500286340713,
+            -15.832800090312961,
+            1582.1200439453125
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_003",
+          "ostium_xyz_mm": [
+            28.735002863407132,
+            -17.432800090312963,
+            1605.3200439453126
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_004",
+          "ostium_xyz_mm": [
+            18.335002863407126,
+            -19.83280009031296,
+            1482.9200439453125
+          ],
+          "stability": 0.737,
+          "disappeared_in": [
+            "flood_budget_mm-20%",
+            "flood_budget_mm-10%",
+            "gaussian_noise_sigma15hu",
+            "gaussian_noise_sigma30hu",
+            "gaussian_noise_sigma50hu"
+          ],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_005",
+          "ostium_xyz_mm": [
+            9.53500286340713,
+            -20.63280009031296,
+            1585.3200439453126
+          ],
+          "stability": 0.947,
+          "disappeared_in": [
+            "gaussian_noise_sigma50hu"
+          ],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_006",
+          "ostium_xyz_mm": [
+            35.13500286340713,
+            7.3671999096870415,
+            1635.7200439453127
+          ],
+          "stability": 0.579,
+          "disappeared_in": [
+            "flood_budget_mm-20%",
+            "flood_budget_mm-10%",
+            "flood_fraction_range-20%",
+            "flood_fraction_range-10%",
+            "flood_fraction_range+10%",
+            "min_length_mm+10%",
+            "min_length_mm+20%",
+            "gaussian_noise_sigma50hu"
+          ],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_007",
+          "ostium_xyz_mm": [
+            32.73500286340713,
+            -11.832800090312961,
+            1627.7200439453125
+          ],
+          "stability": 0.632,
+          "disappeared_in": [
+            "flood_budget_mm-20%",
+            "flood_budget_mm-10%",
+            "flood_fraction_range-20%",
+            "flood_fraction_range-10%",
+            "flood_fraction_range+10%",
+            "confidence_threshold+10%",
+            "confidence_threshold+20%"
+          ],
+          "moved_in": []
+        }
+      ],
+      "appearance_events": [
+        {
+          "perturbation": "flood_budget_mm-20%",
+          "n_appeared": 2
+        },
+        {
+          "perturbation": "flood_budget_mm-10%",
+          "n_appeared": 2
+        },
+        {
+          "perturbation": "gaussian_noise_sigma15hu",
+          "n_appeared": 4
+        },
+        {
+          "perturbation": "gaussian_noise_sigma30hu",
+          "n_appeared": 2
+        }
+      ],
+      "elapsed_s": 32.24411416053772
+    },
+    {
+      "case_id": "subject007",
+      "n_baseline_daughters": 2,
+      "case_stability_score": 0.9735,
+      "spurious_appearance_rate_when_empty": null,
+      "detections": [
+        {
+          "instance_id": "branch_001",
+          "ostium_xyz_mm": [
+            24.734009075164792,
+            -4.046998977661136,
+            -1165.2700439453124
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_002",
+          "ostium_xyz_mm": [
+            22.33400907516479,
+            -1.6469989776611342,
+            -1141.2700439453124
+          ],
+          "stability": 0.947,
+          "disappeared_in": [],
+          "moved_in": [
+            "gaussian_noise_sigma30hu"
+          ]
+        }
+      ],
+      "appearance_events": [
+        {
+          "perturbation": "gaussian_noise_sigma30hu",
+          "n_appeared": 2
+        },
+        {
+          "perturbation": "gaussian_noise_sigma50hu",
+          "n_appeared": 1
+        }
+      ],
+      "elapsed_s": 17.35938000679016
+    },
+    {
+      "case_id": "subject008",
+      "n_baseline_daughters": 3,
+      "case_stability_score": 0.9823333333333334,
+      "spurious_appearance_rate_when_empty": null,
+      "detections": [
+        {
+          "instance_id": "branch_001",
+          "ostium_xyz_mm": [
+            6.795997047424315,
+            9.82399851083754,
+            1487.8500244140625
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_002",
+          "ostium_xyz_mm": [
+            -5.2040029525756815,
+            7.423998510837549,
+            1493.4500244140625
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_003",
+          "ostium_xyz_mm": [
+            8.395997047424316,
+            9.82399851083754,
+            1523.8500244140625
+          ],
+          "stability": 0.947,
+          "disappeared_in": [
+            "confidence_threshold+20%"
+          ],
+          "moved_in": []
+        }
+      ],
+      "appearance_events": [
+        {
+          "perturbation": "flood_budget_mm-20%",
+          "n_appeared": 3
+        },
+        {
+          "perturbation": "flood_budget_mm-10%",
+          "n_appeared": 2
+        },
+        {
+          "perturbation": "flood_fraction_range+10%",
+          "n_appeared": 1
+        },
+        {
+          "perturbation": "confidence_threshold-20%",
+          "n_appeared": 2
+        },
+        {
+          "perturbation": "confidence_threshold-10%",
+          "n_appeared": 2
+        },
+        {
+          "perturbation": "gaussian_noise_sigma15hu",
+          "n_appeared": 2
+        },
+        {
+          "perturbation": "gaussian_noise_sigma30hu",
+          "n_appeared": 1
+        },
+        {
+          "perturbation": "gaussian_noise_sigma50hu",
+          "n_appeared": 4
+        }
+      ],
+      "elapsed_s": 33.104004859924316
+    },
+    {
+      "case_id": "subject009",
+      "n_baseline_daughters": 6,
+      "case_stability_score": 0.9736666666666668,
+      "spurious_appearance_rate_when_empty": null,
+      "detections": [
+        {
+          "instance_id": "branch_001",
+          "ostium_xyz_mm": [
+            19.726998019218442,
+            3.575998258590694,
+            1467.8399658203125
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_002",
+          "ostium_xyz_mm": [
+            6.126998019218441,
+            7.575998258590694,
+            1403.8399658203125
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_003",
+          "ostium_xyz_mm": [
+            5.326998019218436,
+            -2.0240017414093074,
+            1479.8399658203125
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_004",
+          "ostium_xyz_mm": [
+            2.1269980192184406,
+            3.575998258590694,
+            1429.4399658203126
+          ],
+          "stability": 0.842,
+          "disappeared_in": [
+            "flood_fraction_range+10%",
+            "flood_fraction_range+20%",
+            "gaussian_noise_sigma30hu"
+          ],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_005",
+          "ostium_xyz_mm": [
+            9.326998019218436,
+            7.575998258590694,
+            1405.4399658203126
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_006",
+          "ostium_xyz_mm": [
+            23.726998019218442,
+            1.9759982585906926,
+            1495.8399658203125
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        }
+      ],
+      "appearance_events": [
+        {
+          "perturbation": "confidence_threshold-20%",
+          "n_appeared": 1
+        },
+        {
+          "perturbation": "confidence_threshold-10%",
+          "n_appeared": 1
+        },
+        {
+          "perturbation": "gaussian_noise_sigma30hu",
+          "n_appeared": 1
+        }
+      ],
+      "elapsed_s": 19.958873987197876
+    },
+    {
+      "case_id": "subject010",
+      "n_baseline_daughters": 5,
+      "case_stability_score": 0.9263999999999999,
+      "spurious_appearance_rate_when_empty": null,
+      "detections": [
+        {
+          "instance_id": "branch_001",
+          "ostium_xyz_mm": [
+            -4.147001349926001,
+            -16.387997114658358,
+            -1033.1700195312499
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_002",
+          "ostium_xyz_mm": [
+            14.252998650074002,
+            -12.387997114658358,
+            -1043.57001953125
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_003",
+          "ostium_xyz_mm": [
+            5.452998650074001,
+            -14.787997114658356,
+            -1014.77001953125
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_004",
+          "ostium_xyz_mm": [
+            5.452998650074001,
+            -10.787997114658356,
+            -1004.3700195312499
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_005",
+          "ostium_xyz_mm": [
+            7.052998650074002,
+            -13.187997114658355,
+            -1081.1700195312499
+          ],
+          "stability": 0.632,
+          "disappeared_in": [
+            "flood_fraction_range-20%",
+            "flood_fraction_range-10%",
+            "flood_fraction_range+10%",
+            "min_length_mm+10%",
+            "min_length_mm+20%",
+            "gaussian_noise_sigma30hu",
+            "gaussian_noise_sigma50hu"
+          ],
+          "moved_in": []
+        }
+      ],
+      "appearance_events": [
+        {
+          "perturbation": "flood_budget_mm-20%",
+          "n_appeared": 1
+        },
+        {
+          "perturbation": "confidence_threshold-20%",
+          "n_appeared": 1
+        },
+        {
+          "perturbation": "gaussian_noise_sigma15hu",
+          "n_appeared": 1
+        }
+      ],
+      "elapsed_s": 44.35436987876892
+    },
+    {
+      "case_id": "subject011",
+      "n_baseline_daughters": 5,
+      "case_stability_score": 1.0,
+      "spurious_appearance_rate_when_empty": null,
+      "detections": [
+        {
+          "instance_id": "branch_001",
+          "ostium_xyz_mm": [
+            2.1960091590881277,
+            -4.758993577957153,
+            1560.1899658203126
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_002",
+          "ostium_xyz_mm": [
+            15.796009159088129,
+            0.8410064220428453,
+            1620.1899658203126
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_003",
+          "ostium_xyz_mm": [
+            24.59600915908813,
+            -6.358993577957154,
+            1625.7899658203125
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_004",
+          "ostium_xyz_mm": [
+            19.79600915908813,
+            -5.558993577957157,
+            1649.7899658203125
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_005",
+          "ostium_xyz_mm": [
+            10.996009159088132,
+            -7.9589935779571555,
+            1626.5899658203125
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        }
+      ],
+      "appearance_events": [
+        {
+          "perturbation": "flood_budget_mm-20%",
+          "n_appeared": 1
+        },
+        {
+          "perturbation": "flood_budget_mm-10%",
+          "n_appeared": 1
+        },
+        {
+          "perturbation": "flood_fraction_range+10%",
+          "n_appeared": 1
+        },
+        {
+          "perturbation": "flood_fraction_range+20%",
+          "n_appeared": 1
+        },
+        {
+          "perturbation": "confidence_threshold-20%",
+          "n_appeared": 1
+        },
+        {
+          "perturbation": "confidence_threshold-10%",
+          "n_appeared": 1
+        },
+        {
+          "perturbation": "gaussian_noise_sigma15hu",
+          "n_appeared": 1
+        }
+      ],
+      "elapsed_s": 17.668135166168213
+    },
+    {
+      "case_id": "subject012",
+      "n_baseline_daughters": 10,
+      "case_stability_score": 0.9053000000000001,
+      "spurious_appearance_rate_when_empty": null,
+      "detections": [
+        {
+          "instance_id": "branch_001",
+          "ostium_xyz_mm": [
+            17.8409922003746,
+            23.715992462635036,
+            1438.2499755859376
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_002",
+          "ostium_xyz_mm": [
+            -1.3590077996254024,
+            22.115992462635035,
+            1441.4499755859376
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_003",
+          "ostium_xyz_mm": [
+            -2.1590077996253996,
+            16.515992462635033,
+            1368.6499755859375
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_004",
+          "ostium_xyz_mm": [
+            4.240992200374599,
+            18.115992462635035,
+            1344.6499755859375
+          ],
+          "stability": 0.737,
+          "disappeared_in": [
+            "flood_budget_mm+10%",
+            "flood_budget_mm+20%",
+            "gaussian_noise_sigma15hu",
+            "gaussian_noise_sigma30hu",
+            "gaussian_noise_sigma50hu"
+          ],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_005",
+          "ostium_xyz_mm": [
+            -2.959007799625404,
+            16.515992462635033,
+            1347.0499755859375
+          ],
+          "stability": 0.842,
+          "disappeared_in": [
+            "min_length_mm+10%",
+            "min_length_mm+20%",
+            "gaussian_noise_sigma30hu"
+          ],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_006",
+          "ostium_xyz_mm": [
+            7.440992200374598,
+            22.115992462635035,
+            1470.2499755859376
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_007",
+          "ostium_xyz_mm": [
+            6.640992200374598,
+            18.91599246263503,
+            1371.8499755859375
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_008",
+          "ostium_xyz_mm": [
+            6.640992200374598,
+            16.515992462635033,
+            1451.8499755859375
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_009",
+          "ostium_xyz_mm": [
+            2.6409922003745976,
+            24.515992462635033,
+            1405.4499755859376
+          ],
+          "stability": 0.842,
+          "disappeared_in": [
+            "flood_budget_mm+10%",
+            "flood_budget_mm+20%",
+            "gaussian_noise_sigma50hu"
+          ],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_010",
+          "ostium_xyz_mm": [
+            5.0409922003746,
+            3.715992462635036,
+            1363.8499755859375
+          ],
+          "stability": 0.632,
+          "disappeared_in": [
+            "flood_budget_mm+10%",
+            "flood_budget_mm+20%",
+            "confidence_threshold+10%",
+            "confidence_threshold+20%",
+            "gaussian_noise_sigma15hu",
+            "gaussian_noise_sigma30hu",
+            "gaussian_noise_sigma50hu"
+          ],
+          "moved_in": []
+        }
+      ],
+      "appearance_events": [
+        {
+          "perturbation": "flood_budget_mm-20%",
+          "n_appeared": 1
+        },
+        {
+          "perturbation": "gaussian_noise_sigma15hu",
+          "n_appeared": 1
+        },
+        {
+          "perturbation": "gaussian_noise_sigma30hu",
+          "n_appeared": 1
+        },
+        {
+          "perturbation": "gaussian_noise_sigma50hu",
+          "n_appeared": 1
+        }
+      ],
+      "elapsed_s": 23.532849073410034
+    },
+    {
+      "case_id": "subject013",
+      "n_baseline_daughters": 8,
+      "case_stability_score": 0.973625,
+      "spurious_appearance_rate_when_empty": null,
+      "detections": [
+        {
+          "instance_id": "branch_001",
+          "ostium_xyz_mm": [
+            7.0699992179870605,
+            24.155996644496913,
+            1580.9300537109375
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_002",
+          "ostium_xyz_mm": [
+            -0.13000078201293874,
+            16.955996644496913,
+            1600.9300537109375
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_003",
+          "ostium_xyz_mm": [
+            7.0699992179870605,
+            18.555996644496915,
+            1601.7300537109375
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_004",
+          "ostium_xyz_mm": [
+            3.0699992179870605,
+            12.15599664449691,
+            1588.1300537109375
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_005",
+          "ostium_xyz_mm": [
+            -9.73000078201294,
+            16.15599664449691,
+            1580.9300537109375
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_006",
+          "ostium_xyz_mm": [
+            4.669999217987058,
+            19.355996644496912,
+            1608.1300537109375
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_007",
+          "ostium_xyz_mm": [
+            3.8699992179870613,
+            -2.2440033555030894,
+            1521.7300537109375
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_008",
+          "ostium_xyz_mm": [
+            2.26999921798706,
+            15.355996644496912,
+            1539.3300537109376
+          ],
+          "stability": 0.789,
+          "disappeared_in": [
+            "flood_budget_mm+10%",
+            "flood_budget_mm+20%",
+            "gaussian_noise_sigma15hu",
+            "gaussian_noise_sigma30hu"
+          ],
+          "moved_in": []
+        }
+      ],
+      "appearance_events": [
+        {
+          "perturbation": "flood_budget_mm-20%",
+          "n_appeared": 2
+        },
+        {
+          "perturbation": "gaussian_noise_sigma50hu",
+          "n_appeared": 2
+        }
+      ],
+      "elapsed_s": 20.777455806732178
+    },
+    {
+      "case_id": "subject014",
+      "n_baseline_daughters": 3,
+      "case_stability_score": 1.0,
+      "spurious_appearance_rate_when_empty": null,
+      "detections": [
+        {
+          "instance_id": "branch_001",
+          "ostium_xyz_mm": [
+            11.447999453544615,
+            10.593997287750241,
+            1465.4600341796875
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_002",
+          "ostium_xyz_mm": [
+            -2.952000546455384,
+            7.3939972877502385,
+            1476.6600341796875
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_003",
+          "ostium_xyz_mm": [
+            9.047999453544616,
+            4.99399728775024,
+            1490.2600341796876
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        }
+      ],
+      "appearance_events": [],
+      "elapsed_s": 17.156081914901733
+    },
+    {
+      "case_id": "subject015",
+      "n_baseline_daughters": 10,
+      "case_stability_score": 0.9315,
+      "spurious_appearance_rate_when_empty": null,
+      "detections": [
+        {
+          "instance_id": "branch_001",
+          "ostium_xyz_mm": [
+            10.498996829986567,
+            11.458000600337975,
+            1497.6299560546875
+          ],
+          "stability": 0.842,
+          "disappeared_in": [
+            "flood_budget_mm+10%",
+            "flood_budget_mm+20%",
+            "gaussian_noise_sigma30hu"
+          ],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_002",
+          "ostium_xyz_mm": [
+            28.098996829986568,
+            23.458000600337975,
+            1536.8299560546875
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_003",
+          "ostium_xyz_mm": [
+            17.69899682998657,
+            37.05800060033798,
+            1564.0299560546875
+          ],
+          "stability": 0.789,
+          "disappeared_in": [
+            "flood_budget_mm+10%",
+            "flood_budget_mm+20%",
+            "gaussian_noise_sigma50hu"
+          ],
+          "moved_in": [
+            "gaussian_noise_sigma30hu"
+          ]
+        },
+        {
+          "instance_id": "branch_004",
+          "ostium_xyz_mm": [
+            3.2989968299865637,
+            -4.541999399662025,
+            1472.0299560546875
+          ],
+          "stability": 0.947,
+          "disappeared_in": [
+            "gaussian_noise_sigma50hu"
+          ],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_005",
+          "ostium_xyz_mm": [
+            17.69899682998657,
+            -8.541999399662018,
+            1478.4299560546876
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_006",
+          "ostium_xyz_mm": [
+            10.498996829986567,
+            -11.74199939966202,
+            1447.2299560546876
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_007",
+          "ostium_xyz_mm": [
+            10.498996829986567,
+            17.858000600337974,
+            1540.8299560546875
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_008",
+          "ostium_xyz_mm": [
+            17.69899682998657,
+            13.858000600337974,
+            1549.6299560546875
+          ],
+          "stability": 0.947,
+          "disappeared_in": [
+            "confidence_threshold+20%"
+          ],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_009",
+          "ostium_xyz_mm": [
+            2.4989968299865666,
+            -12.541999399662018,
+            1445.6299560546875
+          ],
+          "stability": 0.895,
+          "disappeared_in": [
+            "confidence_threshold+20%",
+            "gaussian_noise_sigma50hu"
+          ],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_010",
+          "ostium_xyz_mm": [
+            20.098996829986568,
+            15.458000600337975,
+            1562.4299560546876
+          ],
+          "stability": 0.895,
+          "disappeared_in": [
+            "confidence_threshold+10%",
+            "confidence_threshold+20%"
+          ],
+          "moved_in": []
+        }
+      ],
+      "appearance_events": [
+        {
+          "perturbation": "gaussian_noise_sigma30hu",
+          "n_appeared": 1
+        },
+        {
+          "perturbation": "gaussian_noise_sigma50hu",
+          "n_appeared": 1
+        }
+      ],
+      "elapsed_s": 31.81886076927185
+    },
+    {
+      "case_id": "subject016",
+      "n_baseline_daughters": 4,
+      "case_stability_score": 0.8815,
+      "spurious_appearance_rate_when_empty": null,
+      "detections": [
+        {
+          "instance_id": "branch_001",
+          "ostium_xyz_mm": [
+            16.43222656249999,
+            -159.4677734375,
+            398.0
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_002",
+          "ostium_xyz_mm": [
+            18.832226562499997,
+            -167.4677734375,
+            376.4
+          ],
+          "stability": 1.0,
+          "disappeared_in": [],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_003",
+          "ostium_xyz_mm": [
+            5.232226562499996,
+            -167.4677734375,
+            355.59999999999997
+          ],
+          "stability": 0.947,
+          "disappeared_in": [
+            "gaussian_noise_sigma15hu"
+          ],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_004",
+          "ostium_xyz_mm": [
+            13.232226562499996,
+            -153.8677734375,
+            414.0
+          ],
+          "stability": 0.579,
+          "disappeared_in": [
+            "flood_budget_mm-20%",
+            "min_length_mm+10%",
+            "min_length_mm+20%",
+            "confidence_threshold+10%",
+            "confidence_threshold+20%",
+            "gaussian_noise_sigma15hu",
+            "gaussian_noise_sigma30hu",
+            "gaussian_noise_sigma50hu"
+          ],
+          "moved_in": []
+        }
+      ],
+      "appearance_events": [
+        {
+          "perturbation": "flood_budget_mm-20%",
+          "n_appeared": 4
+        }
+      ],
+      "elapsed_s": 33.316964864730835
+    },
+    {
+      "case_id": "subject017",
+      "n_baseline_daughters": 0,
+      "case_stability_score": null,
+      "spurious_appearance_rate_when_empty": 0.0,
+      "detections": [],
+      "appearance_events": [],
+      "elapsed_s": 3.3698220252990723
+    },
+    {
+      "case_id": "subject018",
+      "n_baseline_daughters": 7,
+      "case_stability_score": 0.6317142857142857,
+      "spurious_appearance_rate_when_empty": null,
+      "detections": [
+        {
+          "instance_id": "branch_001",
+          "ostium_xyz_mm": [
+            27.111718749999994,
+            -130.18828125,
+            1043.3000122070314
+          ],
+          "stability": 0.632,
+          "disappeared_in": [
+            "flood_fraction_range-20%",
+            "flood_fraction_range+10%",
+            "flood_fraction_range+20%",
+            "gaussian_noise_sigma15hu",
+            "gaussian_noise_sigma30hu",
+            "gaussian_noise_sigma50hu"
+          ],
+          "moved_in": [
+            "flood_fraction_range-10%"
+          ]
+        },
+        {
+          "instance_id": "branch_002",
+          "ostium_xyz_mm": [
+            37.51171874999999,
+            -168.58828125000002,
+            939.3000122070313
+          ],
+          "stability": 0.632,
+          "disappeared_in": [
+            "flood_fraction_range-20%",
+            "flood_fraction_range+10%",
+            "flood_fraction_range+20%",
+            "min_length_mm+10%",
+            "min_length_mm+20%",
+            "gaussian_noise_sigma30hu",
+            "gaussian_noise_sigma50hu"
+          ],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_003",
+          "ostium_xyz_mm": [
+            12.711718749999996,
+            -218.98828125,
+            1070.5000122070314
+          ],
+          "stability": 0.632,
+          "disappeared_in": [
+            "flood_fraction_range-20%",
+            "flood_fraction_range-10%",
+            "flood_fraction_range+10%",
+            "flood_fraction_range+20%",
+            "min_length_mm+20%",
+            "gaussian_noise_sigma30hu",
+            "gaussian_noise_sigma50hu"
+          ],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_004",
+          "ostium_xyz_mm": [
+            27.91171874999999,
+            -198.18828125,
+            842.5000122070313
+          ],
+          "stability": 0.684,
+          "disappeared_in": [
+            "flood_fraction_range+10%",
+            "flood_fraction_range+20%",
+            "confidence_threshold+20%",
+            "gaussian_noise_sigma15hu",
+            "gaussian_noise_sigma30hu",
+            "gaussian_noise_sigma50hu"
+          ],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_005",
+          "ostium_xyz_mm": [
+            35.111718749999994,
+            -130.18828125,
+            1036.9000122070313
+          ],
+          "stability": 0.684,
+          "disappeared_in": [
+            "flood_fraction_range-20%",
+            "flood_fraction_range-10%",
+            "confidence_threshold+20%",
+            "gaussian_noise_sigma15hu",
+            "gaussian_noise_sigma30hu",
+            "gaussian_noise_sigma50hu"
+          ],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_006",
+          "ostium_xyz_mm": [
+            -13.688281250000003,
+            -205.38828125,
+            1084.1000122070313
+          ],
+          "stability": 0.526,
+          "disappeared_in": [
+            "flood_fraction_range-20%",
+            "flood_fraction_range-10%",
+            "flood_fraction_range+10%",
+            "flood_fraction_range+20%",
+            "min_length_mm+20%",
+            "confidence_threshold+10%",
+            "confidence_threshold+20%",
+            "gaussian_noise_sigma30hu",
+            "gaussian_noise_sigma50hu"
+          ],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_007",
+          "ostium_xyz_mm": [
+            31.91171874999999,
+            -140.58828125000002,
+            973.7000122070312
+          ],
+          "stability": 0.632,
+          "disappeared_in": [
+            "flood_fraction_range-20%",
+            "flood_fraction_range-10%",
+            "confidence_threshold+10%",
+            "confidence_threshold+20%",
+            "gaussian_noise_sigma15hu",
+            "gaussian_noise_sigma30hu",
+            "gaussian_noise_sigma50hu"
+          ],
+          "moved_in": []
+        }
+      ],
+      "appearance_events": [
+        {
+          "perturbation": "flood_fraction_range-20%",
+          "n_appeared": 8
+        },
+        {
+          "perturbation": "flood_fraction_range-10%",
+          "n_appeared": 3
+        },
+        {
+          "perturbation": "flood_fraction_range+10%",
+          "n_appeared": 5
+        },
+        {
+          "perturbation": "flood_fraction_range+20%",
+          "n_appeared": 5
+        },
+        {
+          "perturbation": "confidence_threshold-20%",
+          "n_appeared": 4
+        },
+        {
+          "perturbation": "confidence_threshold-10%",
+          "n_appeared": 3
+        },
+        {
+          "perturbation": "gaussian_noise_sigma15hu",
+          "n_appeared": 3
+        },
+        {
+          "perturbation": "gaussian_noise_sigma30hu",
+          "n_appeared": 2
+        },
+        {
+          "perturbation": "gaussian_noise_sigma50hu",
+          "n_appeared": 5
+        }
+      ],
+      "elapsed_s": 147.12863302230835
+    },
+    {
+      "case_id": "subject019",
+      "n_baseline_daughters": 3,
+      "case_stability_score": 0.8769999999999999,
+      "spurious_appearance_rate_when_empty": null,
+      "detections": [
+        {
+          "instance_id": "branch_001",
+          "ostium_xyz_mm": [
+            12.833789062499996,
+            -168.66621093749998,
+            281.99999847412107
+          ],
+          "stability": 0.947,
+          "disappeared_in": [
+            "flood_fraction_range+20%"
+          ],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_002",
+          "ostium_xyz_mm": [
+            5.633789062499993,
+            -174.26621093749998,
+            283.5999984741211
+          ],
+          "stability": 0.842,
+          "disappeared_in": [
+            "flood_fraction_range+20%",
+            "confidence_threshold+10%",
+            "confidence_threshold+20%"
+          ],
+          "moved_in": []
+        },
+        {
+          "instance_id": "branch_003",
+          "ostium_xyz_mm": [
+            18.433789062499997,
+            -182.26621093749998,
+            302.7999984741211
+          ],
+          "stability": 0.842,
+          "disappeared_in": [
+            "confidence_threshold+10%",
+            "confidence_threshold+20%",
+            "gaussian_noise_sigma15hu"
+          ],
+          "moved_in": []
+        }
+      ],
+      "appearance_events": [],
+      "elapsed_s": 6.209627866744995
+    },
+    {
+      "case_id": "subject020",
+      "n_baseline_daughters": 0,
+      "case_stability_score": null,
+      "spurious_appearance_rate_when_empty": 0.05263157894736842,
+      "detections": [],
+      "appearance_events": [
+        {
+          "perturbation": "gaussian_noise_sigma50hu",
+          "n_appeared": 1
+        }
+      ],
+      "elapsed_s": 7.231744766235352
+    }
+  ]
+}

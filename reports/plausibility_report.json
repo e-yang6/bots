@@ -1,0 +1,1044 @@
+{
+  "summary": {
+    "n_cases": 20,
+    "n_total_detections": 94,
+    "detections_per_10cm": {
+      "mean": 3.0615477522725043,
+      "median": 3.407493760541332,
+      "min": 0.0,
+      "max": 6.490009109849897
+    },
+    "radius_mm": {
+      "mean": 1.8713061328263996,
+      "median": 2.093839728832245,
+      "p05": 0.7424725711345674,
+      "p95": 3.070865297317505
+    },
+    "angle_to_centerline_deg": {
+      "mean": 47.2912114011475,
+      "median": 41.59963623798947,
+      "p05": 13.275086575328372,
+      "p95": 87.07645359156619
+    },
+    "fraction_touching_cap": 0.02127659574468085
+  },
+  "case_flags": [
+    {
+      "case_id": "subject017",
+      "reason": "zero_detections",
+      "detail": null
+    },
+    {
+      "case_id": "subject020",
+      "reason": "zero_detections",
+      "detail": null
+    }
+  ],
+  "detection_flags": [],
+  "cases": [
+    {
+      "case_id": "subject001",
+      "n_daughters": 6,
+      "aortic_length_mm": 139.9040616971729,
+      "detections_per_10cm": 4.288653186486611,
+      "detections": [
+        {
+          "case_id": "subject001",
+          "instance_id": "branch_001",
+          "radius_mm": 0.9085456371307374,
+          "angle_to_centerline_deg": 74.0399187254709,
+          "touches_cap": false,
+          "distance_to_cap_mm": 53.01889957446239,
+          "confidence": 0.9696
+        },
+        {
+          "case_id": "subject001",
+          "instance_id": "branch_002",
+          "radius_mm": 2.356987142562866,
+          "angle_to_centerline_deg": 48.92756266417834,
+          "touches_cap": false,
+          "distance_to_cap_mm": 36.00198700996858,
+          "confidence": 0.8577
+        },
+        {
+          "case_id": "subject001",
+          "instance_id": "branch_003",
+          "radius_mm": 1.7390594720840455,
+          "angle_to_centerline_deg": 74.65740885161507,
+          "touches_cap": false,
+          "distance_to_cap_mm": 44.42226580370502,
+          "confidence": 0.8044
+        },
+        {
+          "case_id": "subject001",
+          "instance_id": "branch_004",
+          "radius_mm": 0.8000003635883333,
+          "angle_to_centerline_deg": 24.529001901941566,
+          "touches_cap": false,
+          "distance_to_cap_mm": 29.63383147687729,
+          "confidence": 0.7666
+        },
+        {
+          "case_id": "subject001",
+          "instance_id": "branch_005",
+          "radius_mm": 2.5148083209991454,
+          "angle_to_centerline_deg": 16.393233297235316,
+          "touches_cap": false,
+          "distance_to_cap_mm": 24.341057077026818,
+          "confidence": 0.5693
+        },
+        {
+          "case_id": "subject001",
+          "instance_id": "branch_006",
+          "radius_mm": 1.1488113045692445,
+          "angle_to_centerline_deg": 13.474851448169094,
+          "touches_cap": false,
+          "distance_to_cap_mm": 19.026618780597836,
+          "confidence": 0.5171
+        }
+      ]
+    },
+    {
+      "case_id": "subject002",
+      "n_daughters": 5,
+      "aortic_length_mm": 151.49906157854184,
+      "detections_per_10cm": 3.3003504760376643,
+      "detections": [
+        {
+          "case_id": "subject002",
+          "instance_id": "branch_001",
+          "radius_mm": 2.2076876401901244,
+          "angle_to_centerline_deg": 68.0314335796949,
+          "touches_cap": false,
+          "distance_to_cap_mm": 56.59068361247125,
+          "confidence": 0.9756
+        },
+        {
+          "case_id": "subject002",
+          "instance_id": "branch_002",
+          "radius_mm": 2.2212883472442626,
+          "angle_to_centerline_deg": 72.28865929716358,
+          "touches_cap": false,
+          "distance_to_cap_mm": 64.36481981443087,
+          "confidence": 0.9602
+        },
+        {
+          "case_id": "subject002",
+          "instance_id": "branch_003",
+          "radius_mm": 2.1903223037719726,
+          "angle_to_centerline_deg": 18.055405555188496,
+          "touches_cap": false,
+          "distance_to_cap_mm": 41.10945190599224,
+          "confidence": 0.6409
+        },
+        {
+          "case_id": "subject002",
+          "instance_id": "branch_004",
+          "radius_mm": 0.9436590909957887,
+          "angle_to_centerline_deg": 19.80052516078556,
+          "touches_cap": false,
+          "distance_to_cap_mm": 14.82382819493464,
+          "confidence": 0.5639
+        },
+        {
+          "case_id": "subject002",
+          "instance_id": "branch_005",
+          "radius_mm": 3.04859938621521,
+          "angle_to_centerline_deg": 19.707768313028957,
+          "touches_cap": false,
+          "distance_to_cap_mm": 24.882488897027848,
+          "confidence": 0.5301
+        }
+      ]
+    },
+    {
+      "case_id": "subject003",
+      "n_daughters": 7,
+      "aortic_length_mm": 194.77773416620215,
+      "detections_per_10cm": 3.593839937591101,
+      "detections": [
+        {
+          "case_id": "subject003",
+          "instance_id": "branch_001",
+          "radius_mm": 2.364782118797302,
+          "angle_to_centerline_deg": 71.9108317648875,
+          "touches_cap": false,
+          "distance_to_cap_mm": 18.430097846084504,
+          "confidence": 0.9442
+        },
+        {
+          "case_id": "subject003",
+          "instance_id": "branch_002",
+          "radius_mm": 2.7100974559783935,
+          "angle_to_centerline_deg": 79.83158950004295,
+          "touches_cap": false,
+          "distance_to_cap_mm": 58.20932839297725,
+          "confidence": 0.9265
+        },
+        {
+          "case_id": "subject003",
+          "instance_id": "branch_003",
+          "radius_mm": 0.7803996443748475,
+          "angle_to_centerline_deg": 65.64958791348265,
+          "touches_cap": false,
+          "distance_to_cap_mm": 75.3115826600309,
+          "confidence": 0.8296
+        },
+        {
+          "case_id": "subject003",
+          "instance_id": "branch_004",
+          "radius_mm": 2.970531368255615,
+          "angle_to_centerline_deg": 35.460062622499194,
+          "touches_cap": false,
+          "distance_to_cap_mm": 35.19756983311567,
+          "confidence": 0.7314
+        },
+        {
+          "case_id": "subject003",
+          "instance_id": "branch_005",
+          "radius_mm": 2.628546619415283,
+          "angle_to_centerline_deg": 28.31986494430039,
+          "touches_cap": false,
+          "distance_to_cap_mm": 18.422120343717438,
+          "confidence": 0.6925
+        },
+        {
+          "case_id": "subject003",
+          "instance_id": "branch_006",
+          "radius_mm": 2.226005697250366,
+          "angle_to_centerline_deg": 30.17520953316825,
+          "touches_cap": false,
+          "distance_to_cap_mm": 57.132054359370265,
+          "confidence": 0.662
+        },
+        {
+          "case_id": "subject003",
+          "instance_id": "branch_007",
+          "radius_mm": 2.553259754180908,
+          "angle_to_centerline_deg": 28.31986494430039,
+          "touches_cap": false,
+          "distance_to_cap_mm": 10.425999952041726,
+          "confidence": 0.6069
+        }
+      ]
+    },
+    {
+      "case_id": "subject004",
+      "n_daughters": 6,
+      "aortic_length_mm": 152.9336845230559,
+      "detections_per_10cm": 3.9232691075951,
+      "detections": [
+        {
+          "case_id": "subject004",
+          "instance_id": "branch_001",
+          "radius_mm": 2.1563161849975585,
+          "angle_to_centerline_deg": 46.185702486049834,
+          "touches_cap": false,
+          "distance_to_cap_mm": 43.43780080375315,
+          "confidence": 0.918
+        },
+        {
+          "case_id": "subject004",
+          "instance_id": "branch_002",
+          "radius_mm": 2.0611095666885375,
+          "angle_to_centerline_deg": 38.50127631046661,
+          "touches_cap": false,
+          "distance_to_cap_mm": 38.09823776258768,
+          "confidence": 0.7843
+        },
+        {
+          "case_id": "subject004",
+          "instance_id": "branch_003",
+          "radius_mm": 0.7679944872856141,
+          "angle_to_centerline_deg": 46.574881442493755,
+          "touches_cap": false,
+          "distance_to_cap_mm": 26.745241240155067,
+          "confidence": 0.7798
+        },
+        {
+          "case_id": "subject004",
+          "instance_id": "branch_004",
+          "radius_mm": 0.7823056519031526,
+          "angle_to_centerline_deg": 24.42157872287597,
+          "touches_cap": false,
+          "distance_to_cap_mm": 38.87507902946727,
+          "confidence": 0.6231
+        },
+        {
+          "case_id": "subject004",
+          "instance_id": "branch_005",
+          "radius_mm": 3.068715715408325,
+          "angle_to_centerline_deg": 22.725955204279146,
+          "touches_cap": false,
+          "distance_to_cap_mm": 8.028327491227458,
+          "confidence": 0.5336
+        },
+        {
+          "case_id": "subject004",
+          "instance_id": "branch_006",
+          "radius_mm": 3.0414086818695067,
+          "angle_to_centerline_deg": 12.534012859839834,
+          "touches_cap": false,
+          "distance_to_cap_mm": 23.522816475169467,
+          "confidence": 0.5027
+        }
+      ]
+    },
+    {
+      "case_id": "subject005",
+      "n_daughters": 7,
+      "aortic_length_mm": 161.79430380802216,
+      "detections_per_10cm": 4.326481115370962,
+      "detections": [
+        {
+          "case_id": "subject005",
+          "instance_id": "branch_001",
+          "radius_mm": 0.7233023583889009,
+          "angle_to_centerline_deg": 76.72266211679867,
+          "touches_cap": false,
+          "distance_to_cap_mm": 26.098086586122854,
+          "confidence": 0.982
+        },
+        {
+          "case_id": "subject005",
+          "instance_id": "branch_002",
+          "radius_mm": 1.1055283784866334,
+          "angle_to_centerline_deg": 67.04582985054213,
+          "touches_cap": false,
+          "distance_to_cap_mm": 53.15252785027255,
+          "confidence": 0.9755
+        },
+        {
+          "case_id": "subject005",
+          "instance_id": "branch_003",
+          "radius_mm": 2.837364339828491,
+          "angle_to_centerline_deg": 52.29108104551428,
+          "touches_cap": false,
+          "distance_to_cap_mm": 46.62205175708606,
+          "confidence": 0.9578
+        },
+        {
+          "case_id": "subject005",
+          "instance_id": "branch_004",
+          "radius_mm": 2.971833372116089,
+          "angle_to_centerline_deg": 49.723685729778516,
+          "touches_cap": false,
+          "distance_to_cap_mm": 35.59743108402366,
+          "confidence": 0.9302
+        },
+        {
+          "case_id": "subject005",
+          "instance_id": "branch_005",
+          "radius_mm": 2.181525731086731,
+          "angle_to_centerline_deg": 49.575374476809294,
+          "touches_cap": false,
+          "distance_to_cap_mm": 41.368219023731804,
+          "confidence": 0.9077
+        },
+        {
+          "case_id": "subject005",
+          "instance_id": "branch_006",
+          "radius_mm": 3.703453207015991,
+          "angle_to_centerline_deg": 49.833385311296965,
+          "touches_cap": false,
+          "distance_to_cap_mm": 19.424880027512206,
+          "confidence": 0.8927
+        },
+        {
+          "case_id": "subject005",
+          "instance_id": "branch_007",
+          "radius_mm": 0.8295827746391298,
+          "angle_to_centerline_deg": 21.364909543366952,
+          "touches_cap": false,
+          "distance_to_cap_mm": 34.49433878600951,
+          "confidence": 0.6942
+        }
+      ]
+    },
+    {
+      "case_id": "subject006",
+      "n_daughters": 6,
+      "aortic_length_mm": 194.78390033756125,
+      "detections_per_10cm": 3.0803367165366216,
+      "detections": [
+        {
+          "case_id": "subject006",
+          "instance_id": "branch_001",
+          "radius_mm": 2.3764882326126098,
+          "angle_to_centerline_deg": 73.66249358062996,
+          "touches_cap": false,
+          "distance_to_cap_mm": 19.627794604753078,
+          "confidence": 0.964
+        },
+        {
+          "case_id": "subject006",
+          "instance_id": "branch_002",
+          "radius_mm": 2.5853864192962646,
+          "angle_to_centerline_deg": 72.6727834434596,
+          "touches_cap": false,
+          "distance_to_cap_mm": 59.67027049984952,
+          "confidence": 0.9174
+        },
+        {
+          "case_id": "subject006",
+          "instance_id": "branch_003",
+          "radius_mm": 3.16028037071228,
+          "angle_to_centerline_deg": 31.92359790999379,
+          "touches_cap": false,
+          "distance_to_cap_mm": 36.82382403320796,
+          "confidence": 0.7902
+        },
+        {
+          "case_id": "subject006",
+          "instance_id": "branch_004",
+          "radius_mm": 2.318960928916931,
+          "angle_to_centerline_deg": 27.241064376319066,
+          "touches_cap": false,
+          "distance_to_cap_mm": 59.15984928233453,
+          "confidence": 0.6795
+        },
+        {
+          "case_id": "subject006",
+          "instance_id": "branch_005",
+          "radius_mm": 0.7371991813182832,
+          "angle_to_centerline_deg": 88.86172919605744,
+          "touches_cap": false,
+          "distance_to_cap_mm": 5.258384946435479,
+          "confidence": 0.6658
+        },
+        {
+          "case_id": "subject006",
+          "instance_id": "branch_006",
+          "radius_mm": 2.1770729064941405,
+          "angle_to_centerline_deg": 10.425922842984475,
+          "touches_cap": false,
+          "distance_to_cap_mm": 13.994175454885085,
+          "confidence": 0.5406
+        }
+      ]
+    },
+    {
+      "case_id": "subject007",
+      "n_daughters": 2,
+      "aortic_length_mm": 131.40429644775452,
+      "detections_per_10cm": 1.5220202490069927,
+      "detections": [
+        {
+          "case_id": "subject007",
+          "instance_id": "branch_001",
+          "radius_mm": 2.038499140739441,
+          "angle_to_centerline_deg": 82.25055717139847,
+          "touches_cap": false,
+          "distance_to_cap_mm": 41.82961017196895,
+          "confidence": 0.9257
+        },
+        {
+          "case_id": "subject007",
+          "instance_id": "branch_002",
+          "radius_mm": 1.3474956393241884,
+          "angle_to_centerline_deg": 29.760230441726637,
+          "touches_cap": false,
+          "distance_to_cap_mm": 17.60961503554393,
+          "confidence": 0.6422
+        }
+      ]
+    },
+    {
+      "case_id": "subject008",
+      "n_daughters": 3,
+      "aortic_length_mm": 150.54791767067786,
+      "detections_per_10cm": 1.9927210196041845,
+      "detections": [
+        {
+          "case_id": "subject008",
+          "instance_id": "branch_001",
+          "radius_mm": 2.2074294328689574,
+          "angle_to_centerline_deg": 59.234384001488294,
+          "touches_cap": false,
+          "distance_to_cap_mm": 45.67753935483389,
+          "confidence": 0.9576
+        },
+        {
+          "case_id": "subject008",
+          "instance_id": "branch_002",
+          "radius_mm": 2.132463240623474,
+          "angle_to_centerline_deg": 38.02083828911486,
+          "touches_cap": false,
+          "distance_to_cap_mm": 40.58385954012143,
+          "confidence": 0.8414
+        },
+        {
+          "case_id": "subject008",
+          "instance_id": "branch_003",
+          "radius_mm": 2.941257381439209,
+          "angle_to_centerline_deg": 22.34204085164164,
+          "touches_cap": false,
+          "distance_to_cap_mm": 9.922401939395531,
+          "confidence": 0.5522
+        }
+      ]
+    },
+    {
+      "case_id": "subject009",
+      "n_daughters": 5,
+      "aortic_length_mm": 142.2622005037218,
+      "detections_per_10cm": 3.5146370450449993,
+      "detections": [
+        {
+          "case_id": "subject009",
+          "instance_id": "branch_001",
+          "radius_mm": 2.3683650732040404,
+          "angle_to_centerline_deg": 80.10310156863773,
+          "touches_cap": false,
+          "distance_to_cap_mm": 50.03625785959266,
+          "confidence": 1.0
+        },
+        {
+          "case_id": "subject009",
+          "instance_id": "branch_002",
+          "radius_mm": 0.9150456428527833,
+          "angle_to_centerline_deg": 53.36368108287069,
+          "touches_cap": false,
+          "distance_to_cap_mm": 4.66889930172612,
+          "confidence": 0.8458
+        },
+        {
+          "case_id": "subject009",
+          "instance_id": "branch_003",
+          "radius_mm": 1.2207684755325319,
+          "angle_to_centerline_deg": 31.43028039028505,
+          "touches_cap": false,
+          "distance_to_cap_mm": 41.7707328454853,
+          "confidence": 0.7723
+        },
+        {
+          "case_id": "subject009",
+          "instance_id": "branch_004",
+          "radius_mm": 0.981208646297455,
+          "angle_to_centerline_deg": 32.93237632436098,
+          "touches_cap": false,
+          "distance_to_cap_mm": 6.299206299209611,
+          "confidence": 0.7306
+        },
+        {
+          "case_id": "subject009",
+          "instance_id": "branch_005",
+          "radius_mm": 2.1067524194717406,
+          "angle_to_centerline_deg": 30.593906996596452,
+          "touches_cap": false,
+          "distance_to_cap_mm": 23.663228205039633,
+          "confidence": 0.7142
+        }
+      ]
+    },
+    {
+      "case_id": "subject010",
+      "n_daughters": 4,
+      "aortic_length_mm": 159.90702090132902,
+      "detections_per_10cm": 2.5014536431569248,
+      "detections": [
+        {
+          "case_id": "subject010",
+          "instance_id": "branch_001",
+          "radius_mm": 2.622424507141113,
+          "angle_to_centerline_deg": 43.51107539539958,
+          "touches_cap": false,
+          "distance_to_cap_mm": 35.718715255465966,
+          "confidence": 0.9603
+        },
+        {
+          "case_id": "subject010",
+          "instance_id": "branch_002",
+          "radius_mm": 2.6428717613220214,
+          "angle_to_centerline_deg": 45.929668958209774,
+          "touches_cap": false,
+          "distance_to_cap_mm": 46.13612774375901,
+          "confidence": 0.884
+        },
+        {
+          "case_id": "subject010",
+          "instance_id": "branch_003",
+          "radius_mm": 2.832663917541504,
+          "angle_to_centerline_deg": 32.00277062042166,
+          "touches_cap": false,
+          "distance_to_cap_mm": 18.20232571246589,
+          "confidence": 0.7455
+        },
+        {
+          "case_id": "subject010",
+          "instance_id": "branch_004",
+          "radius_mm": 2.6327606678009032,
+          "angle_to_centerline_deg": 34.10598937116704,
+          "touches_cap": false,
+          "distance_to_cap_mm": 5.358552374994212,
+          "confidence": 0.7199
+        }
+      ]
+    },
+    {
+      "case_id": "subject011",
+      "n_daughters": 5,
+      "aortic_length_mm": 140.29383865633525,
+      "detections_per_10cm": 3.5639483871048925,
+      "detections": [
+        {
+          "case_id": "subject011",
+          "instance_id": "branch_001",
+          "radius_mm": 0.9884214639663698,
+          "angle_to_centerline_deg": 85.24037886008671,
+          "touches_cap": false,
+          "distance_to_cap_mm": 18.404452598013822,
+          "confidence": 0.9686
+        },
+        {
+          "case_id": "subject011",
+          "instance_id": "branch_002",
+          "radius_mm": 0.7228205740451814,
+          "angle_to_centerline_deg": 75.82945665595801,
+          "touches_cap": false,
+          "distance_to_cap_mm": 44.20262435647915,
+          "confidence": 0.968
+        },
+        {
+          "case_id": "subject011",
+          "instance_id": "branch_003",
+          "radius_mm": 2.3762455224990844,
+          "angle_to_centerline_deg": 52.96948435179396,
+          "touches_cap": false,
+          "distance_to_cap_mm": 38.33996619472551,
+          "confidence": 0.9515
+        },
+        {
+          "case_id": "subject011",
+          "instance_id": "branch_004",
+          "radius_mm": 2.7114335536956786,
+          "angle_to_centerline_deg": 42.65583692191108,
+          "touches_cap": false,
+          "distance_to_cap_mm": 13.674078627235708,
+          "confidence": 0.9354
+        },
+        {
+          "case_id": "subject011",
+          "instance_id": "branch_005",
+          "radius_mm": 2.1895452976226806,
+          "angle_to_centerline_deg": 32.42805539849104,
+          "touches_cap": false,
+          "distance_to_cap_mm": 38.27709682924307,
+          "confidence": 0.7221
+        }
+      ]
+    },
+    {
+      "case_id": "subject012",
+      "n_daughters": 9,
+      "aortic_length_mm": 155.0634426548167,
+      "detections_per_10cm": 5.8040759613693735,
+      "detections": [
+        {
+          "case_id": "subject012",
+          "instance_id": "branch_001",
+          "radius_mm": 2.6097065448760985,
+          "angle_to_centerline_deg": 88.54404885288142,
+          "touches_cap": false,
+          "distance_to_cap_mm": 36.18975614715585,
+          "confidence": 0.997
+        },
+        {
+          "case_id": "subject012",
+          "instance_id": "branch_002",
+          "radius_mm": 2.5044745445251464,
+          "angle_to_centerline_deg": 55.433709008174255,
+          "touches_cap": false,
+          "distance_to_cap_mm": 33.388934285423,
+          "confidence": 0.9563
+        },
+        {
+          "case_id": "subject012",
+          "instance_id": "branch_003",
+          "radius_mm": 0.7453120887279512,
+          "angle_to_centerline_deg": 43.15889104883368,
+          "touches_cap": false,
+          "distance_to_cap_mm": 33.42617744185319,
+          "confidence": 0.9562
+        },
+        {
+          "case_id": "subject012",
+          "instance_id": "branch_004",
+          "radius_mm": 0.7557245433330537,
+          "angle_to_centerline_deg": 49.786162266645036,
+          "touches_cap": false,
+          "distance_to_cap_mm": 9.559379079995466,
+          "confidence": 0.9477
+        },
+        {
+          "case_id": "subject012",
+          "instance_id": "branch_005",
+          "radius_mm": 3.224939966201782,
+          "angle_to_centerline_deg": 69.47607957617628,
+          "touches_cap": false,
+          "distance_to_cap_mm": 4.761855339274769,
+          "confidence": 0.9195
+        },
+        {
+          "case_id": "subject012",
+          "instance_id": "branch_006",
+          "radius_mm": 0.8830170869827272,
+          "angle_to_centerline_deg": 39.81532164680706,
+          "touches_cap": false,
+          "distance_to_cap_mm": 36.03728509696306,
+          "confidence": 0.902
+        },
+        {
+          "case_id": "subject012",
+          "instance_id": "branch_007",
+          "radius_mm": 2.7822932243347167,
+          "angle_to_centerline_deg": 36.71289178346117,
+          "touches_cap": false,
+          "distance_to_cap_mm": 23.612852769260822,
+          "confidence": 0.848
+        },
+        {
+          "case_id": "subject012",
+          "instance_id": "branch_008",
+          "radius_mm": 0.7470575213432313,
+          "angle_to_centerline_deg": 37.60698926243237,
+          "touches_cap": false,
+          "distance_to_cap_mm": 68.95360167296174,
+          "confidence": 0.8142
+        },
+        {
+          "case_id": "subject012",
+          "instance_id": "branch_009",
+          "radius_mm": 1.1253044843673707,
+          "angle_to_centerline_deg": 4.465884972633187,
+          "touches_cap": false,
+          "distance_to_cap_mm": 28.4657524643359,
+          "confidence": 0.5205
+        }
+      ]
+    },
+    {
+      "case_id": "subject013",
+      "n_daughters": 7,
+      "aortic_length_mm": 138.0680554202401,
+      "detections_per_10cm": 5.0699634891604575,
+      "detections": [
+        {
+          "case_id": "subject013",
+          "instance_id": "branch_001",
+          "radius_mm": 1.8467235803604127,
+          "angle_to_centerline_deg": 86.87236031709048,
+          "touches_cap": false,
+          "distance_to_cap_mm": 30.99310802994034,
+          "confidence": 0.9811
+        },
+        {
+          "case_id": "subject013",
+          "instance_id": "branch_002",
+          "radius_mm": 1.9712348222732545,
+          "angle_to_centerline_deg": 88.93382091198539,
+          "touches_cap": false,
+          "distance_to_cap_mm": 11.430718286281367,
+          "confidence": 0.9765
+        },
+        {
+          "case_id": "subject013",
+          "instance_id": "branch_003",
+          "radius_mm": 1.9203410387039186,
+          "angle_to_centerline_deg": 76.9475976262523,
+          "touches_cap": false,
+          "distance_to_cap_mm": 10.65914343745871,
+          "confidence": 0.9765
+        },
+        {
+          "case_id": "subject013",
+          "instance_id": "branch_004",
+          "radius_mm": 2.2945997953414916,
+          "angle_to_centerline_deg": 87.45548395844966,
+          "touches_cap": false,
+          "distance_to_cap_mm": 25.3755812715694,
+          "confidence": 0.9485
+        },
+        {
+          "case_id": "subject013",
+          "instance_id": "branch_005",
+          "radius_mm": 2.140578055381775,
+          "angle_to_centerline_deg": 69.51120837972421,
+          "touches_cap": false,
+          "distance_to_cap_mm": 31.975203118081676,
+          "confidence": 0.9151
+        },
+        {
+          "case_id": "subject013",
+          "instance_id": "branch_006",
+          "radius_mm": 0.9231291055679323,
+          "angle_to_centerline_deg": 87.60533560129902,
+          "touches_cap": false,
+          "distance_to_cap_mm": 4.534965326205143,
+          "confidence": 0.8716
+        },
+        {
+          "case_id": "subject013",
+          "instance_id": "branch_007",
+          "radius_mm": 0.9097445845603944,
+          "angle_to_centerline_deg": 35.02567401213544,
+          "touches_cap": false,
+          "distance_to_cap_mm": 29.993218700967006,
+          "confidence": 0.8431
+        }
+      ]
+    },
+    {
+      "case_id": "subject014",
+      "n_daughters": 3,
+      "aortic_length_mm": 145.78177987668198,
+      "detections_per_10cm": 2.057870333684858,
+      "detections": [
+        {
+          "case_id": "subject014",
+          "instance_id": "branch_001",
+          "radius_mm": 1.767400646209717,
+          "angle_to_centerline_deg": 78.94616524115592,
+          "touches_cap": false,
+          "distance_to_cap_mm": 46.34125539135146,
+          "confidence": 0.9495
+        },
+        {
+          "case_id": "subject014",
+          "instance_id": "branch_002",
+          "radius_mm": 1.78798725605011,
+          "angle_to_centerline_deg": 34.791966352812175,
+          "touches_cap": false,
+          "distance_to_cap_mm": 34.90300398962699,
+          "confidence": 0.7963
+        },
+        {
+          "case_id": "subject014",
+          "instance_id": "branch_003",
+          "radius_mm": 2.080927038192749,
+          "angle_to_centerline_deg": 18.830211625116817,
+          "touches_cap": false,
+          "distance_to_cap_mm": 21.96668708022542,
+          "confidence": 0.6769
+        }
+      ]
+    },
+    {
+      "case_id": "subject015",
+      "n_daughters": 10,
+      "aortic_length_mm": 154.0829886482437,
+      "detections_per_10cm": 6.490009109849897,
+      "detections": [
+        {
+          "case_id": "subject015",
+          "instance_id": "branch_001",
+          "radius_mm": 1.3484573602676393,
+          "angle_to_centerline_deg": 83.18207770788104,
+          "touches_cap": false,
+          "distance_to_cap_mm": 59.786880760841846,
+          "confidence": 0.9186
+        },
+        {
+          "case_id": "subject015",
+          "instance_id": "branch_002",
+          "radius_mm": 3.003560447692871,
+          "angle_to_centerline_deg": 55.26985836575851,
+          "touches_cap": false,
+          "distance_to_cap_mm": 34.38712253362307,
+          "confidence": 0.9126
+        },
+        {
+          "case_id": "subject015",
+          "instance_id": "branch_003",
+          "radius_mm": 1.5186583042144777,
+          "angle_to_centerline_deg": 81.28345891006387,
+          "touches_cap": false,
+          "distance_to_cap_mm": 6.914065194996749,
+          "confidence": 0.7876
+        },
+        {
+          "case_id": "subject015",
+          "instance_id": "branch_004",
+          "radius_mm": 0.7313305377960206,
+          "angle_to_centerline_deg": 40.28222434459819,
+          "touches_cap": false,
+          "distance_to_cap_mm": 29.354747903700417,
+          "confidence": 0.7735
+        },
+        {
+          "case_id": "subject015",
+          "instance_id": "branch_005",
+          "radius_mm": 1.4098247528076173,
+          "angle_to_centerline_deg": 35.23501164332563,
+          "touches_cap": false,
+          "distance_to_cap_mm": 35.58076467687399,
+          "confidence": 0.7484
+        },
+        {
+          "case_id": "subject015",
+          "instance_id": "branch_006",
+          "radius_mm": 0.9224580168724061,
+          "angle_to_centerline_deg": 30.1402692822572,
+          "touches_cap": false,
+          "distance_to_cap_mm": 4.278649838961461,
+          "confidence": 0.694
+        },
+        {
+          "case_id": "subject015",
+          "instance_id": "branch_007",
+          "radius_mm": 3.0748573780059814,
+          "angle_to_centerline_deg": 29.829843291325385,
+          "touches_cap": false,
+          "distance_to_cap_mm": 30.774983666667588,
+          "confidence": 0.6493
+        },
+        {
+          "case_id": "subject015",
+          "instance_id": "branch_008",
+          "radius_mm": 3.265330934524536,
+          "angle_to_centerline_deg": 23.172174344247466,
+          "touches_cap": false,
+          "distance_to_cap_mm": 22.39444926414626,
+          "confidence": 0.5894
+        },
+        {
+          "case_id": "subject015",
+          "instance_id": "branch_009",
+          "radius_mm": 0.878476256132126,
+          "angle_to_centerline_deg": 40.13307512789841,
+          "touches_cap": false,
+          "distance_to_cap_mm": 2.5612496949730104,
+          "confidence": 0.5528
+        },
+        {
+          "case_id": "subject015",
+          "instance_id": "branch_010",
+          "radius_mm": 2.7974449634552,
+          "angle_to_centerline_deg": 17.909638787325342,
+          "touches_cap": false,
+          "distance_to_cap_mm": 8.959410383764482,
+          "confidence": 0.5461
+        }
+      ]
+    },
+    {
+      "case_id": "subject016",
+      "n_daughters": 1,
+      "aortic_length_mm": 171.90343949196847,
+      "detections_per_10cm": 0.5817219265393007,
+      "detections": [
+        {
+          "case_id": "subject016",
+          "instance_id": "branch_001",
+          "radius_mm": 0.8269762933254243,
+          "angle_to_centerline_deg": 27.491878723480102,
+          "touches_cap": true,
+          "distance_to_cap_mm": 2.5071326821121445,
+          "confidence": 0.788
+        }
+      ]
+    },
+    {
+      "case_id": "subject017",
+      "n_daughters": 0,
+      "aortic_length_mm": 53.8309429862643,
+      "detections_per_10cm": 0.0,
+      "detections": []
+    },
+    {
+      "case_id": "subject018",
+      "n_daughters": 5,
+      "aortic_length_mm": 364.83949507572277,
+      "detections_per_10cm": 1.3704656616088797,
+      "detections": [
+        {
+          "case_id": "subject018",
+          "instance_id": "branch_001",
+          "radius_mm": 0.9564352273941041,
+          "angle_to_centerline_deg": 47.00869807863937,
+          "touches_cap": false,
+          "distance_to_cap_mm": 132.2583797279569,
+          "confidence": 0.7841
+        },
+        {
+          "case_id": "subject018",
+          "instance_id": "branch_002",
+          "radius_mm": 0.7848336040973665,
+          "angle_to_centerline_deg": 86.2020087815333,
+          "touches_cap": false,
+          "distance_to_cap_mm": 3.697446566363219,
+          "confidence": 0.6827
+        },
+        {
+          "case_id": "subject018",
+          "instance_id": "branch_003",
+          "radius_mm": 0.953346872329712,
+          "angle_to_centerline_deg": 40.543435554067855,
+          "touches_cap": false,
+          "distance_to_cap_mm": 45.06745561439596,
+          "confidence": 0.5787
+        },
+        {
+          "case_id": "subject018",
+          "instance_id": "branch_004",
+          "radius_mm": 0.7180575668811799,
+          "angle_to_centerline_deg": 26.537921473581452,
+          "touches_cap": true,
+          "distance_to_cap_mm": 0.606217782649169,
+          "confidence": 0.5447
+        },
+        {
+          "case_id": "subject018",
+          "instance_id": "branch_005",
+          "radius_mm": 1.5576681137084962,
+          "angle_to_centerline_deg": 3.976547442864671,
+          "touches_cap": false,
+          "distance_to_cap_mm": 107.60076658841345,
+          "confidence": 0.5
+        }
+      ]
+    },
+    {
+      "case_id": "subject019",
+      "n_daughters": 3,
+      "aortic_length_mm": 70.60256047553885,
+      "detections_per_10cm": 4.249137679701273,
+      "detections": [
+        {
+          "case_id": "subject019",
+          "instance_id": "branch_001",
+          "radius_mm": 0.9155223608016969,
+          "angle_to_centerline_deg": 82.37335869287415,
+          "touches_cap": false,
+          "distance_to_cap_mm": 25.949318059449574,
+          "confidence": 0.7107
+        },
+        {
+          "case_id": "subject019",
+          "instance_id": "branch_002",
+          "radius_mm": 1.1258031368255617,
+          "angle_to_centerline_deg": 35.4136739251834,
+          "touches_cap": false,
+          "distance_to_cap_mm": 24.000533327407485,
+          "confidence": 0.5445
+        },
+        {
+          "case_id": "subject019",
+          "instance_id": "branch_003",
+          "radius_mm": 2.215545916557312,
+          "angle_to_centerline_deg": 12.90409466862417,
+          "touches_cap": false,
+          "distance_to_cap_mm": 4.375571391258397,
+          "confidence": 0.5129
+        }
+      ]
+    },
+    {
+      "case_id": "subject020",
+      "n_daughters": 0,
+      "aortic_length_mm": 78.22153949765409,
+      "detections_per_10cm": 0.0,
+      "detections": []
+    }
+  ]
+}

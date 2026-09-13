@@ -67,8 +67,15 @@ PATCH_DISJOINT_TOLERANCE_MM = 1.5
 
 
 def analyze_case(image_path, aorta_mask_path, target_spacing=0.8, max_instances=MAX_INSTANCES_TO_TRACE,
+                 flood_budget_mm=None, flood_fraction_range=None, min_length_mm=None,
                  verbose=False):
     """Run the full detection chain and return everything it found.
+
+    flood_budget_mm / flood_fraction_range / min_length_mm are the tunable
+    parameters scripts/stability.py and scripts/sweep.py perturb -- passed
+    straight through to src.floodfill.robust_flood and
+    src.candidates.find_candidates unchanged when left as None (their own
+    module defaults), so this is exposure only, not a behaviour change.
 
     Returns a context dict (also used by scripts/visualize_candidates.py).
     No filtering or output formatting happens here.
@@ -85,11 +92,14 @@ def analyze_case(image_path, aorta_mask_path, target_spacing=0.8, max_instances=
 
     return analyze_volumes(
         resampled_image, resampled_mask, original_grid=original_grid,
-        max_instances=max_instances, verbose=verbose, timings=timings,
+        max_instances=max_instances, flood_budget_mm=flood_budget_mm,
+        flood_fraction_range=flood_fraction_range, min_length_mm=min_length_mm,
+        verbose=verbose, timings=timings,
     )
 
 
 def analyze_volumes(resampled_image, resampled_mask, original_grid=None, max_instances=MAX_INSTANCES_TO_TRACE,
+                    flood_budget_mm=None, flood_fraction_range=None, min_length_mm=None,
                     verbose=False, timings=None):
     """The detection chain on an already cropped and resampled image/mask pair.
 
@@ -97,6 +107,15 @@ def analyze_volumes(resampled_image, resampled_mask, original_grid=None, max_ins
     the chain real cases do.
     """
     timings = {} if timings is None else timings
+    flood_kwargs = {}
+    if flood_budget_mm is not None:
+        flood_kwargs["budget_mm"] = flood_budget_mm
+    if flood_fraction_range is not None:
+        flood_kwargs["fraction_range"] = flood_fraction_range
+    candidate_kwargs = {}
+    if min_length_mm is not None:
+        candidate_kwargs["min_length_mm"] = min_length_mm
+
     started = time.time()
     stats = lumen_stats(resampled_image, resampled_mask)
     contrast_enhanced = is_contrast_enhanced(stats)
@@ -134,18 +153,20 @@ def analyze_volumes(resampled_image, resampled_mask, original_grid=None, max_ins
         return context
 
     started = time.time()
-    flood = robust_flood(resampled_image, resampled_mask, stats)
+    flood = robust_flood(resampled_image, resampled_mask, stats, **flood_kwargs)
     timings["flood_s"] = time.time() - started
     context["flood"] = flood
 
     started = time.time()
-    detection = find_candidates(resampled_image, resampled_mask, stats, centerline, caps, flood=flood)
+    detection = find_candidates(
+        resampled_image, resampled_mask, stats, centerline, caps, flood=flood, **candidate_kwargs
+    )
     timings["candidates_s"] = time.time() - started
     context["detection"] = detection
     context["candidates"] = detection["candidates"]
 
     started = time.time()
-    instances, instance_summary = split_into_instances(detection["candidates"], detection)
+    instances, instance_summary = split_into_instances(detection["candidates"], detection, **candidate_kwargs)
     timings["parentage_s"] = time.time() - started
     context["instances"] = instances
     context["instance_summary"] = instance_summary
@@ -262,6 +283,11 @@ def build_daughters(context, threshold=CONFIDENCE_THRESHOLD,
         min_length_mm (a component can pass length before splitting and an
         individual origin still come up short after). src.rules also vetoes
         it directly, redundantly, as its own explicit gate.
+      - under 1.0mm radius (2mm diameter, the competition brief's minimum
+        branch size): src.rules.MIN_RADIUS_MM vetoes this directly against
+        radius_at_seed_mm, which is exactly the radius_mm this function
+        later writes to the daughter -- there is no upstream mirror of this
+        one, unlike the length veto above.
       - a daughter-of-a-daughter: never gets a contact patch of its own in
         this design (see src/parentage.py's module docstring) -- it stays
         part of its parent's traced component and is never an instance to

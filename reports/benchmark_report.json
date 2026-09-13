@@ -1,0 +1,174 @@
+{
+  "summary": {
+    "n_cases": 20,
+    "target_seconds_per_case": 60.0,
+    "n_over_budget": 0,
+    "mean_elapsed_s": 2.4480388164520264,
+    "median_elapsed_s": 2.1563585996627808,
+    "max_elapsed_s": 8.47839093208313,
+    "mean_peak_rss_mb": 601.053125,
+    "max_peak_rss_mb": 1501.921875
+  },
+  "cases": [
+    {
+      "case_id": "subject001",
+      "elapsed_s": 2.9463911056518555,
+      "peak_rss_mb": 576.515625,
+      "return_code": 0,
+      "n_daughters": 6,
+      "under_target": true
+    },
+    {
+      "case_id": "subject002",
+      "elapsed_s": 1.8275949954986572,
+      "peak_rss_mb": 372.875,
+      "return_code": 0,
+      "n_daughters": 6,
+      "under_target": true
+    },
+    {
+      "case_id": "subject003",
+      "elapsed_s": 3.39068603515625,
+      "peak_rss_mb": 710.765625,
+      "return_code": 0,
+      "n_daughters": 7,
+      "under_target": true
+    },
+    {
+      "case_id": "subject004",
+      "elapsed_s": 1.9581358432769775,
+      "peak_rss_mb": 292.46875,
+      "return_code": 0,
+      "n_daughters": 6,
+      "under_target": true
+    },
+    {
+      "case_id": "subject005",
+      "elapsed_s": 2.171380043029785,
+      "peak_rss_mb": 426.6875,
+      "return_code": 0,
+      "n_daughters": 7,
+      "under_target": true
+    },
+    {
+      "case_id": "subject006",
+      "elapsed_s": 2.6386282444000244,
+      "peak_rss_mb": 508.609375,
+      "return_code": 0,
+      "n_daughters": 7,
+      "under_target": true
+    },
+    {
+      "case_id": "subject007",
+      "elapsed_s": 1.6431670188903809,
+      "peak_rss_mb": 441.8125,
+      "return_code": 0,
+      "n_daughters": 2,
+      "under_target": true
+    },
+    {
+      "case_id": "subject008",
+      "elapsed_s": 2.9755990505218506,
+      "peak_rss_mb": 779.96875,
+      "return_code": 0,
+      "n_daughters": 3,
+      "under_target": true
+    },
+    {
+      "case_id": "subject009",
+      "elapsed_s": 1.8848109245300293,
+      "peak_rss_mb": 493.890625,
+      "return_code": 0,
+      "n_daughters": 6,
+      "under_target": true
+    },
+    {
+      "case_id": "subject010",
+      "elapsed_s": 2.928394079208374,
+      "peak_rss_mb": 634.28125,
+      "return_code": 0,
+      "n_daughters": 5,
+      "under_target": true
+    },
+    {
+      "case_id": "subject011",
+      "elapsed_s": 1.8853809833526611,
+      "peak_rss_mb": 564.1875,
+      "return_code": 0,
+      "n_daughters": 5,
+      "under_target": true
+    },
+    {
+      "case_id": "subject012",
+      "elapsed_s": 2.5083608627319336,
+      "peak_rss_mb": 864.421875,
+      "return_code": 0,
+      "n_daughters": 10,
+      "under_target": true
+    },
+    {
+      "case_id": "subject013",
+      "elapsed_s": 2.188614845275879,
+      "peak_rss_mb": 743.40625,
+      "return_code": 0,
+      "n_daughters": 8,
+      "under_target": true
+    },
+    {
+      "case_id": "subject014",
+      "elapsed_s": 1.9700751304626465,
+      "peak_rss_mb": 674.953125,
+      "return_code": 0,
+      "n_daughters": 3,
+      "under_target": true
+    },
+    {
+      "case_id": "subject015",
+      "elapsed_s": 2.6195080280303955,
+      "peak_rss_mb": 858.625,
+      "return_code": 0,
+      "n_daughters": 10,
+      "under_target": true
+    },
+    {
+      "case_id": "subject016",
+      "elapsed_s": 2.1413371562957764,
+      "peak_rss_mb": 558.5625,
+      "return_code": 0,
+      "n_daughters": 4,
+      "under_target": true
+    },
+    {
+      "case_id": "subject017",
+      "elapsed_s": 0.83815598487854,
+      "peak_rss_mb": 302.6875,
+      "return_code": 0,
+      "n_daughters": 0,
+      "under_target": true
+    },
+    {
+      "case_id": "subject018",
+      "elapsed_s": 8.47839093208313,
+      "peak_rss_mb": 1501.921875,
+      "return_code": 0,
+      "n_daughters": 7,
+      "under_target": true
+    },
+    {
+      "case_id": "subject019",
+      "elapsed_s": 0.9034278392791748,
+      "peak_rss_mb": 304.546875,
+      "return_code": 0,
+      "n_daughters": 3,
+      "under_target": true
+    },
+    {
+      "case_id": "subject020",
+      "elapsed_s": 1.062737226486206,
+      "peak_rss_mb": 409.875,
+      "return_code": 0,
+      "n_daughters": 0,
+      "under_target": true
+    }
+  ]
+}

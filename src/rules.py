@@ -12,16 +12,37 @@ cases would be less trustworthy than these rules, not more.
 import numpy as np
 
 # ---------------------------------------------------------------- vetoes
-# Hard rejects, checked before any scoring. These mirror src.candidates'
-# own _reject rules (too_short, aortic_continuation) and are therefore
-# normally redundant: an instance whose parent candidate failed them never
-# reaches find_candidates' survivor list, let alone this function. They are
-# kept here anyway as an explicit, inspectable gate at the scoring layer
-# itself, and as a safety net if a future change ever lets features reach
-# score_candidate without having passed through candidates.py first.
+# Hard rejects, checked before any scoring. MIN_GEODESIC_LENGTH_MM and the
+# cap vetoes mirror src.candidates' own _reject rules (too_short,
+# aortic_continuation) and are therefore normally redundant: an instance
+# whose parent candidate failed them never reaches find_candidates' survivor
+# list, let alone this function. They are kept here anyway as an explicit,
+# inspectable gate at the scoring layer itself, and as a safety net if a
+# future change ever lets features reach score_candidate without having
+# passed through candidates.py first. MIN_RADIUS_MM has no such upstream
+# mirror -- it is the only gate on the final radius, enforced here alone.
 MIN_GEODESIC_LENGTH_MM = 5.0
 CAP_RADIUS_VETO_FRACTION = 0.4
 CAP_ANGLE_VETO_DEG = 25.0
+
+# Competition brief's minimum branch size: diameter >= 2mm, i.e. radius >=
+# 1.0mm. Checked against radius_at_seed_mm, which is exactly the radius_mm
+# schema.make_daughter later writes to output (src.features.build_feature_vector
+# sets it to seed["radius_mm"] unchanged) -- so this gates the same number
+# that ends up in the final JSON, not some intermediate estimate of it.
+MIN_RADIUS_MM = 1.0
+
+# Absorbs known measurement noise on thin vessels: scripts/validate_phantom.py
+# showed radius_at_seed_mm (the distance-transform-based estimate) can read
+# up to ~0.4-0.5mm low near this scale, e.g. a true 1.4mm-radius branch
+# measured at 0.95mm -- comfortably above the 2mm-diameter minimum but wrongly
+# vetoed by a bare MIN_RADIUS_MM cutoff. Vetoing at MIN_RADIUS_MM minus this
+# margin, rather than at MIN_RADIUS_MM itself, trades a little of the other
+# direction (a genuinely sub-1mm branch measured a bit high could still slip
+# through) for recovering the branches this noise band was wrongly dropping.
+# See README.md's Phantom validation section for the measured trade-off.
+RADIUS_VETO_MEASUREMENT_TOLERANCE_MM = 0.3
+RADIUS_VETO_MM = MIN_RADIUS_MM - RADIUS_VETO_MEASUREMENT_TOLERANCE_MM
 
 # ------------------------------------------------------------- penalties
 # Each term ramps from 0 penalty at `onset` to full weight at `full` (onset
@@ -123,6 +144,10 @@ def _ramp(value, onset, full):
 def _check_veto(features):
     if features["traced_length_mm"] < MIN_GEODESIC_LENGTH_MM:
         return f"traced length {features['traced_length_mm']:.1f}mm < {MIN_GEODESIC_LENGTH_MM:.0f}mm"
+    if features["radius_at_seed_mm"] < RADIUS_VETO_MM:
+        return (f"radius {features['radius_at_seed_mm']:.2f}mm < {RADIUS_VETO_MM:.2f}mm "
+                f"({MIN_RADIUS_MM:.1f}mm minimum less {RADIUS_VETO_MEASUREMENT_TOLERANCE_MM:.1f}mm "
+                f"measurement-noise margin)")
     if features["touches_cap"] > 0.5:
         if features["cap_radius_ratio"] > CAP_RADIUS_VETO_FRACTION:
             return (f"cap-touching with radius {features['cap_radius_ratio']:.2f}x local aorta "

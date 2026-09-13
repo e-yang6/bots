@@ -1,0 +1,3494 @@
+{
+  "cases": [
+    {
+      "case_id": "subject001",
+      "aortic_length_mm": 139.9040616971729,
+      "threshold_sweep": [
+        {
+          "threshold": 0.05,
+          "n_daughters": 6,
+          "detections_per_10cm": 4.288653186486611,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.1,
+          "n_daughters": 6,
+          "detections_per_10cm": 4.288653186486611,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.15,
+          "n_daughters": 6,
+          "detections_per_10cm": 4.288653186486611,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.2,
+          "n_daughters": 6,
+          "detections_per_10cm": 4.288653186486611,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.25,
+          "n_daughters": 6,
+          "detections_per_10cm": 4.288653186486611,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.3,
+          "n_daughters": 6,
+          "detections_per_10cm": 4.288653186486611,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.35,
+          "n_daughters": 6,
+          "detections_per_10cm": 4.288653186486611,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.4,
+          "n_daughters": 6,
+          "detections_per_10cm": 4.288653186486611,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.45,
+          "n_daughters": 6,
+          "detections_per_10cm": 4.288653186486611,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.5,
+          "n_daughters": 6,
+          "detections_per_10cm": 4.288653186486611,
+          "local_stability": 0.8333333333333334
+        },
+        {
+          "threshold": 0.55,
+          "n_daughters": 5,
+          "detections_per_10cm": 3.5738776554055094,
+          "local_stability": 0.8
+        },
+        {
+          "threshold": 0.6,
+          "n_daughters": 4,
+          "detections_per_10cm": 2.8591021243244077,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.65,
+          "n_daughters": 4,
+          "detections_per_10cm": 2.8591021243244077,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.7,
+          "n_daughters": 4,
+          "detections_per_10cm": 2.8591021243244077,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.75,
+          "n_daughters": 4,
+          "detections_per_10cm": 2.8591021243244077,
+          "local_stability": 0.75
+        },
+        {
+          "threshold": 0.8,
+          "n_daughters": 3,
+          "detections_per_10cm": 2.1443265932433055,
+          "local_stability": 0.6666666666666666
+        },
+        {
+          "threshold": 0.85,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.4295510621622038,
+          "local_stability": 0.5
+        },
+        {
+          "threshold": 0.9,
+          "n_daughters": 1,
+          "detections_per_10cm": 0.7147755310811019,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.95,
+          "n_daughters": 1,
+          "detections_per_10cm": 0.7147755310811019,
+          "local_stability": 0.0
+        }
+      ],
+      "budget_sweep": [
+        {
+          "budget_mm": 7.5,
+          "budget_fraction": 0.5,
+          "n_daughters": 11,
+          "detections_per_10cm": 7.862530841892121
+        },
+        {
+          "budget_mm": 10.5,
+          "budget_fraction": 0.7,
+          "n_daughters": 6,
+          "detections_per_10cm": 4.288653186486611
+        },
+        {
+          "budget_mm": 12.75,
+          "budget_fraction": 0.85,
+          "n_daughters": 6,
+          "detections_per_10cm": 4.288653186486611
+        },
+        {
+          "budget_mm": 15.0,
+          "budget_fraction": 1.0,
+          "n_daughters": 6,
+          "detections_per_10cm": 4.288653186486611
+        },
+        {
+          "budget_mm": 19.5,
+          "budget_fraction": 1.3,
+          "n_daughters": 6,
+          "detections_per_10cm": 4.288653186486611
+        },
+        {
+          "budget_mm": 24.0,
+          "budget_fraction": 1.6,
+          "n_daughters": 6,
+          "detections_per_10cm": 4.288653186486611
+        },
+        {
+          "budget_mm": 30.0,
+          "budget_fraction": 2.0,
+          "n_daughters": 8,
+          "detections_per_10cm": 5.718204248648815
+        }
+      ],
+      "elapsed_s": 8.459474802017212
+    },
+    {
+      "case_id": "subject002",
+      "aortic_length_mm": 151.49906157854184,
+      "threshold_sweep": [
+        {
+          "threshold": 0.05,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.960420571245197,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.1,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.960420571245197,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.15,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.960420571245197,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.2,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.960420571245197,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.25,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.960420571245197,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.3,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.960420571245197,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.35,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.960420571245197,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.4,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.960420571245197,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.45,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.960420571245197,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.5,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.960420571245197,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.55,
+          "n_daughters": 5,
+          "detections_per_10cm": 3.3003504760376643,
+          "local_stability": 0.6666666666666666
+        },
+        {
+          "threshold": 0.6,
+          "n_daughters": 4,
+          "detections_per_10cm": 2.640280380830131,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.65,
+          "n_daughters": 3,
+          "detections_per_10cm": 1.9802102856225985,
+          "local_stability": 0.75
+        },
+        {
+          "threshold": 0.7,
+          "n_daughters": 3,
+          "detections_per_10cm": 1.9802102856225985,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.75,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.3201401904150656,
+          "local_stability": 0.6666666666666666
+        },
+        {
+          "threshold": 0.8,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.3201401904150656,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.85,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.3201401904150656,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.9,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.3201401904150656,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.95,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.3201401904150656,
+          "local_stability": 0.5
+        }
+      ],
+      "budget_sweep": [
+        {
+          "budget_mm": 7.5,
+          "budget_fraction": 0.5,
+          "n_daughters": 9,
+          "detections_per_10cm": 5.940630856867796
+        },
+        {
+          "budget_mm": 10.5,
+          "budget_fraction": 0.7,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.960420571245197
+        },
+        {
+          "budget_mm": 12.75,
+          "budget_fraction": 0.85,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.960420571245197
+        },
+        {
+          "budget_mm": 15.0,
+          "budget_fraction": 1.0,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.960420571245197
+        },
+        {
+          "budget_mm": 19.5,
+          "budget_fraction": 1.3,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.960420571245197
+        },
+        {
+          "budget_mm": 24.0,
+          "budget_fraction": 1.6,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.960420571245197
+        },
+        {
+          "budget_mm": 30.0,
+          "budget_fraction": 2.0,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.960420571245197
+        }
+      ],
+      "elapsed_s": 8.087981700897217
+    },
+    {
+      "case_id": "subject003",
+      "aortic_length_mm": 194.77773416620215,
+      "threshold_sweep": [
+        {
+          "threshold": 0.05,
+          "n_daughters": 7,
+          "detections_per_10cm": 3.593839937591101,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.1,
+          "n_daughters": 7,
+          "detections_per_10cm": 3.593839937591101,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.15,
+          "n_daughters": 7,
+          "detections_per_10cm": 3.593839937591101,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.2,
+          "n_daughters": 7,
+          "detections_per_10cm": 3.593839937591101,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.25,
+          "n_daughters": 7,
+          "detections_per_10cm": 3.593839937591101,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.3,
+          "n_daughters": 7,
+          "detections_per_10cm": 3.593839937591101,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.35,
+          "n_daughters": 7,
+          "detections_per_10cm": 3.593839937591101,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.4,
+          "n_daughters": 7,
+          "detections_per_10cm": 3.593839937591101,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.45,
+          "n_daughters": 7,
+          "detections_per_10cm": 3.593839937591101,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.5,
+          "n_daughters": 7,
+          "detections_per_10cm": 3.593839937591101,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.55,
+          "n_daughters": 7,
+          "detections_per_10cm": 3.593839937591101,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.6,
+          "n_daughters": 7,
+          "detections_per_10cm": 3.593839937591101,
+          "local_stability": 0.8571428571428571
+        },
+        {
+          "threshold": 0.65,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.0804342322209437,
+          "local_stability": 0.8333333333333334
+        },
+        {
+          "threshold": 0.7,
+          "n_daughters": 4,
+          "detections_per_10cm": 2.053622821480629,
+          "local_stability": 0.8
+        },
+        {
+          "threshold": 0.75,
+          "n_daughters": 3,
+          "detections_per_10cm": 1.5402171161104719,
+          "local_stability": 0.75
+        },
+        {
+          "threshold": 0.8,
+          "n_daughters": 3,
+          "detections_per_10cm": 1.5402171161104719,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.85,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.0268114107403146,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.9,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.0268114107403146,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.95,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 0.0
+        }
+      ],
+      "budget_sweep": [
+        {
+          "budget_mm": 7.5,
+          "budget_fraction": 0.5,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.0804342322209437
+        },
+        {
+          "budget_mm": 10.5,
+          "budget_fraction": 0.7,
+          "n_daughters": 7,
+          "detections_per_10cm": 3.593839937591101
+        },
+        {
+          "budget_mm": 12.75,
+          "budget_fraction": 0.85,
+          "n_daughters": 7,
+          "detections_per_10cm": 3.593839937591101
+        },
+        {
+          "budget_mm": 15.0,
+          "budget_fraction": 1.0,
+          "n_daughters": 7,
+          "detections_per_10cm": 3.593839937591101
+        },
+        {
+          "budget_mm": 19.5,
+          "budget_fraction": 1.3,
+          "n_daughters": 7,
+          "detections_per_10cm": 3.593839937591101
+        },
+        {
+          "budget_mm": 24.0,
+          "budget_fraction": 1.6,
+          "n_daughters": 7,
+          "detections_per_10cm": 3.593839937591101
+        },
+        {
+          "budget_mm": 30.0,
+          "budget_fraction": 2.0,
+          "n_daughters": 5,
+          "detections_per_10cm": 2.5670285268507866
+        }
+      ],
+      "elapsed_s": 13.562727928161621
+    },
+    {
+      "case_id": "subject004",
+      "aortic_length_mm": 152.9336845230559,
+      "threshold_sweep": [
+        {
+          "threshold": 0.05,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.9232691075951,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.1,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.9232691075951,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.15,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.9232691075951,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.2,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.9232691075951,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.25,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.9232691075951,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.3,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.9232691075951,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.35,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.9232691075951,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.4,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.9232691075951,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.45,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.9232691075951,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.5,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.9232691075951,
+          "local_stability": 0.8333333333333334
+        },
+        {
+          "threshold": 0.55,
+          "n_daughters": 4,
+          "detections_per_10cm": 2.6155127383967334,
+          "local_stability": 0.8
+        },
+        {
+          "threshold": 0.6,
+          "n_daughters": 4,
+          "detections_per_10cm": 2.6155127383967334,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.65,
+          "n_daughters": 3,
+          "detections_per_10cm": 1.96163455379755,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.7,
+          "n_daughters": 3,
+          "detections_per_10cm": 1.96163455379755,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.75,
+          "n_daughters": 3,
+          "detections_per_10cm": 1.96163455379755,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.8,
+          "n_daughters": 1,
+          "detections_per_10cm": 0.6538781845991833,
+          "local_stability": 0.5
+        },
+        {
+          "threshold": 0.85,
+          "n_daughters": 1,
+          "detections_per_10cm": 0.6538781845991833,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.9,
+          "n_daughters": 1,
+          "detections_per_10cm": 0.6538781845991833,
+          "local_stability": 0.0
+        },
+        {
+          "threshold": 0.95,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 1.0
+        }
+      ],
+      "budget_sweep": [
+        {
+          "budget_mm": 7.5,
+          "budget_fraction": 0.5,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.9232691075951
+        },
+        {
+          "budget_mm": 10.5,
+          "budget_fraction": 0.7,
+          "n_daughters": 5,
+          "detections_per_10cm": 3.2693909229959166
+        },
+        {
+          "budget_mm": 12.75,
+          "budget_fraction": 0.85,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.9232691075951
+        },
+        {
+          "budget_mm": 15.0,
+          "budget_fraction": 1.0,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.9232691075951
+        },
+        {
+          "budget_mm": 19.5,
+          "budget_fraction": 1.3,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.9232691075951
+        },
+        {
+          "budget_mm": 24.0,
+          "budget_fraction": 1.6,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.9232691075951
+        },
+        {
+          "budget_mm": 30.0,
+          "budget_fraction": 2.0,
+          "n_daughters": 5,
+          "detections_per_10cm": 3.2693909229959166
+        }
+      ],
+      "elapsed_s": 8.446784019470215
+    },
+    {
+      "case_id": "subject005",
+      "aortic_length_mm": 161.79430380802216,
+      "threshold_sweep": [
+        {
+          "threshold": 0.05,
+          "n_daughters": 7,
+          "detections_per_10cm": 4.326481115370962,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.1,
+          "n_daughters": 7,
+          "detections_per_10cm": 4.326481115370962,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.15,
+          "n_daughters": 7,
+          "detections_per_10cm": 4.326481115370962,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.2,
+          "n_daughters": 7,
+          "detections_per_10cm": 4.326481115370962,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.25,
+          "n_daughters": 7,
+          "detections_per_10cm": 4.326481115370962,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.3,
+          "n_daughters": 7,
+          "detections_per_10cm": 4.326481115370962,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.35,
+          "n_daughters": 7,
+          "detections_per_10cm": 4.326481115370962,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.4,
+          "n_daughters": 7,
+          "detections_per_10cm": 4.326481115370962,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.45,
+          "n_daughters": 7,
+          "detections_per_10cm": 4.326481115370962,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.5,
+          "n_daughters": 7,
+          "detections_per_10cm": 4.326481115370962,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.55,
+          "n_daughters": 7,
+          "detections_per_10cm": 4.326481115370962,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.6,
+          "n_daughters": 7,
+          "detections_per_10cm": 4.326481115370962,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.65,
+          "n_daughters": 7,
+          "detections_per_10cm": 4.326481115370962,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.7,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.708412384603682,
+          "local_stability": 0.8571428571428571
+        },
+        {
+          "threshold": 0.75,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.708412384603682,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.8,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.708412384603682,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.85,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.708412384603682,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.9,
+          "n_daughters": 5,
+          "detections_per_10cm": 3.0903436538364013,
+          "local_stability": 0.6666666666666666
+        },
+        {
+          "threshold": 0.95,
+          "n_daughters": 3,
+          "detections_per_10cm": 1.854206192301841,
+          "local_stability": 0.5
+        }
+      ],
+      "budget_sweep": [
+        {
+          "budget_mm": 7.5,
+          "budget_fraction": 0.5,
+          "n_daughters": 12,
+          "detections_per_10cm": 7.416824769207364
+        },
+        {
+          "budget_mm": 10.5,
+          "budget_fraction": 0.7,
+          "n_daughters": 11,
+          "detections_per_10cm": 6.798756038440083
+        },
+        {
+          "budget_mm": 12.75,
+          "budget_fraction": 0.85,
+          "n_daughters": 10,
+          "detections_per_10cm": 6.180687307672803
+        },
+        {
+          "budget_mm": 15.0,
+          "budget_fraction": 1.0,
+          "n_daughters": 7,
+          "detections_per_10cm": 4.326481115370962
+        },
+        {
+          "budget_mm": 19.5,
+          "budget_fraction": 1.3,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.708412384603682
+        },
+        {
+          "budget_mm": 24.0,
+          "budget_fraction": 1.6,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.708412384603682
+        },
+        {
+          "budget_mm": 30.0,
+          "budget_fraction": 2.0,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.708412384603682
+        }
+      ],
+      "elapsed_s": 10.488616228103638
+    },
+    {
+      "case_id": "subject006",
+      "aortic_length_mm": 194.78390033756125,
+      "threshold_sweep": [
+        {
+          "threshold": 0.05,
+          "n_daughters": 7,
+          "detections_per_10cm": 3.5937261692927254,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.1,
+          "n_daughters": 7,
+          "detections_per_10cm": 3.5937261692927254,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.15,
+          "n_daughters": 7,
+          "detections_per_10cm": 3.5937261692927254,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.2,
+          "n_daughters": 7,
+          "detections_per_10cm": 3.5937261692927254,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.25,
+          "n_daughters": 7,
+          "detections_per_10cm": 3.5937261692927254,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.3,
+          "n_daughters": 7,
+          "detections_per_10cm": 3.5937261692927254,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.35,
+          "n_daughters": 7,
+          "detections_per_10cm": 3.5937261692927254,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.4,
+          "n_daughters": 7,
+          "detections_per_10cm": 3.5937261692927254,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.45,
+          "n_daughters": 7,
+          "detections_per_10cm": 3.5937261692927254,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.5,
+          "n_daughters": 7,
+          "detections_per_10cm": 3.5937261692927254,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.55,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.0803367165366216,
+          "local_stability": 0.8571428571428571
+        },
+        {
+          "threshold": 0.6,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.0803367165366216,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.65,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.0803367165366216,
+          "local_stability": 0.8333333333333334
+        },
+        {
+          "threshold": 0.7,
+          "n_daughters": 4,
+          "detections_per_10cm": 2.0535578110244144,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.75,
+          "n_daughters": 4,
+          "detections_per_10cm": 2.0535578110244144,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.8,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.0267789055122072,
+          "local_stability": 0.5
+        },
+        {
+          "threshold": 0.85,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.0267789055122072,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.9,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.0267789055122072,
+          "local_stability": 0.5
+        },
+        {
+          "threshold": 0.95,
+          "n_daughters": 1,
+          "detections_per_10cm": 0.5133894527561036,
+          "local_stability": 0.0
+        }
+      ],
+      "budget_sweep": [
+        {
+          "budget_mm": 7.5,
+          "budget_fraction": 0.5,
+          "n_daughters": 8,
+          "detections_per_10cm": 4.107115622048829
+        },
+        {
+          "budget_mm": 10.5,
+          "budget_fraction": 0.7,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.0803367165366216
+        },
+        {
+          "budget_mm": 12.75,
+          "budget_fraction": 0.85,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.0803367165366216
+        },
+        {
+          "budget_mm": 15.0,
+          "budget_fraction": 1.0,
+          "n_daughters": 7,
+          "detections_per_10cm": 3.5937261692927254
+        },
+        {
+          "budget_mm": 19.5,
+          "budget_fraction": 1.3,
+          "n_daughters": 7,
+          "detections_per_10cm": 3.5937261692927254
+        },
+        {
+          "budget_mm": 24.0,
+          "budget_fraction": 1.6,
+          "n_daughters": 7,
+          "detections_per_10cm": 3.5937261692927254
+        },
+        {
+          "budget_mm": 30.0,
+          "budget_fraction": 2.0,
+          "n_daughters": 7,
+          "detections_per_10cm": 3.5937261692927254
+        }
+      ],
+      "elapsed_s": 13.357879877090454
+    },
+    {
+      "case_id": "subject007",
+      "aortic_length_mm": 131.40429644775452,
+      "threshold_sweep": [
+        {
+          "threshold": 0.05,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.5220202490069927,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.1,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.5220202490069927,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.15,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.5220202490069927,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.2,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.5220202490069927,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.25,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.5220202490069927,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.3,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.5220202490069927,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.35,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.5220202490069927,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.4,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.5220202490069927,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.45,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.5220202490069927,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.5,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.5220202490069927,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.55,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.5220202490069927,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.6,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.5220202490069927,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.65,
+          "n_daughters": 1,
+          "detections_per_10cm": 0.7610101245034964,
+          "local_stability": 0.5
+        },
+        {
+          "threshold": 0.7,
+          "n_daughters": 1,
+          "detections_per_10cm": 0.7610101245034964,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.75,
+          "n_daughters": 1,
+          "detections_per_10cm": 0.7610101245034964,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.8,
+          "n_daughters": 1,
+          "detections_per_10cm": 0.7610101245034964,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.85,
+          "n_daughters": 1,
+          "detections_per_10cm": 0.7610101245034964,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.9,
+          "n_daughters": 1,
+          "detections_per_10cm": 0.7610101245034964,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.95,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 1.0
+        }
+      ],
+      "budget_sweep": [
+        {
+          "budget_mm": 7.5,
+          "budget_fraction": 0.5,
+          "n_daughters": 7,
+          "detections_per_10cm": 5.327070871524474
+        },
+        {
+          "budget_mm": 10.5,
+          "budget_fraction": 0.7,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.5220202490069927
+        },
+        {
+          "budget_mm": 12.75,
+          "budget_fraction": 0.85,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.5220202490069927
+        },
+        {
+          "budget_mm": 15.0,
+          "budget_fraction": 1.0,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.5220202490069927
+        },
+        {
+          "budget_mm": 19.5,
+          "budget_fraction": 1.3,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.5220202490069927
+        },
+        {
+          "budget_mm": 24.0,
+          "budget_fraction": 1.6,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.5220202490069927
+        },
+        {
+          "budget_mm": 30.0,
+          "budget_fraction": 2.0,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.5220202490069927
+        }
+      ],
+      "elapsed_s": 6.952422142028809
+    },
+    {
+      "case_id": "subject008",
+      "aortic_length_mm": 150.54791767067786,
+      "threshold_sweep": [
+        {
+          "threshold": 0.05,
+          "n_daughters": 5,
+          "detections_per_10cm": 3.3212016993403073,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.1,
+          "n_daughters": 5,
+          "detections_per_10cm": 3.3212016993403073,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.15,
+          "n_daughters": 5,
+          "detections_per_10cm": 3.3212016993403073,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.2,
+          "n_daughters": 5,
+          "detections_per_10cm": 3.3212016993403073,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.25,
+          "n_daughters": 5,
+          "detections_per_10cm": 3.3212016993403073,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.3,
+          "n_daughters": 5,
+          "detections_per_10cm": 3.3212016993403073,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.35,
+          "n_daughters": 5,
+          "detections_per_10cm": 3.3212016993403073,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.4,
+          "n_daughters": 5,
+          "detections_per_10cm": 3.3212016993403073,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.45,
+          "n_daughters": 5,
+          "detections_per_10cm": 3.3212016993403073,
+          "local_stability": 0.8
+        },
+        {
+          "threshold": 0.5,
+          "n_daughters": 3,
+          "detections_per_10cm": 1.9927210196041845,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.55,
+          "n_daughters": 3,
+          "detections_per_10cm": 1.9927210196041845,
+          "local_stability": 0.6666666666666666
+        },
+        {
+          "threshold": 0.6,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.328480679736123,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.65,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.328480679736123,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.7,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.328480679736123,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.75,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.328480679736123,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.8,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.328480679736123,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.85,
+          "n_daughters": 1,
+          "detections_per_10cm": 0.6642403398680615,
+          "local_stability": 0.5
+        },
+        {
+          "threshold": 0.9,
+          "n_daughters": 1,
+          "detections_per_10cm": 0.6642403398680615,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.95,
+          "n_daughters": 1,
+          "detections_per_10cm": 0.6642403398680615,
+          "local_stability": 0.0
+        }
+      ],
+      "budget_sweep": [
+        {
+          "budget_mm": 7.5,
+          "budget_fraction": 0.5,
+          "n_daughters": 7,
+          "detections_per_10cm": 4.64968237907643
+        },
+        {
+          "budget_mm": 10.5,
+          "budget_fraction": 0.7,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.985442039208369
+        },
+        {
+          "budget_mm": 12.75,
+          "budget_fraction": 0.85,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.985442039208369
+        },
+        {
+          "budget_mm": 15.0,
+          "budget_fraction": 1.0,
+          "n_daughters": 3,
+          "detections_per_10cm": 1.9927210196041845
+        },
+        {
+          "budget_mm": 19.5,
+          "budget_fraction": 1.3,
+          "n_daughters": 3,
+          "detections_per_10cm": 1.9927210196041845
+        },
+        {
+          "budget_mm": 24.0,
+          "budget_fraction": 1.6,
+          "n_daughters": 5,
+          "detections_per_10cm": 3.3212016993403073
+        },
+        {
+          "budget_mm": 30.0,
+          "budget_fraction": 2.0,
+          "n_daughters": 3,
+          "detections_per_10cm": 1.9927210196041845
+        }
+      ],
+      "elapsed_s": 13.644439935684204
+    },
+    {
+      "case_id": "subject009",
+      "aortic_length_mm": 142.2622005037218,
+      "threshold_sweep": [
+        {
+          "threshold": 0.05,
+          "n_daughters": 7,
+          "detections_per_10cm": 4.920491863062999,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.1,
+          "n_daughters": 7,
+          "detections_per_10cm": 4.920491863062999,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.15,
+          "n_daughters": 7,
+          "detections_per_10cm": 4.920491863062999,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.2,
+          "n_daughters": 7,
+          "detections_per_10cm": 4.920491863062999,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.25,
+          "n_daughters": 7,
+          "detections_per_10cm": 4.920491863062999,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.3,
+          "n_daughters": 7,
+          "detections_per_10cm": 4.920491863062999,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.35,
+          "n_daughters": 7,
+          "detections_per_10cm": 4.920491863062999,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.4,
+          "n_daughters": 7,
+          "detections_per_10cm": 4.920491863062999,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.45,
+          "n_daughters": 7,
+          "detections_per_10cm": 4.920491863062999,
+          "local_stability": 0.8571428571428571
+        },
+        {
+          "threshold": 0.5,
+          "n_daughters": 6,
+          "detections_per_10cm": 4.217564454053999,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.55,
+          "n_daughters": 6,
+          "detections_per_10cm": 4.217564454053999,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.6,
+          "n_daughters": 6,
+          "detections_per_10cm": 4.217564454053999,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.65,
+          "n_daughters": 6,
+          "detections_per_10cm": 4.217564454053999,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.7,
+          "n_daughters": 6,
+          "detections_per_10cm": 4.217564454053999,
+          "local_stability": 0.8333333333333334
+        },
+        {
+          "threshold": 0.75,
+          "n_daughters": 3,
+          "detections_per_10cm": 2.1087822270269996,
+          "local_stability": 0.6
+        },
+        {
+          "threshold": 0.8,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.4058548180179997,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.85,
+          "n_daughters": 1,
+          "detections_per_10cm": 0.7029274090089999,
+          "local_stability": 0.5
+        },
+        {
+          "threshold": 0.9,
+          "n_daughters": 1,
+          "detections_per_10cm": 0.7029274090089999,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.95,
+          "n_daughters": 1,
+          "detections_per_10cm": 0.7029274090089999,
+          "local_stability": 1.0
+        }
+      ],
+      "budget_sweep": [
+        {
+          "budget_mm": 7.5,
+          "budget_fraction": 0.5,
+          "n_daughters": 5,
+          "detections_per_10cm": 3.5146370450449993
+        },
+        {
+          "budget_mm": 10.5,
+          "budget_fraction": 0.7,
+          "n_daughters": 6,
+          "detections_per_10cm": 4.217564454053999
+        },
+        {
+          "budget_mm": 12.75,
+          "budget_fraction": 0.85,
+          "n_daughters": 6,
+          "detections_per_10cm": 4.217564454053999
+        },
+        {
+          "budget_mm": 15.0,
+          "budget_fraction": 1.0,
+          "n_daughters": 6,
+          "detections_per_10cm": 4.217564454053999
+        },
+        {
+          "budget_mm": 19.5,
+          "budget_fraction": 1.3,
+          "n_daughters": 6,
+          "detections_per_10cm": 4.217564454053999
+        },
+        {
+          "budget_mm": 24.0,
+          "budget_fraction": 1.6,
+          "n_daughters": 6,
+          "detections_per_10cm": 4.217564454053999
+        },
+        {
+          "budget_mm": 30.0,
+          "budget_fraction": 2.0,
+          "n_daughters": 5,
+          "detections_per_10cm": 3.5146370450449993
+        }
+      ],
+      "elapsed_s": 7.718831300735474
+    },
+    {
+      "case_id": "subject010",
+      "aortic_length_mm": 159.90702090132902,
+      "threshold_sweep": [
+        {
+          "threshold": 0.05,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.752180464735387,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.1,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.752180464735387,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.15,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.752180464735387,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.2,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.752180464735387,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.25,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.752180464735387,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.3,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.752180464735387,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.35,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.752180464735387,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.4,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.752180464735387,
+          "local_stability": 0.8333333333333334
+        },
+        {
+          "threshold": 0.45,
+          "n_daughters": 5,
+          "detections_per_10cm": 3.126817053946156,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.5,
+          "n_daughters": 5,
+          "detections_per_10cm": 3.126817053946156,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.55,
+          "n_daughters": 5,
+          "detections_per_10cm": 3.126817053946156,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.6,
+          "n_daughters": 5,
+          "detections_per_10cm": 3.126817053946156,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.65,
+          "n_daughters": 5,
+          "detections_per_10cm": 3.126817053946156,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.7,
+          "n_daughters": 4,
+          "detections_per_10cm": 2.5014536431569248,
+          "local_stability": 0.6
+        },
+        {
+          "threshold": 0.75,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.2507268215784624,
+          "local_stability": 0.6666666666666666
+        },
+        {
+          "threshold": 0.8,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.2507268215784624,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.85,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.2507268215784624,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.9,
+          "n_daughters": 1,
+          "detections_per_10cm": 0.6253634107892312,
+          "local_stability": 0.5
+        },
+        {
+          "threshold": 0.95,
+          "n_daughters": 1,
+          "detections_per_10cm": 0.6253634107892312,
+          "local_stability": 0.0
+        }
+      ],
+      "budget_sweep": [
+        {
+          "budget_mm": 7.5,
+          "budget_fraction": 0.5,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.752180464735387
+        },
+        {
+          "budget_mm": 10.5,
+          "budget_fraction": 0.7,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.752180464735387
+        },
+        {
+          "budget_mm": 12.75,
+          "budget_fraction": 0.85,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.752180464735387
+        },
+        {
+          "budget_mm": 15.0,
+          "budget_fraction": 1.0,
+          "n_daughters": 5,
+          "detections_per_10cm": 3.126817053946156
+        },
+        {
+          "budget_mm": 19.5,
+          "budget_fraction": 1.3,
+          "n_daughters": 5,
+          "detections_per_10cm": 3.126817053946156
+        },
+        {
+          "budget_mm": 24.0,
+          "budget_fraction": 1.6,
+          "n_daughters": 5,
+          "detections_per_10cm": 3.126817053946156
+        },
+        {
+          "budget_mm": 30.0,
+          "budget_fraction": 2.0,
+          "n_daughters": 5,
+          "detections_per_10cm": 3.126817053946156
+        }
+      ],
+      "elapsed_s": 14.777076244354248
+    },
+    {
+      "case_id": "subject011",
+      "aortic_length_mm": 140.29383865633525,
+      "threshold_sweep": [
+        {
+          "threshold": 0.05,
+          "n_daughters": 6,
+          "detections_per_10cm": 4.276738064525871,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.1,
+          "n_daughters": 6,
+          "detections_per_10cm": 4.276738064525871,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.15,
+          "n_daughters": 6,
+          "detections_per_10cm": 4.276738064525871,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.2,
+          "n_daughters": 6,
+          "detections_per_10cm": 4.276738064525871,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.25,
+          "n_daughters": 6,
+          "detections_per_10cm": 4.276738064525871,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.3,
+          "n_daughters": 6,
+          "detections_per_10cm": 4.276738064525871,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.35,
+          "n_daughters": 6,
+          "detections_per_10cm": 4.276738064525871,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.4,
+          "n_daughters": 6,
+          "detections_per_10cm": 4.276738064525871,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.45,
+          "n_daughters": 6,
+          "detections_per_10cm": 4.276738064525871,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.5,
+          "n_daughters": 5,
+          "detections_per_10cm": 3.5639483871048925,
+          "local_stability": 0.8333333333333334
+        },
+        {
+          "threshold": 0.55,
+          "n_daughters": 5,
+          "detections_per_10cm": 3.5639483871048925,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.6,
+          "n_daughters": 5,
+          "detections_per_10cm": 3.5639483871048925,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.65,
+          "n_daughters": 5,
+          "detections_per_10cm": 3.5639483871048925,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.7,
+          "n_daughters": 5,
+          "detections_per_10cm": 3.5639483871048925,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.75,
+          "n_daughters": 4,
+          "detections_per_10cm": 2.8511587096839137,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.8,
+          "n_daughters": 4,
+          "detections_per_10cm": 2.8511587096839137,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.85,
+          "n_daughters": 4,
+          "detections_per_10cm": 2.8511587096839137,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.9,
+          "n_daughters": 4,
+          "detections_per_10cm": 2.8511587096839137,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.95,
+          "n_daughters": 3,
+          "detections_per_10cm": 2.1383690322629354,
+          "local_stability": 0.0
+        }
+      ],
+      "budget_sweep": [
+        {
+          "budget_mm": 7.5,
+          "budget_fraction": 0.5,
+          "n_daughters": 6,
+          "detections_per_10cm": 4.276738064525871
+        },
+        {
+          "budget_mm": 10.5,
+          "budget_fraction": 0.7,
+          "n_daughters": 6,
+          "detections_per_10cm": 4.276738064525871
+        },
+        {
+          "budget_mm": 12.75,
+          "budget_fraction": 0.85,
+          "n_daughters": 6,
+          "detections_per_10cm": 4.276738064525871
+        },
+        {
+          "budget_mm": 15.0,
+          "budget_fraction": 1.0,
+          "n_daughters": 5,
+          "detections_per_10cm": 3.5639483871048925
+        },
+        {
+          "budget_mm": 19.5,
+          "budget_fraction": 1.3,
+          "n_daughters": 4,
+          "detections_per_10cm": 2.8511587096839137
+        },
+        {
+          "budget_mm": 24.0,
+          "budget_fraction": 1.6,
+          "n_daughters": 4,
+          "detections_per_10cm": 2.8511587096839137
+        },
+        {
+          "budget_mm": 30.0,
+          "budget_fraction": 2.0,
+          "n_daughters": 4,
+          "detections_per_10cm": 2.8511587096839137
+        }
+      ],
+      "elapsed_s": 6.991330623626709
+    },
+    {
+      "case_id": "subject012",
+      "aortic_length_mm": 155.0634426548167,
+      "threshold_sweep": [
+        {
+          "threshold": 0.05,
+          "n_daughters": 10,
+          "detections_per_10cm": 6.448973290410415,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.1,
+          "n_daughters": 10,
+          "detections_per_10cm": 6.448973290410415,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.15,
+          "n_daughters": 10,
+          "detections_per_10cm": 6.448973290410415,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.2,
+          "n_daughters": 10,
+          "detections_per_10cm": 6.448973290410415,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.25,
+          "n_daughters": 10,
+          "detections_per_10cm": 6.448973290410415,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.3,
+          "n_daughters": 10,
+          "detections_per_10cm": 6.448973290410415,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.35,
+          "n_daughters": 10,
+          "detections_per_10cm": 6.448973290410415,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.4,
+          "n_daughters": 10,
+          "detections_per_10cm": 6.448973290410415,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.45,
+          "n_daughters": 10,
+          "detections_per_10cm": 6.448973290410415,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.5,
+          "n_daughters": 10,
+          "detections_per_10cm": 6.448973290410415,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.55,
+          "n_daughters": 9,
+          "detections_per_10cm": 5.8040759613693735,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.6,
+          "n_daughters": 9,
+          "detections_per_10cm": 5.8040759613693735,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.65,
+          "n_daughters": 9,
+          "detections_per_10cm": 5.8040759613693735,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.7,
+          "n_daughters": 9,
+          "detections_per_10cm": 5.8040759613693735,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.75,
+          "n_daughters": 9,
+          "detections_per_10cm": 5.8040759613693735,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.8,
+          "n_daughters": 9,
+          "detections_per_10cm": 5.8040759613693735,
+          "local_stability": 0.8888888888888888
+        },
+        {
+          "threshold": 0.85,
+          "n_daughters": 7,
+          "detections_per_10cm": 4.514281303287291,
+          "local_stability": 0.875
+        },
+        {
+          "threshold": 0.9,
+          "n_daughters": 7,
+          "detections_per_10cm": 4.514281303287291,
+          "local_stability": 0.7142857142857143
+        },
+        {
+          "threshold": 0.95,
+          "n_daughters": 3,
+          "detections_per_10cm": 1.9346919871231245,
+          "local_stability": 0.2
+        }
+      ],
+      "budget_sweep": [
+        {
+          "budget_mm": 7.5,
+          "budget_fraction": 0.5,
+          "n_daughters": 9,
+          "detections_per_10cm": 5.8040759613693735
+        },
+        {
+          "budget_mm": 10.5,
+          "budget_fraction": 0.7,
+          "n_daughters": 10,
+          "detections_per_10cm": 6.448973290410415
+        },
+        {
+          "budget_mm": 12.75,
+          "budget_fraction": 0.85,
+          "n_daughters": 11,
+          "detections_per_10cm": 7.093870619451456
+        },
+        {
+          "budget_mm": 15.0,
+          "budget_fraction": 1.0,
+          "n_daughters": 10,
+          "detections_per_10cm": 6.448973290410415
+        },
+        {
+          "budget_mm": 19.5,
+          "budget_fraction": 1.3,
+          "n_daughters": 7,
+          "detections_per_10cm": 4.514281303287291
+        },
+        {
+          "budget_mm": 24.0,
+          "budget_fraction": 1.6,
+          "n_daughters": 7,
+          "detections_per_10cm": 4.514281303287291
+        },
+        {
+          "budget_mm": 30.0,
+          "budget_fraction": 2.0,
+          "n_daughters": 7,
+          "detections_per_10cm": 4.514281303287291
+        }
+      ],
+      "elapsed_s": 9.312812089920044
+    },
+    {
+      "case_id": "subject013",
+      "aortic_length_mm": 138.0680554202401,
+      "threshold_sweep": [
+        {
+          "threshold": 0.05,
+          "n_daughters": 8,
+          "detections_per_10cm": 5.794243987611951,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.1,
+          "n_daughters": 8,
+          "detections_per_10cm": 5.794243987611951,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.15,
+          "n_daughters": 8,
+          "detections_per_10cm": 5.794243987611951,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.2,
+          "n_daughters": 8,
+          "detections_per_10cm": 5.794243987611951,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.25,
+          "n_daughters": 8,
+          "detections_per_10cm": 5.794243987611951,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.3,
+          "n_daughters": 8,
+          "detections_per_10cm": 5.794243987611951,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.35,
+          "n_daughters": 8,
+          "detections_per_10cm": 5.794243987611951,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.4,
+          "n_daughters": 8,
+          "detections_per_10cm": 5.794243987611951,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.45,
+          "n_daughters": 8,
+          "detections_per_10cm": 5.794243987611951,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.5,
+          "n_daughters": 8,
+          "detections_per_10cm": 5.794243987611951,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.55,
+          "n_daughters": 8,
+          "detections_per_10cm": 5.794243987611951,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.6,
+          "n_daughters": 8,
+          "detections_per_10cm": 5.794243987611951,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.65,
+          "n_daughters": 8,
+          "detections_per_10cm": 5.794243987611951,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.7,
+          "n_daughters": 8,
+          "detections_per_10cm": 5.794243987611951,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.75,
+          "n_daughters": 8,
+          "detections_per_10cm": 5.794243987611951,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.8,
+          "n_daughters": 7,
+          "detections_per_10cm": 5.0699634891604575,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.85,
+          "n_daughters": 6,
+          "detections_per_10cm": 4.345682990708964,
+          "local_stability": 0.8571428571428571
+        },
+        {
+          "threshold": 0.9,
+          "n_daughters": 5,
+          "detections_per_10cm": 3.6214024922574697,
+          "local_stability": 0.8
+        },
+        {
+          "threshold": 0.95,
+          "n_daughters": 3,
+          "detections_per_10cm": 2.172841495354482,
+          "local_stability": 0.75
+        }
+      ],
+      "budget_sweep": [
+        {
+          "budget_mm": 7.5,
+          "budget_fraction": 0.5,
+          "n_daughters": 10,
+          "detections_per_10cm": 7.242804984514939
+        },
+        {
+          "budget_mm": 10.5,
+          "budget_fraction": 0.7,
+          "n_daughters": 10,
+          "detections_per_10cm": 7.242804984514939
+        },
+        {
+          "budget_mm": 12.75,
+          "budget_fraction": 0.85,
+          "n_daughters": 10,
+          "detections_per_10cm": 7.242804984514939
+        },
+        {
+          "budget_mm": 15.0,
+          "budget_fraction": 1.0,
+          "n_daughters": 8,
+          "detections_per_10cm": 5.794243987611951
+        },
+        {
+          "budget_mm": 19.5,
+          "budget_fraction": 1.3,
+          "n_daughters": 7,
+          "detections_per_10cm": 5.0699634891604575
+        },
+        {
+          "budget_mm": 24.0,
+          "budget_fraction": 1.6,
+          "n_daughters": 7,
+          "detections_per_10cm": 5.0699634891604575
+        },
+        {
+          "budget_mm": 30.0,
+          "budget_fraction": 2.0,
+          "n_daughters": 7,
+          "detections_per_10cm": 5.0699634891604575
+        }
+      ],
+      "elapsed_s": 8.155982971191406
+    },
+    {
+      "case_id": "subject014",
+      "aortic_length_mm": 145.78177987668198,
+      "threshold_sweep": [
+        {
+          "threshold": 0.05,
+          "n_daughters": 3,
+          "detections_per_10cm": 2.057870333684858,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.1,
+          "n_daughters": 3,
+          "detections_per_10cm": 2.057870333684858,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.15,
+          "n_daughters": 3,
+          "detections_per_10cm": 2.057870333684858,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.2,
+          "n_daughters": 3,
+          "detections_per_10cm": 2.057870333684858,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.25,
+          "n_daughters": 3,
+          "detections_per_10cm": 2.057870333684858,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.3,
+          "n_daughters": 3,
+          "detections_per_10cm": 2.057870333684858,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.35,
+          "n_daughters": 3,
+          "detections_per_10cm": 2.057870333684858,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.4,
+          "n_daughters": 3,
+          "detections_per_10cm": 2.057870333684858,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.45,
+          "n_daughters": 3,
+          "detections_per_10cm": 2.057870333684858,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.5,
+          "n_daughters": 3,
+          "detections_per_10cm": 2.057870333684858,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.55,
+          "n_daughters": 3,
+          "detections_per_10cm": 2.057870333684858,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.6,
+          "n_daughters": 3,
+          "detections_per_10cm": 2.057870333684858,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.65,
+          "n_daughters": 3,
+          "detections_per_10cm": 2.057870333684858,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.7,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.3719135557899051,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.75,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.3719135557899051,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.8,
+          "n_daughters": 1,
+          "detections_per_10cm": 0.6859567778949526,
+          "local_stability": 0.5
+        },
+        {
+          "threshold": 0.85,
+          "n_daughters": 1,
+          "detections_per_10cm": 0.6859567778949526,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.9,
+          "n_daughters": 1,
+          "detections_per_10cm": 0.6859567778949526,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.95,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 0.0
+        }
+      ],
+      "budget_sweep": [
+        {
+          "budget_mm": 7.5,
+          "budget_fraction": 0.5,
+          "n_daughters": 5,
+          "detections_per_10cm": 3.4297838894747628
+        },
+        {
+          "budget_mm": 10.5,
+          "budget_fraction": 0.7,
+          "n_daughters": 5,
+          "detections_per_10cm": 3.4297838894747628
+        },
+        {
+          "budget_mm": 12.75,
+          "budget_fraction": 0.85,
+          "n_daughters": 3,
+          "detections_per_10cm": 2.057870333684858
+        },
+        {
+          "budget_mm": 15.0,
+          "budget_fraction": 1.0,
+          "n_daughters": 3,
+          "detections_per_10cm": 2.057870333684858
+        },
+        {
+          "budget_mm": 19.5,
+          "budget_fraction": 1.3,
+          "n_daughters": 3,
+          "detections_per_10cm": 2.057870333684858
+        },
+        {
+          "budget_mm": 24.0,
+          "budget_fraction": 1.6,
+          "n_daughters": 3,
+          "detections_per_10cm": 2.057870333684858
+        },
+        {
+          "budget_mm": 30.0,
+          "budget_fraction": 2.0,
+          "n_daughters": 3,
+          "detections_per_10cm": 2.057870333684858
+        }
+      ],
+      "elapsed_s": 7.003567695617676
+    },
+    {
+      "case_id": "subject015",
+      "aortic_length_mm": 154.0829886482437,
+      "threshold_sweep": [
+        {
+          "threshold": 0.05,
+          "n_daughters": 10,
+          "detections_per_10cm": 6.490009109849897,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.1,
+          "n_daughters": 10,
+          "detections_per_10cm": 6.490009109849897,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.15,
+          "n_daughters": 10,
+          "detections_per_10cm": 6.490009109849897,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.2,
+          "n_daughters": 10,
+          "detections_per_10cm": 6.490009109849897,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.25,
+          "n_daughters": 10,
+          "detections_per_10cm": 6.490009109849897,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.3,
+          "n_daughters": 10,
+          "detections_per_10cm": 6.490009109849897,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.35,
+          "n_daughters": 10,
+          "detections_per_10cm": 6.490009109849897,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.4,
+          "n_daughters": 10,
+          "detections_per_10cm": 6.490009109849897,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.45,
+          "n_daughters": 10,
+          "detections_per_10cm": 6.490009109849897,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.5,
+          "n_daughters": 10,
+          "detections_per_10cm": 6.490009109849897,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.55,
+          "n_daughters": 9,
+          "detections_per_10cm": 5.841008198864907,
+          "local_stability": 0.8
+        },
+        {
+          "threshold": 0.6,
+          "n_daughters": 7,
+          "detections_per_10cm": 4.543006376894928,
+          "local_stability": 0.875
+        },
+        {
+          "threshold": 0.65,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.894005465909938,
+          "local_stability": 0.8571428571428571
+        },
+        {
+          "threshold": 0.7,
+          "n_daughters": 5,
+          "detections_per_10cm": 3.2450045549249484,
+          "local_stability": 0.8333333333333334
+        },
+        {
+          "threshold": 0.75,
+          "n_daughters": 4,
+          "detections_per_10cm": 2.5960036439399587,
+          "local_stability": 0.8
+        },
+        {
+          "threshold": 0.8,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.2980018219699794,
+          "local_stability": 0.6666666666666666
+        },
+        {
+          "threshold": 0.85,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.2980018219699794,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.9,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.2980018219699794,
+          "local_stability": 0.0
+        },
+        {
+          "threshold": 0.95,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 1.0
+        }
+      ],
+      "budget_sweep": [
+        {
+          "budget_mm": 7.5,
+          "budget_fraction": 0.5,
+          "n_daughters": 13,
+          "detections_per_10cm": 8.437011842804866
+        },
+        {
+          "budget_mm": 10.5,
+          "budget_fraction": 0.7,
+          "n_daughters": 9,
+          "detections_per_10cm": 5.841008198864907
+        },
+        {
+          "budget_mm": 12.75,
+          "budget_fraction": 0.85,
+          "n_daughters": 10,
+          "detections_per_10cm": 6.490009109849897
+        },
+        {
+          "budget_mm": 15.0,
+          "budget_fraction": 1.0,
+          "n_daughters": 10,
+          "detections_per_10cm": 6.490009109849897
+        },
+        {
+          "budget_mm": 19.5,
+          "budget_fraction": 1.3,
+          "n_daughters": 8,
+          "detections_per_10cm": 5.1920072878799175
+        },
+        {
+          "budget_mm": 24.0,
+          "budget_fraction": 1.6,
+          "n_daughters": 8,
+          "detections_per_10cm": 5.1920072878799175
+        },
+        {
+          "budget_mm": 30.0,
+          "budget_fraction": 2.0,
+          "n_daughters": 6,
+          "detections_per_10cm": 3.894005465909938
+        }
+      ],
+      "elapsed_s": 12.027176856994629
+    },
+    {
+      "case_id": "subject016",
+      "aortic_length_mm": 171.90343949196847,
+      "threshold_sweep": [
+        {
+          "threshold": 0.05,
+          "n_daughters": 4,
+          "detections_per_10cm": 2.3268877061572026,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.1,
+          "n_daughters": 4,
+          "detections_per_10cm": 2.3268877061572026,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.15,
+          "n_daughters": 4,
+          "detections_per_10cm": 2.3268877061572026,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.2,
+          "n_daughters": 4,
+          "detections_per_10cm": 2.3268877061572026,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.25,
+          "n_daughters": 4,
+          "detections_per_10cm": 2.3268877061572026,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.3,
+          "n_daughters": 4,
+          "detections_per_10cm": 2.3268877061572026,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.35,
+          "n_daughters": 4,
+          "detections_per_10cm": 2.3268877061572026,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.4,
+          "n_daughters": 4,
+          "detections_per_10cm": 2.3268877061572026,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.45,
+          "n_daughters": 4,
+          "detections_per_10cm": 2.3268877061572026,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.5,
+          "n_daughters": 4,
+          "detections_per_10cm": 2.3268877061572026,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.55,
+          "n_daughters": 3,
+          "detections_per_10cm": 1.745165779617902,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.6,
+          "n_daughters": 3,
+          "detections_per_10cm": 1.745165779617902,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.65,
+          "n_daughters": 3,
+          "detections_per_10cm": 1.745165779617902,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.7,
+          "n_daughters": 3,
+          "detections_per_10cm": 1.745165779617902,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.75,
+          "n_daughters": 3,
+          "detections_per_10cm": 1.745165779617902,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.8,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.1634438530786013,
+          "local_stability": 0.6666666666666666
+        },
+        {
+          "threshold": 0.85,
+          "n_daughters": 2,
+          "detections_per_10cm": 1.1634438530786013,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.9,
+          "n_daughters": 1,
+          "detections_per_10cm": 0.5817219265393007,
+          "local_stability": 0.5
+        },
+        {
+          "threshold": 0.95,
+          "n_daughters": 1,
+          "detections_per_10cm": 0.5817219265393007,
+          "local_stability": 0.0
+        }
+      ],
+      "budget_sweep": [
+        {
+          "budget_mm": 7.5,
+          "budget_fraction": 0.5,
+          "n_daughters": 7,
+          "detections_per_10cm": 4.072053485775105
+        },
+        {
+          "budget_mm": 10.5,
+          "budget_fraction": 0.7,
+          "n_daughters": 7,
+          "detections_per_10cm": 4.072053485775105
+        },
+        {
+          "budget_mm": 12.75,
+          "budget_fraction": 0.85,
+          "n_daughters": 4,
+          "detections_per_10cm": 2.3268877061572026
+        },
+        {
+          "budget_mm": 15.0,
+          "budget_fraction": 1.0,
+          "n_daughters": 4,
+          "detections_per_10cm": 2.3268877061572026
+        },
+        {
+          "budget_mm": 19.5,
+          "budget_fraction": 1.3,
+          "n_daughters": 4,
+          "detections_per_10cm": 2.3268877061572026
+        },
+        {
+          "budget_mm": 24.0,
+          "budget_fraction": 1.6,
+          "n_daughters": 4,
+          "detections_per_10cm": 2.3268877061572026
+        },
+        {
+          "budget_mm": 30.0,
+          "budget_fraction": 2.0,
+          "n_daughters": 4,
+          "detections_per_10cm": 2.3268877061572026
+        }
+      ],
+      "elapsed_s": 12.283229112625122
+    },
+    {
+      "case_id": "subject017",
+      "aortic_length_mm": 53.8309429862643,
+      "threshold_sweep": [
+        {
+          "threshold": 0.05,
+          "n_daughters": 1,
+          "detections_per_10cm": 1.857667624836451,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.1,
+          "n_daughters": 1,
+          "detections_per_10cm": 1.857667624836451,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.15,
+          "n_daughters": 1,
+          "detections_per_10cm": 1.857667624836451,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.2,
+          "n_daughters": 1,
+          "detections_per_10cm": 1.857667624836451,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.25,
+          "n_daughters": 1,
+          "detections_per_10cm": 1.857667624836451,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.3,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 0.0
+        },
+        {
+          "threshold": 0.35,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.4,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.45,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.5,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.55,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.6,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.65,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.7,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.75,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.8,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.85,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.9,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.95,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 1.0
+        }
+      ],
+      "budget_sweep": [
+        {
+          "budget_mm": 7.5,
+          "budget_fraction": 0.5,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0
+        },
+        {
+          "budget_mm": 10.5,
+          "budget_fraction": 0.7,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0
+        },
+        {
+          "budget_mm": 12.75,
+          "budget_fraction": 0.85,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0
+        },
+        {
+          "budget_mm": 15.0,
+          "budget_fraction": 1.0,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0
+        },
+        {
+          "budget_mm": 19.5,
+          "budget_fraction": 1.3,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0
+        },
+        {
+          "budget_mm": 24.0,
+          "budget_fraction": 1.6,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0
+        },
+        {
+          "budget_mm": 30.0,
+          "budget_fraction": 2.0,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0
+        }
+      ],
+      "elapsed_s": 1.6195030212402344
+    },
+    {
+      "case_id": "subject018",
+      "aortic_length_mm": 364.83949507572277,
+      "threshold_sweep": [
+        {
+          "threshold": 0.05,
+          "n_daughters": 13,
+          "detections_per_10cm": 3.563210720183087,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.1,
+          "n_daughters": 13,
+          "detections_per_10cm": 3.563210720183087,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.15,
+          "n_daughters": 13,
+          "detections_per_10cm": 3.563210720183087,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.2,
+          "n_daughters": 13,
+          "detections_per_10cm": 3.563210720183087,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.25,
+          "n_daughters": 13,
+          "detections_per_10cm": 3.563210720183087,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.3,
+          "n_daughters": 13,
+          "detections_per_10cm": 3.563210720183087,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.35,
+          "n_daughters": 13,
+          "detections_per_10cm": 3.563210720183087,
+          "local_stability": 0.9230769230769231
+        },
+        {
+          "threshold": 0.4,
+          "n_daughters": 11,
+          "detections_per_10cm": 3.0150244555395354,
+          "local_stability": 0.8333333333333334
+        },
+        {
+          "threshold": 0.45,
+          "n_daughters": 10,
+          "detections_per_10cm": 2.7409313232177595,
+          "local_stability": 0.7
+        },
+        {
+          "threshold": 0.5,
+          "n_daughters": 7,
+          "detections_per_10cm": 1.9186519262524315,
+          "local_stability": 0.8571428571428571
+        },
+        {
+          "threshold": 0.55,
+          "n_daughters": 5,
+          "detections_per_10cm": 1.3704656616088797,
+          "local_stability": 0.8333333333333334
+        },
+        {
+          "threshold": 0.6,
+          "n_daughters": 3,
+          "detections_per_10cm": 0.8222793969653278,
+          "local_stability": 0.75
+        },
+        {
+          "threshold": 0.65,
+          "n_daughters": 3,
+          "detections_per_10cm": 0.8222793969653278,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.7,
+          "n_daughters": 2,
+          "detections_per_10cm": 0.5481862646435519,
+          "local_stability": 0.6666666666666666
+        },
+        {
+          "threshold": 0.75,
+          "n_daughters": 2,
+          "detections_per_10cm": 0.5481862646435519,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.8,
+          "n_daughters": 1,
+          "detections_per_10cm": 0.27409313232177596,
+          "local_stability": 0.5
+        },
+        {
+          "threshold": 0.85,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 0.0
+        },
+        {
+          "threshold": 0.9,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.95,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 1.0
+        }
+      ],
+      "budget_sweep": [
+        {
+          "budget_mm": 7.5,
+          "budget_fraction": 0.5,
+          "n_daughters": 20,
+          "detections_per_10cm": 5.481862646435519
+        },
+        {
+          "budget_mm": 10.5,
+          "budget_fraction": 0.7,
+          "n_daughters": 7,
+          "detections_per_10cm": 1.9186519262524315
+        },
+        {
+          "budget_mm": 12.75,
+          "budget_fraction": 0.85,
+          "n_daughters": 7,
+          "detections_per_10cm": 1.9186519262524315
+        },
+        {
+          "budget_mm": 15.0,
+          "budget_fraction": 1.0,
+          "n_daughters": 7,
+          "detections_per_10cm": 1.9186519262524315
+        },
+        {
+          "budget_mm": 19.5,
+          "budget_fraction": 1.3,
+          "n_daughters": 7,
+          "detections_per_10cm": 1.9186519262524315
+        },
+        {
+          "budget_mm": 24.0,
+          "budget_fraction": 1.6,
+          "n_daughters": 7,
+          "detections_per_10cm": 1.9186519262524315
+        },
+        {
+          "budget_mm": 30.0,
+          "budget_fraction": 2.0,
+          "n_daughters": 7,
+          "detections_per_10cm": 1.9186519262524315
+        }
+      ],
+      "elapsed_s": 65.24670481681824
+    },
+    {
+      "case_id": "subject019",
+      "aortic_length_mm": 70.60256047553885,
+      "threshold_sweep": [
+        {
+          "threshold": 0.05,
+          "n_daughters": 3,
+          "detections_per_10cm": 4.249137679701273,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.1,
+          "n_daughters": 3,
+          "detections_per_10cm": 4.249137679701273,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.15,
+          "n_daughters": 3,
+          "detections_per_10cm": 4.249137679701273,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.2,
+          "n_daughters": 3,
+          "detections_per_10cm": 4.249137679701273,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.25,
+          "n_daughters": 3,
+          "detections_per_10cm": 4.249137679701273,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.3,
+          "n_daughters": 3,
+          "detections_per_10cm": 4.249137679701273,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.35,
+          "n_daughters": 3,
+          "detections_per_10cm": 4.249137679701273,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.4,
+          "n_daughters": 3,
+          "detections_per_10cm": 4.249137679701273,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.45,
+          "n_daughters": 3,
+          "detections_per_10cm": 4.249137679701273,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.5,
+          "n_daughters": 3,
+          "detections_per_10cm": 4.249137679701273,
+          "local_stability": 0.6666666666666666
+        },
+        {
+          "threshold": 0.55,
+          "n_daughters": 1,
+          "detections_per_10cm": 1.4163792265670911,
+          "local_stability": 0.5
+        },
+        {
+          "threshold": 0.6,
+          "n_daughters": 1,
+          "detections_per_10cm": 1.4163792265670911,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.65,
+          "n_daughters": 1,
+          "detections_per_10cm": 1.4163792265670911,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.7,
+          "n_daughters": 1,
+          "detections_per_10cm": 1.4163792265670911,
+          "local_stability": 0.0
+        },
+        {
+          "threshold": 0.75,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.8,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.85,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.9,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.95,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 1.0
+        }
+      ],
+      "budget_sweep": [
+        {
+          "budget_mm": 7.5,
+          "budget_fraction": 0.5,
+          "n_daughters": 2,
+          "detections_per_10cm": 2.8327584531341823
+        },
+        {
+          "budget_mm": 10.5,
+          "budget_fraction": 0.7,
+          "n_daughters": 3,
+          "detections_per_10cm": 4.249137679701273
+        },
+        {
+          "budget_mm": 12.75,
+          "budget_fraction": 0.85,
+          "n_daughters": 3,
+          "detections_per_10cm": 4.249137679701273
+        },
+        {
+          "budget_mm": 15.0,
+          "budget_fraction": 1.0,
+          "n_daughters": 3,
+          "detections_per_10cm": 4.249137679701273
+        },
+        {
+          "budget_mm": 19.5,
+          "budget_fraction": 1.3,
+          "n_daughters": 3,
+          "detections_per_10cm": 4.249137679701273
+        },
+        {
+          "budget_mm": 24.0,
+          "budget_fraction": 1.6,
+          "n_daughters": 3,
+          "detections_per_10cm": 4.249137679701273
+        },
+        {
+          "budget_mm": 30.0,
+          "budget_fraction": 2.0,
+          "n_daughters": 3,
+          "detections_per_10cm": 4.249137679701273
+        }
+      ],
+      "elapsed_s": 2.670003890991211
+    },
+    {
+      "case_id": "subject020",
+      "aortic_length_mm": 78.22153949765409,
+      "threshold_sweep": [
+        {
+          "threshold": 0.05,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.1,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.15,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.2,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.25,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.3,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.35,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.4,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.45,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.5,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.55,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.6,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.65,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.7,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.75,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.8,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.85,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.9,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 1.0
+        },
+        {
+          "threshold": 0.95,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0,
+          "local_stability": 1.0
+        }
+      ],
+      "budget_sweep": [
+        {
+          "budget_mm": 7.5,
+          "budget_fraction": 0.5,
+          "n_daughters": 3,
+          "detections_per_10cm": 3.8352607469327187
+        },
+        {
+          "budget_mm": 10.5,
+          "budget_fraction": 0.7,
+          "n_daughters": 1,
+          "detections_per_10cm": 1.278420248977573
+        },
+        {
+          "budget_mm": 12.75,
+          "budget_fraction": 0.85,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0
+        },
+        {
+          "budget_mm": 15.0,
+          "budget_fraction": 1.0,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0
+        },
+        {
+          "budget_mm": 19.5,
+          "budget_fraction": 1.3,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0
+        },
+        {
+          "budget_mm": 24.0,
+          "budget_fraction": 1.6,
+          "n_daughters": 0,
+          "detections_per_10cm": 0.0
+        },
+        {
+          "budget_mm": 30.0,
+          "budget_fraction": 2.0,
+          "n_daughters": 1,
+          "detections_per_10cm": 1.278420248977573
+        }
+      ],
+      "elapsed_s": 3.22196102142334
+    }
+  ],
+  "aggregate_threshold_sweep": [
+    {
+      "threshold": 0.05,
+      "mean_n_daughters": 5.85,
+      "total_n_daughters": 117,
+      "mean_detections_per_10cm": 3.7133511440344202,
+      "mean_local_stability": 1.0
+    },
+    {
+      "threshold": 0.1,
+      "mean_n_daughters": 5.85,
+      "total_n_daughters": 117,
+      "mean_detections_per_10cm": 3.7133511440344202,
+      "mean_local_stability": 1.0
+    },
+    {
+      "threshold": 0.15,
+      "mean_n_daughters": 5.85,
+      "total_n_daughters": 117,
+      "mean_detections_per_10cm": 3.7133511440344202,
+      "mean_local_stability": 1.0
+    },
+    {
+      "threshold": 0.2,
+      "mean_n_daughters": 5.85,
+      "total_n_daughters": 117,
+      "mean_detections_per_10cm": 3.7133511440344202,
+      "mean_local_stability": 1.0
+    },
+    {
+      "threshold": 0.25,
+      "mean_n_daughters": 5.85,
+      "total_n_daughters": 117,
+      "mean_detections_per_10cm": 3.7133511440344202,
+      "mean_local_stability": 1.0
+    },
+    {
+      "threshold": 0.3,
+      "mean_n_daughters": 5.8,
+      "total_n_daughters": 116,
+      "mean_detections_per_10cm": 3.6204677627925976,
+      "mean_local_stability": 0.95
+    },
+    {
+      "threshold": 0.35,
+      "mean_n_daughters": 5.8,
+      "total_n_daughters": 116,
+      "mean_detections_per_10cm": 3.6204677627925976,
+      "mean_local_stability": 0.9961538461538462
+    },
+    {
+      "threshold": 0.4,
+      "mean_n_daughters": 5.7,
+      "total_n_daughters": 114,
+      "mean_detections_per_10cm": 3.593058449560419,
+      "mean_local_stability": 0.9833333333333334
+    },
+    {
+      "threshold": 0.45,
+      "mean_n_daughters": 5.6,
+      "total_n_daughters": 112,
+      "mean_detections_per_10cm": 3.5480856224048694,
+      "mean_local_stability": 0.9678571428571429
+    },
+    {
+      "threshold": 0.5,
+      "mean_n_daughters": 5.25,
+      "total_n_daughters": 105,
+      "mean_detections_per_10cm": 3.3697617642482975,
+      "mean_local_stability": 0.9511904761904763
+    },
+    {
+      "threshold": 0.55,
+      "mean_n_daughters": 4.65,
+      "total_n_daughters": 93,
+      "mean_detections_per_10cm": 2.947133947618989,
+      "mean_local_stability": 0.8961904761904762
+    },
+    {
+      "threshold": 0.6,
+      "mean_n_daughters": 4.3,
+      "total_n_daughters": 86,
+      "mean_detections_per_10cm": 2.7528702449804774,
+      "mean_local_stability": 0.9741071428571428
+    },
+    {
+      "threshold": 0.65,
+      "mean_n_daughters": 4.05,
+      "total_n_daughters": 81,
+      "mean_detections_per_10cm": 2.5910019939472093,
+      "mean_local_stability": 0.9386904761904763
+    },
+    {
+      "threshold": 0.7,
+      "mean_n_daughters": 3.6,
+      "total_n_daughters": 72,
+      "mean_detections_per_10cm": 2.345698329996672,
+      "mean_local_stability": 0.8795238095238096
+    },
+    {
+      "threshold": 0.75,
+      "mean_n_daughters": 3.1,
+      "total_n_daughters": 62,
+      "mean_detections_per_10cm": 1.9801405967888617,
+      "mean_local_stability": 0.9116666666666667
+    },
+    {
+      "threshold": 0.8,
+      "mean_n_daughters": 2.5,
+      "total_n_daughters": 50,
+      "mean_detections_per_10cm": 1.6143259781899524,
+      "mean_local_stability": 0.8444444444444444
+    },
+    {
+      "threshold": 0.85,
+      "mean_n_daughters": 2.1,
+      "total_n_daughters": 42,
+      "mean_detections_per_10cm": 1.370150114480769,
+      "mean_local_stability": 0.8616071428571429
+    },
+    {
+      "threshold": 0.9,
+      "mean_n_daughters": 1.85,
+      "total_n_daughters": 37,
+      "mean_detections_per_10cm": 1.2069396095993485,
+      "mean_local_stability": 0.784047619047619
+    },
+    {
+      "threshold": 0.95,
+      "mean_n_daughters": 1.0,
+      "total_n_daughters": 20,
+      "mean_detections_per_10cm": 0.6611333483750124,
+      "mean_local_stability": 0.49749999999999994
+    }
+  ],
+  "aggregate_budget_sweep": [
+    {
+      "budget_fraction": 0.5,
+      "mean_n_daughters": 7.6,
+      "total_n_daughters": 152,
+      "mean_detections_per_10cm": 4.749336313259039
+    },
+    {
+      "budget_fraction": 0.7,
+      "mean_n_daughters": 5.95,
+      "total_n_daughters": 119,
+      "mean_detections_per_10cm": 3.861308817439878
+    },
+    {
+      "budget_fraction": 0.85,
+      "mean_n_daughters": 5.75,
+      "total_n_daughters": 115,
+      "mean_detections_per_10cm": 3.7080192229135056
+    },
+    {
+      "budget_fraction": 1.0,
+      "mean_n_daughters": 5.25,
+      "total_n_daughters": 105,
+      "mean_detections_per_10cm": 3.3697617642482975
+    },
+    {
+      "budget_fraction": 1.3,
+      "mean_n_daughters": 4.85,
+      "total_n_daughters": 97,
+      "mean_detections_per_10cm": 3.1053701284616544
+    },
+    {
+      "budget_fraction": 1.6,
+      "mean_n_daughters": 4.95,
+      "total_n_daughters": 99,
+      "mean_detections_per_10cm": 3.1717941624484607
+    },
+    {
+      "budget_fraction": 2.0,
+      "mean_n_daughters": 4.7,
+      "total_n_daughters": 94,
+      "mean_detections_per_10cm": 3.0566877527027194
+    }
+  ],
+  "chosen_threshold": 0.5,
+  "chosen_threshold_plateau": {
+    "lower": 0.05,
+    "upper": 0.5,
+    "width": 0.45,
+    "contains_current_default": true,
+    "on_a_cliff": false,
+    "mean_total_n_daughters": 114.8,
+    "mean_local_stability": 0.9848534798534798
+  },
+  "current_default_threshold": 0.5
+}
