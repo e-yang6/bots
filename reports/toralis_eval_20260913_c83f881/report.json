@@ -1,0 +1,827 @@
+{
+  "started_utc": "2026-09-13T08:15:53.597311+00:00",
+  "git_commit": "c83f88111147513ce08098343d531a8cb7cac322",
+  "python_executable": "C:\\Users\\parth\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+  "python_version": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "data_dir": "C:\\tung-tung-saharteries\\TORALIS CHALLENGE\\EVAL_SET",
+  "interpretation": "Informative comparison to draft expert-review-pending labels, not an adjudicated accuracy claim.",
+  "matching": "Unmodified src.evaluate: Hungarian assignment on physical LPS ostium distance, then accept at <=10 mm; no direction-based reassignment or exclusions.",
+  "runtime_method": "One sequential run.py subprocess per case, default pipeline/thread settings and --verbose. Includes startup, imports and I/O; excludes evaluation.",
+  "cases": [
+    {
+      "case_id": "case_19",
+      "command": [
+        "C:\\Users\\parth\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "C:\\tung-tung-saharteries\\run.py",
+        "--image",
+        "C:\\tung-tung-saharteries\\TORALIS CHALLENGE\\EVAL_SET\\case_19\\orig19.nii.gz",
+        "--aorta-mask",
+        "C:\\tung-tung-saharteries\\TORALIS CHALLENGE\\EVAL_SET\\case_19\\aorta19.nii.gz",
+        "--output",
+        "C:\\tung-tung-saharteries\\reports\\toralis_eval_20260913_c83f881\\case_19_prediction.json",
+        "--verbose"
+      ],
+      "score_command": [
+        "C:\\Users\\parth\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "-m",
+        "src.evaluate",
+        "--predictions",
+        "C:\\tung-tung-saharteries\\reports\\toralis_eval_20260913_c83f881\\case_19_prediction.json",
+        "--references",
+        "C:\\tung-tung-saharteries\\TORALIS CHALLENGE\\EVAL_SET\\case_19\\annotations.json",
+        "--distance-threshold-mm",
+        "10"
+      ],
+      "input_sha256": {
+        "C:\\tung-tung-saharteries\\TORALIS CHALLENGE\\EVAL_SET\\case_19\\orig19.nii.gz": "5e3140eeaa821b6c964620256c1696df6a228564896b1c66d3846f625b7c8c96",
+        "C:\\tung-tung-saharteries\\TORALIS CHALLENGE\\EVAL_SET\\case_19\\aorta19.nii.gz": "c18f4c8f43904e1658164e762984d042b1bc88e789494e6fdeec79ec95d82b0f",
+        "C:\\tung-tung-saharteries\\TORALIS CHALLENGE\\EVAL_SET\\case_19\\annotations.json": "fa8a8f86c09a795f696eb8a016f9ff95cea4d238380413c51b0304f73fff31c8"
+      },
+      "elapsed_s": 2.606973999994807,
+      "return_code": 0,
+      "schema_valid": true,
+      "n_predictions": 2,
+      "n_references": 3,
+      "scores": {
+        "precision": 1.0,
+        "recall": 0.6666666666666666,
+        "f1": 0.8,
+        "mean_ostium_error_mm": 1.0547405025104095,
+        "mean_seed_error_mm": 1.3128771456598272,
+        "mean_direction_error_deg": 17.00356606848909,
+        "mean_radius_error_mm": null,
+        "radius_scored_matches": 0,
+        "true_positives": 2,
+        "false_positives": 0,
+        "false_negatives": 1
+      },
+      "matches": [
+        {
+          "prediction_id": "branch_001",
+          "reference_id": "branch_002",
+          "ostium_error_mm": 1.0499999999999856,
+          "seed_error_mm": 0.9473780231420421,
+          "direction_error_deg": 4.300509114690022,
+          "radius_error_mm": null
+        },
+        {
+          "prediction_id": "branch_002",
+          "reference_id": "branch_001",
+          "ostium_error_mm": 1.0594810050208336,
+          "seed_error_mm": 1.6783762681776122,
+          "direction_error_deg": 29.70662302228816,
+          "radius_error_mm": null
+        }
+      ],
+      "unmatched_prediction_ids": [],
+      "unmatched_reference_ids": [
+        "branch_003"
+      ],
+      "reference_snapshot": [
+        {
+          "instance_id": "branch_001",
+          "parent_instance_id": "aorta",
+          "ostium_xyz_mm": [
+            5.3837890625,
+            -173.3662109375,
+            283.0999984741211
+          ],
+          "seed_xyz_mm": [
+            3.1326210765682276,
+            -170.20587778791509,
+            281.7150947952307
+          ],
+          "radius_mm": null,
+          "direction_xyz": [
+            -0.5464157522165991,
+            0.7670932715715298,
+            -0.3361513623938706
+          ],
+          "review_status": "expert_review_pending"
+        },
+        {
+          "instance_id": "branch_002",
+          "parent_instance_id": "aorta",
+          "ostium_xyz_mm": [
+            13.6337890625,
+            -168.1162109375,
+            281.5999984741211
+          ],
+          "seed_xyz_mm": [
+            15.696039180185409,
+            -164.03823292111508,
+            280.7842705754216
+          ],
+          "radius_mm": null,
+          "direction_xyz": [
+            0.4442586742004348,
+            0.8784953345092013,
+            -0.1757275665433253
+          ],
+          "review_status": "expert_review_pending"
+        },
+        {
+          "instance_id": "branch_003",
+          "parent_instance_id": "aorta",
+          "ostium_xyz_mm": [
+            17.042569062500007,
+            -181.7300909375,
+            305.3620384741211
+          ],
+          "seed_xyz_mm": [
+            21.321166007986108,
+            -183.67385540053635,
+            306.08737541960716
+          ],
+          "radius_mm": null,
+          "direction_xyz": [
+            0.8997961387607462,
+            -0.40877693804405885,
+            0.15253958041955998
+          ],
+          "review_status": "expert_review_pending"
+        }
+      ]
+    },
+    {
+      "case_id": "case_20",
+      "command": [
+        "C:\\Users\\parth\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "C:\\tung-tung-saharteries\\run.py",
+        "--image",
+        "C:\\tung-tung-saharteries\\TORALIS CHALLENGE\\EVAL_SET\\case_20\\orig20.nii.gz",
+        "--aorta-mask",
+        "C:\\tung-tung-saharteries\\TORALIS CHALLENGE\\EVAL_SET\\case_20\\aorta20.nii.gz",
+        "--output",
+        "C:\\tung-tung-saharteries\\reports\\toralis_eval_20260913_c83f881\\case_20_prediction.json",
+        "--verbose"
+      ],
+      "score_command": [
+        "C:\\Users\\parth\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "-m",
+        "src.evaluate",
+        "--predictions",
+        "C:\\tung-tung-saharteries\\reports\\toralis_eval_20260913_c83f881\\case_20_prediction.json",
+        "--references",
+        "C:\\tung-tung-saharteries\\TORALIS CHALLENGE\\EVAL_SET\\case_20\\annotations.json",
+        "--distance-threshold-mm",
+        "10"
+      ],
+      "input_sha256": {
+        "C:\\tung-tung-saharteries\\TORALIS CHALLENGE\\EVAL_SET\\case_20\\orig20.nii.gz": "f9b0ff4e3af19ca8e63cddfcc1a5ec5d5d302b1f7d97e54b7d57b06680cc7d81",
+        "C:\\tung-tung-saharteries\\TORALIS CHALLENGE\\EVAL_SET\\case_20\\aorta20.nii.gz": "dee54f9885040b24bf59e1e11843c4cf08992f12b4ac9479f622a79a279092ca",
+        "C:\\tung-tung-saharteries\\TORALIS CHALLENGE\\EVAL_SET\\case_20\\annotations.json": "f4db1be36b1cffc7f1d7de77bfe31f9b7443fc69fdaf996ada51c6929d5b65d6"
+      },
+      "elapsed_s": 1.9582426999986637,
+      "return_code": 0,
+      "schema_valid": true,
+      "n_predictions": 2,
+      "n_references": 4,
+      "scores": {
+        "precision": 0.5,
+        "recall": 0.25,
+        "f1": 0.3333333333333333,
+        "mean_ostium_error_mm": 4.29631651081771,
+        "mean_seed_error_mm": 12.56458485944632,
+        "mean_direction_error_deg": 105.60085547314442,
+        "mean_radius_error_mm": 0.10424015721290991,
+        "radius_scored_matches": 1,
+        "true_positives": 1,
+        "false_positives": 1,
+        "false_negatives": 3
+      },
+      "matches": [
+        {
+          "prediction_id": "branch_002",
+          "reference_id": "branch_003",
+          "ostium_error_mm": 4.29631651081771,
+          "seed_error_mm": 12.56458485944632,
+          "direction_error_deg": 105.60085547314442,
+          "radius_error_mm": 0.10424015721290991
+        }
+      ],
+      "unmatched_prediction_ids": [
+        "branch_001"
+      ],
+      "unmatched_reference_ids": [
+        "branch_001",
+        "branch_002",
+        "branch_004"
+      ],
+      "reference_snapshot": [
+        {
+          "instance_id": "branch_001",
+          "parent_instance_id": "aorta",
+          "ostium_xyz_mm": [
+            21.48532,
+            -143.36032,
+            350.99262500000003
+          ],
+          "seed_xyz_mm": [
+            22.562519870691347,
+            -145.1983458236739,
+            346.597843441504
+          ],
+          "radius_mm": 1.246,
+          "direction_xyz": [
+            0.22055991104973136,
+            -0.376341311586345,
+            -0.8998447326240256
+          ],
+          "review_status": "expert_review_pending"
+        },
+        {
+          "instance_id": "branch_002",
+          "parent_instance_id": "aorta",
+          "ostium_xyz_mm": [
+            9.41359,
+            -135.92901999999998,
+            340.202165
+          ],
+          "seed_xyz_mm": [
+            7.302606580771027,
+            -133.9375,
+            336.240106580771
+          ],
+          "radius_mm": null,
+          "direction_xyz": [
+            -0.42982669171101767,
+            0.40550221535561404,
+            -0.8067322780417622
+          ],
+          "review_status": "expert_review_pending"
+        },
+        {
+          "instance_id": "branch_003",
+          "parent_instance_id": "aorta",
+          "ostium_xyz_mm": [
+            8.50567000000001,
+            -127.659085,
+            356.0
+          ],
+          "seed_xyz_mm": [
+            3.8779969448387988,
+            -127.36370212218497,
+            356.54761075563005
+          ],
+          "radius_mm": 0.925,
+          "direction_xyz": [
+            -0.9910821526584962,
+            0.06326045399358551,
+            0.1172786495587609
+          ],
+          "review_status": "expert_review_pending"
+        },
+        {
+          "instance_id": "branch_004",
+          "parent_instance_id": "aorta",
+          "ostium_xyz_mm": [
+            13.72669000000002,
+            -126.27330999999998,
+            358.46567
+          ],
+          "seed_xyz_mm": [
+            16.81683015031257,
+            -123.18316984968743,
+            360.75433015031257
+          ],
+          "radius_mm": null,
+          "direction_xyz": [
+            0.6264039568527595,
+            0.6264039568527595,
+            0.46393551887995393
+          ],
+          "review_status": "expert_review_pending"
+        }
+      ]
+    },
+    {
+      "case_id": "case_21",
+      "command": [
+        "C:\\Users\\parth\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "C:\\tung-tung-saharteries\\run.py",
+        "--image",
+        "C:\\tung-tung-saharteries\\TORALIS CHALLENGE\\EVAL_SET\\case_21\\orig21.nii.gz",
+        "--aorta-mask",
+        "C:\\tung-tung-saharteries\\TORALIS CHALLENGE\\EVAL_SET\\case_21\\aorta21.nii.gz",
+        "--output",
+        "C:\\tung-tung-saharteries\\reports\\toralis_eval_20260913_c83f881\\case_21_prediction.json",
+        "--verbose"
+      ],
+      "score_command": [
+        "C:\\Users\\parth\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "-m",
+        "src.evaluate",
+        "--predictions",
+        "C:\\tung-tung-saharteries\\reports\\toralis_eval_20260913_c83f881\\case_21_prediction.json",
+        "--references",
+        "C:\\tung-tung-saharteries\\TORALIS CHALLENGE\\EVAL_SET\\case_21\\annotations.json",
+        "--distance-threshold-mm",
+        "10"
+      ],
+      "input_sha256": {
+        "C:\\tung-tung-saharteries\\TORALIS CHALLENGE\\EVAL_SET\\case_21\\orig21.nii.gz": "11e3ce094db5632f7f4df2dbe5849923e9f51a7a17eeeeaf1fa6a296abb48519",
+        "C:\\tung-tung-saharteries\\TORALIS CHALLENGE\\EVAL_SET\\case_21\\aorta21.nii.gz": "0ef0d75f4a912a947ab566da3ef5e614f458f3ee5cba328cf1976b320e7f444b",
+        "C:\\tung-tung-saharteries\\TORALIS CHALLENGE\\EVAL_SET\\case_21\\annotations.json": "750d485212a81d0428f581cc18094236b9296338a02edc4e921dc6d94f369101"
+      },
+      "elapsed_s": 3.2526776999948197,
+      "return_code": 0,
+      "schema_valid": true,
+      "n_predictions": 6,
+      "n_references": 3,
+      "scores": {
+        "precision": 0.5,
+        "recall": 1.0,
+        "f1": 0.6666666666666666,
+        "mean_ostium_error_mm": 1.9420634689103533,
+        "mean_seed_error_mm": 1.4841383655634093,
+        "mean_direction_error_deg": 7.008879413071111,
+        "mean_radius_error_mm": null,
+        "radius_scored_matches": 0,
+        "true_positives": 3,
+        "false_positives": 3,
+        "false_negatives": 0
+      },
+      "matches": [
+        {
+          "prediction_id": "branch_001",
+          "reference_id": "branch_001",
+          "ostium_error_mm": 1.3803552692060694,
+          "seed_error_mm": 1.525535368255844,
+          "direction_error_deg": 4.5001722491248195,
+          "radius_error_mm": null
+        },
+        {
+          "prediction_id": "branch_003",
+          "reference_id": "branch_002",
+          "ostium_error_mm": 1.8701336850610288,
+          "seed_error_mm": 0.9663756352544713,
+          "direction_error_deg": 7.7405681561862085,
+          "radius_error_mm": null
+        },
+        {
+          "prediction_id": "branch_004",
+          "reference_id": "branch_003",
+          "ostium_error_mm": 2.575701452463962,
+          "seed_error_mm": 1.960504093179913,
+          "direction_error_deg": 8.785897833902307,
+          "radius_error_mm": null
+        }
+      ],
+      "unmatched_prediction_ids": [
+        "branch_002",
+        "branch_005",
+        "branch_006"
+      ],
+      "unmatched_reference_ids": [],
+      "reference_snapshot": [
+        {
+          "instance_id": "branch_001",
+          "parent_instance_id": "aorta",
+          "ostium_xyz_mm": [
+            16.962300624999983,
+            -161.311804375,
+            401.74784
+          ],
+          "seed_xyz_mm": [
+            13.684148447236822,
+            -161.318359375,
+            398.0037617783621
+          ],
+          "radius_mm": null,
+          "direction_xyz": [
+            -0.6587411573551798,
+            -0.0013172202058673534,
+            -0.7523684951785843
+          ],
+          "review_status": "expert_review_pending"
+        },
+        {
+          "instance_id": "branch_002",
+          "parent_instance_id": "aorta",
+          "ostium_xyz_mm": [
+            36.431640625,
+            -153.068359375,
+            408.02
+          ],
+          "seed_xyz_mm": [
+            41.41571673074969,
+            -153.068359375,
+            408.4187296884881
+          ],
+          "radius_mm": null,
+          "direction_xyz": [
+            0.9968152213017165,
+            0.0,
+            0.07974593770976583
+          ],
+          "review_status": "expert_review_pending"
+        },
+        {
+          "instance_id": "branch_003",
+          "parent_instance_id": "aorta",
+          "ostium_xyz_mm": [
+            22.181640625,
+            -166.568359375,
+            413.84166500000003
+          ],
+          "seed_xyz_mm": [
+            22.88043115332269,
+            -170.1954118999059,
+            410.9240148244402
+          ],
+          "radius_mm": null,
+          "direction_xyz": [
+            0.14845554498477714,
+            -0.770554318424689,
+            -0.6198443300703297
+          ],
+          "review_status": "expert_review_pending"
+        }
+      ]
+    },
+    {
+      "case_id": "case_22",
+      "command": [
+        "C:\\Users\\parth\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "C:\\tung-tung-saharteries\\run.py",
+        "--image",
+        "C:\\tung-tung-saharteries\\TORALIS CHALLENGE\\EVAL_SET\\case_22\\orig22.nii.gz",
+        "--aorta-mask",
+        "C:\\tung-tung-saharteries\\TORALIS CHALLENGE\\EVAL_SET\\case_22\\aorta22.nii.gz",
+        "--output",
+        "C:\\tung-tung-saharteries\\reports\\toralis_eval_20260913_c83f881\\case_22_prediction.json",
+        "--verbose"
+      ],
+      "score_command": [
+        "C:\\Users\\parth\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "-m",
+        "src.evaluate",
+        "--predictions",
+        "C:\\tung-tung-saharteries\\reports\\toralis_eval_20260913_c83f881\\case_22_prediction.json",
+        "--references",
+        "C:\\tung-tung-saharteries\\TORALIS CHALLENGE\\EVAL_SET\\case_22\\annotations.json",
+        "--distance-threshold-mm",
+        "10"
+      ],
+      "input_sha256": {
+        "C:\\tung-tung-saharteries\\TORALIS CHALLENGE\\EVAL_SET\\case_22\\orig22.nii.gz": "56b888fd4a43396ea38d44c7f3ffa7f4f2972815e8173fa73e47d694f3a3ba81",
+        "C:\\tung-tung-saharteries\\TORALIS CHALLENGE\\EVAL_SET\\case_22\\aorta22.nii.gz": "96fac7941744573e8e14f0e4402d60d00fdd9099f984df76514b929bd52b3d0d",
+        "C:\\tung-tung-saharteries\\TORALIS CHALLENGE\\EVAL_SET\\case_22\\annotations.json": "85d0bde98437a944dbda15b21ad3bc4eb47ddb10f07f1b704cde07cacdef7254"
+      },
+      "elapsed_s": 19.26811579999776,
+      "return_code": 0,
+      "schema_valid": true,
+      "n_predictions": 9,
+      "n_references": 6,
+      "scores": {
+        "precision": 0.6666666666666666,
+        "recall": 1.0,
+        "f1": 0.8,
+        "mean_ostium_error_mm": 0.8365169479997202,
+        "mean_seed_error_mm": 0.9375308885198689,
+        "mean_direction_error_deg": 11.151800982297905,
+        "mean_radius_error_mm": 0.0834939823838714,
+        "radius_scored_matches": 1,
+        "true_positives": 6,
+        "false_positives": 3,
+        "false_negatives": 0
+      },
+      "matches": [
+        {
+          "prediction_id": "branch_001",
+          "reference_id": "branch_002",
+          "ostium_error_mm": 0.6670832032063075,
+          "seed_error_mm": 0.6376886140214487,
+          "direction_error_deg": 11.99037510901226,
+          "radius_error_mm": 0.0834939823838714
+        },
+        {
+          "prediction_id": "branch_003",
+          "reference_id": "branch_006",
+          "ostium_error_mm": 0.7763815639555083,
+          "seed_error_mm": 0.73729803569803,
+          "direction_error_deg": 7.062964423567903,
+          "radius_error_mm": null
+        },
+        {
+          "prediction_id": "branch_004",
+          "reference_id": "branch_003",
+          "ostium_error_mm": 0.9285662061614087,
+          "seed_error_mm": 0.31644035011623245,
+          "direction_error_deg": 7.229950259089184,
+          "radius_error_mm": null
+        },
+        {
+          "prediction_id": "branch_005",
+          "reference_id": "branch_005",
+          "ostium_error_mm": 1.0161200716450742,
+          "seed_error_mm": 0.7098900164958729,
+          "direction_error_deg": 11.31816506720212,
+          "radius_error_mm": null
+        },
+        {
+          "prediction_id": "branch_008",
+          "reference_id": "branch_001",
+          "ostium_error_mm": 0.8154753215150087,
+          "seed_error_mm": 2.4642232093502536,
+          "direction_error_deg": 5.851529664294454,
+          "radius_error_mm": null
+        },
+        {
+          "prediction_id": "branch_009",
+          "reference_id": "branch_004",
+          "ostium_error_mm": 0.8154753215150139,
+          "seed_error_mm": 0.759645105437375,
+          "direction_error_deg": 23.457821370621513,
+          "radius_error_mm": null
+        }
+      ],
+      "unmatched_prediction_ids": [
+        "branch_002",
+        "branch_006",
+        "branch_007"
+      ],
+      "unmatched_reference_ids": [],
+      "reference_snapshot": [
+        {
+          "instance_id": "branch_001",
+          "parent_instance_id": "aorta",
+          "ostium_xyz_mm": [
+            14.6376953125,
+            -162.6123046875,
+            243.35000038146973
+          ],
+          "seed_xyz_mm": [
+            17.42398480819793,
+            -164.75545697122595,
+            239.92055845025865
+          ],
+          "radius_mm": null,
+          "direction_xyz": [
+            0.5673608287977768,
+            -0.436401406893302,
+            -0.698323350610193
+          ],
+          "review_status": "expert_review_pending"
+        },
+        {
+          "instance_id": "branch_002",
+          "parent_instance_id": "aorta",
+          "ostium_xyz_mm": [
+            22.8876953125,
+            -140.1123046875,
+            307.1000003814697
+          ],
+          "seed_xyz_mm": [
+            26.870627808562432,
+            -137.5001053156921,
+            305.7292672572152
+          ],
+          "radius_mm": 2.102,
+          "direction_xyz": [
+            0.8035881920707866,
+            0.5270319224829371,
+            -0.2765562695878438
+          ],
+          "review_status": "expert_review_pending"
+        },
+        {
+          "instance_id": "branch_003",
+          "parent_instance_id": "aorta",
+          "ostium_xyz_mm": [
+            4.404035312500014,
+            -143.9267896875,
+            313.6887803814697
+          ],
+          "seed_xyz_mm": [
+            0.13579500978619308,
+            -144.1623046875,
+            311.2235713975848
+          ],
+          "radius_mm": null,
+          "direction_xyz": [
+            -0.8649560632659161,
+            -0.047726958369838694,
+            -0.4995729637042944
+          ],
+          "review_status": "expert_review_pending"
+        },
+        {
+          "instance_id": "branch_004",
+          "parent_instance_id": "aorta",
+          "ostium_xyz_mm": [
+            16.43769531250001,
+            -150.6123046875,
+            322.8500003814697
+          ],
+          "seed_xyz_mm": [
+            16.970210936113943,
+            -155.1875209227997,
+            320.9373922638199
+          ],
+          "radius_mm": null,
+          "direction_xyz": [
+            0.10677200275940807,
+            -0.9173533673717514,
+            -0.38348733851126493
+          ],
+          "review_status": "expert_review_pending"
+        },
+        {
+          "instance_id": "branch_005",
+          "parent_instance_id": "aorta",
+          "ostium_xyz_mm": [
+            17.33769531249999,
+            -149.1123046875,
+            337.1000003814697
+          ],
+          "seed_xyz_mm": [
+            17.375450402618327,
+            -153.98469378659365,
+            336.125525561651
+          ],
+          "radius_mm": null,
+          "direction_xyz": [
+            0.007598089302577934,
+            -0.9805524864537172,
+            -0.19610989355048541
+          ],
+          "review_status": "expert_review_pending"
+        },
+        {
+          "instance_id": "branch_006",
+          "parent_instance_id": "aorta",
+          "ostium_xyz_mm": [
+            19.538240312500022,
+            -155.1621196875,
+            250.64996038146973
+          ],
+          "seed_xyz_mm": [
+            23.773439515792433,
+            -152.72656048420757,
+            249.94234412240507
+          ],
+          "radius_mm": null,
+          "direction_xyz": [
+            0.8579259513711333,
+            0.49337217597250016,
+            -0.143342101073258
+          ],
+          "review_status": "expert_review_pending"
+        }
+      ]
+    },
+    {
+      "case_id": "case_23",
+      "command": [
+        "C:\\Users\\parth\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "C:\\tung-tung-saharteries\\run.py",
+        "--image",
+        "C:\\tung-tung-saharteries\\TORALIS CHALLENGE\\EVAL_SET\\case_23\\orig23.nii.gz",
+        "--aorta-mask",
+        "C:\\tung-tung-saharteries\\TORALIS CHALLENGE\\EVAL_SET\\case_23\\aorta23.nii.gz",
+        "--output",
+        "C:\\tung-tung-saharteries\\reports\\toralis_eval_20260913_c83f881\\case_23_prediction.json",
+        "--verbose"
+      ],
+      "score_command": [
+        "C:\\Users\\parth\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "-m",
+        "src.evaluate",
+        "--predictions",
+        "C:\\tung-tung-saharteries\\reports\\toralis_eval_20260913_c83f881\\case_23_prediction.json",
+        "--references",
+        "C:\\tung-tung-saharteries\\TORALIS CHALLENGE\\EVAL_SET\\case_23\\annotations.json",
+        "--distance-threshold-mm",
+        "10"
+      ],
+      "input_sha256": {
+        "C:\\tung-tung-saharteries\\TORALIS CHALLENGE\\EVAL_SET\\case_23\\orig23.nii.gz": "9e2747d40b4f63ec23d4d4a99dd6d4f4cf0125d608c1e782df6f094af51cbb49",
+        "C:\\tung-tung-saharteries\\TORALIS CHALLENGE\\EVAL_SET\\case_23\\aorta23.nii.gz": "bb10d5cbe26775e76beddf2c3c7d9f447e39784e129fe40f9204e5d48be00cd8",
+        "C:\\tung-tung-saharteries\\TORALIS CHALLENGE\\EVAL_SET\\case_23\\annotations.json": "53c36547dab8361d17ac4f3d0b8ecd5b91cd504463458c7a15918560cb26dcf0"
+      },
+      "elapsed_s": 3.960184499999741,
+      "return_code": 0,
+      "schema_valid": true,
+      "n_predictions": 2,
+      "n_references": 3,
+      "scores": {
+        "precision": 0.5,
+        "recall": 0.3333333333333333,
+        "f1": 0.4,
+        "mean_ostium_error_mm": 3.44891287219612,
+        "mean_seed_error_mm": 8.693481091573569,
+        "mean_direction_error_deg": 68.74771544770576,
+        "mean_radius_error_mm": null,
+        "radius_scored_matches": 0,
+        "true_positives": 1,
+        "false_positives": 1,
+        "false_negatives": 2
+      },
+      "matches": [
+        {
+          "prediction_id": "branch_001",
+          "reference_id": "branch_003",
+          "ostium_error_mm": 3.44891287219612,
+          "seed_error_mm": 8.693481091573569,
+          "direction_error_deg": 68.74771544770576,
+          "radius_error_mm": null
+        }
+      ],
+      "unmatched_prediction_ids": [
+        "branch_002"
+      ],
+      "unmatched_reference_ids": [
+        "branch_001",
+        "branch_002"
+      ],
+      "reference_snapshot": [
+        {
+          "instance_id": "branch_001",
+          "parent_instance_id": "aorta",
+          "ostium_xyz_mm": [
+            13.865448125,
+            -157.45499187500002,
+            265.53016
+          ],
+          "seed_xyz_mm": [
+            15.235745546338137,
+            -158.357421875,
+            260.8773003387048
+          ],
+          "radius_mm": null,
+          "direction_xyz": [
+            0.27774347590997356,
+            -0.18291214816756404,
+            -0.9430809655815205
+          ],
+          "review_status": "expert_review_pending"
+        },
+        {
+          "instance_id": "branch_002",
+          "parent_instance_id": "aorta",
+          "ostium_xyz_mm": [
+            2.9209231250000016,
+            -144.635766875,
+            260.07388000000003
+          ],
+          "seed_xyz_mm": [
+            -0.9268263494844291,
+            -142.07271213775778,
+            261.7847097372422
+          ],
+          "radius_mm": null,
+          "direction_xyz": [
+            -0.7805333469619341,
+            0.5199272212945656,
+            0.34704953369412994
+          ],
+          "review_status": "expert_review_pending"
+        },
+        {
+          "instance_id": "branch_003",
+          "parent_instance_id": "aorta",
+          "ostium_xyz_mm": [
+            6.892578125,
+            -142.607421875,
+            262.0
+          ],
+          "seed_xyz_mm": [
+            9.366184922050365,
+            -140.357421875,
+            265.44721359385966
+          ],
+          "radius_mm": null,
+          "direction_xyz": [
+            0.5150608368135635,
+            0.46850084832093125,
+            0.7177877746963093
+          ],
+          "review_status": "expert_review_pending"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "n_cases": 5,
+    "n_schema_valid": 5,
+    "n_predictions": 21,
+    "n_references": 19,
+    "true_positives": 13,
+    "false_positives": 8,
+    "false_negatives": 6,
+    "precision": 0.6190476190476191,
+    "recall": 0.6842105263157895,
+    "f1": 0.65,
+    "radius_scored_matches": 2,
+    "mean_elapsed_s": 6.209238939997158,
+    "max_elapsed_s": 19.26811579999776,
+    "mean_ostium_error_mm": 1.5923078832895408,
+    "mean_seed_error_mm": 2.6124169746268455,
+    "mean_direction_error_deg": 22.791780553140704,
+    "mean_radius_error_mm": 0.09386706979839066
+  },
+  "finished_utc": "2026-09-13T08:16:29.425689+00:00"
+}

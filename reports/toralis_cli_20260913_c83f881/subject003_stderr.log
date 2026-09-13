@@ -1,0 +1,26 @@
+  radius disagreement 62% on instance 0: distance transform 2.16mm vs frontier 5.74mm
+lumen HU median=341 p25=312 p75=358 contrast_enhanced=True
+components kept=1 dropped=0 caps=2 surface_points=20025
+flood: T=139HU (0.406 x lumen ref 341HU) retries=7 leak=none growth=0.94 reached=23265
+  search: 0.400->LEAK:growth 0.650->ok 0.525->ok 0.463->ok 0.431->ok 0.416->LEAK:growth
+  bone descent (ceiling 383HU, excised 2243 voxels in 1 components): 0.406->LEAK:growth 0.406(-2243bone)->ok
+components=23 candidates=6 neck=2.0mm rejected: no_contact_patch=0 end_cap=0 aortic_continuation=1 too_short=16
+  rejected aortic_continuation: label=1 len=15.0mm r~2.4mm (14deg from centerline)
+instances=7 from 6 candidates (split_components=1 absorbed_narrow_pieces=0 instance_too_short=0)
+  # 0 comp=13 len=15.0mm traced=3.0mm (bifurcation@3.4mm) ostium=(0.3,2.3,1506.3) patch=241mm2 disagree=3.7mm r=5.74mm (dt=2.16 frontier=5.74 vesselness=3.33 MISMATCH) vness=1.02e-06 seed<5mm
+  # 1 comp=19 len=15.0mm traced=8.8mm (max_length) ostium=(20.3,7.9,1543.1) patch=35mm2 disagree=2.3mm r=3.15mm (dt=2.94 frontier=3.15 vesselness=3.33) vness=1.38e-05 split=disjoint_patches shares=#2@1.9mm
+  # 2 comp=19 len=8.9mm traced=8.5mm (vessel_end) ostium=(26.7,10.3,1550.3) patch=108mm2 disagree=5.4mm r=3.39mm (dt=2.59 frontier=3.39 vesselness=3.33) vness=1.38e-05 split=disjoint_patches shares=#1@1.9mm
+  # 3 comp=16 len=15.0mm traced=9.9mm (max_length) ostium=(20.3,3.9,1526.3) patch=127mm2 disagree=6.1mm r=4.17mm (dt=3.04 frontier=4.17 vesselness=3.33) vness=2.92e-05
+  # 4 comp=11 len=15.0mm traced=9.2mm (max_length) ostium=(13.9,8.7,1503.1) patch=141mm2 disagree=3.6mm r=3.52mm (dt=2.80 frontier=3.52 vesselness=3.33) vness=1.83e-05
+  # 5 comp=3 len=11.8mm traced=9.1mm (max_length) ostium=(21.9,-4.9,1421.5) patch=33mm2 disagree=3.7mm r=3.37mm (dt=2.31 frontier=3.37 vesselness=3.33) vness=0.000113
+  # 6 comp=10 len=14.9mm traced=9.3mm (max_length) ostium=(3.5,5.5,1478.3) patch=19mm2 disagree=2.1mm r=1.11mm (dt=0.79 frontier=1.11 vesselness=1.48) vness=0.000168
+timings: load_and_prepare_s=2.0s geometry_s=0.7s flood_s=1.8s candidates_s=1.3s parentage_s=0.1s tracing_s=0.2s
+scoring: 7 instances, confidence threshold=0.50
+  instance=  0 comp=13 confidence=0.00 status=VETOED (traced length 3.0mm < 5mm)
+  instance=  1 comp=19 confidence=0.72 status=KEPT
+  instance=  2 comp=19 confidence=0.57 status=KEPT
+  instance=  3 comp=16 confidence=0.66 status=KEPT
+  instance=  4 comp=11 confidence=0.91 status=KEPT
+  instance=  5 comp=3 confidence=0.92 status=KEPT
+  instance=  6 comp=10 confidence=0.81 status=KEPT
+kept 6/7 as daughters

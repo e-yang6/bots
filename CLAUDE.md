@@ -157,3 +157,12 @@ The IVC is the main confuser and cannot be suppressed automatically — it is a
 large contrast-filled vein hugging the aorta for the whole scan. Distinguish it
 by scrubbing slices: it persists essentially unchanged over ~100 slices and never
 joins the lumen.
+
+## Local Windows environment
+
+On this Windows checkout, use `py -3.11` for the commands above: Python 3.11.9
+has the required pipeline dependencies, while `python3` resolves to the Microsoft
+Store stub. `rtk` is not available in Bash or PowerShell. The local data folder is
+`TORALIS CHALLENGE` without a trailing space and currently contains subjects
+001–025. The draft references are in `TORALIS CHALLENGE/EVAL_SET/case_19` through
+`case_23`, with `origN.nii.gz`, `aortaN.nii.gz`, and `annotations.json` per case.

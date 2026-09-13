@@ -1,0 +1,25 @@
+lumen HU median=416 p25=403 p75=428 contrast_enhanced=True
+components kept=1 dropped=0 caps=2 surface_points=16085
+flood: T=166HU (0.400 x lumen ref 416HU) retries=0 leak=none growth=0.88 reached=12286
+  search: 0.400->ok
+components=13 candidates=7 neck=2.0mm rejected: no_contact_patch=0 end_cap=0 aortic_continuation=2 too_short=4
+  rejected aortic_continuation: label=1 len=12.7mm r~3.4mm (11deg from centerline)
+  rejected aortic_continuation: label=12 len=15.0mm r~4.9mm (radius 0.42x local aorta, 8deg from centerline)
+instances=7 from 7 candidates (split_components=0 absorbed_narrow_pieces=0 instance_too_short=0)
+  # 0 comp=11 len=15.0mm traced=9.4mm (max_length) ostium=(23.7,2.0,1495.8) patch=124mm2 disagree=5.8mm r=2.65mm (dt=2.12 frontier=2.65 vesselness=2.22) vness=3.66e-05
+  # 1 comp=9 len=15.0mm traced=8.8mm (max_length) ostium=(5.3,-2.0,1479.8) patch=45mm2 disagree=3.1mm r=1.48mm (dt=1.29 frontier=1.48 vesselness=1.48) vness=3.34e-05
+  # 2 comp=8 len=15.0mm traced=9.4mm (max_length) ostium=(19.7,3.6,1467.8) patch=67mm2 disagree=1.9mm r=2.93mm (dt=2.37 frontier=2.93 vesselness=2.22) vness=6.51e-05
+  # 3 comp=2 len=14.9mm traced=9.3mm (max_length) ostium=(6.1,7.6,1403.8) patch=37mm2 disagree=3.0mm r=1.28mm (dt=1.02 frontier=1.28 vesselness=1.48) vness=8.06e-05
+  # 4 comp=3 len=15.0mm traced=8.6mm (max_length) ostium=(9.3,7.6,1405.4) patch=13mm2 disagree=2.6mm r=1.31mm (dt=0.96 frontier=1.31 vesselness=1.48) vness=0.000226
+  # 5 comp=7 len=6.3mm traced=5.8mm (vessel_end) ostium=(5.3,8.4,1459.8) patch=17mm2 disagree=2.3mm r=0.90mm (dt=0.79 frontier=0.90 vesselness=1.48) vness=4.03e-05
+  # 6 comp=6 len=7.3mm traced=5.8mm (vessel_end) ostium=(2.1,3.6,1429.4) patch=13mm2 disagree=2.3mm r=1.03mm (dt=0.73 frontier=1.03 vesselness=1.48) vness=0.00017
+timings: load_and_prepare_s=0.7s geometry_s=0.5s flood_s=0.3s candidates_s=0.7s parentage_s=0.0s tracing_s=0.2s
+scoring: 7 instances, confidence threshold=0.50
+  instance=  0 comp=11 confidence=0.71 status=KEPT
+  instance=  1 comp=9 confidence=0.75 status=KEPT
+  instance=  2 comp=8 confidence=1.00 status=KEPT
+  instance=  3 comp=2 confidence=0.84 status=KEPT
+  instance=  4 comp=3 confidence=0.65 status=KEPT
+  instance=  5 comp=7 confidence=0.49 status=BELOW_THRESHOLD (confidence 0.49 < 0.50)
+  instance=  6 comp=6 confidence=0.71 status=KEPT
+kept 6/7 as daughters

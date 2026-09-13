@@ -1,0 +1,54 @@
+  radius disagreement 67% on instance 1: distance transform 0.76mm vs frontier 2.30mm
+  radius disagreement 86% on instance 2: distance transform 0.40mm vs frontier 2.78mm
+  radius disagreement 67% on instance 3: distance transform 1.19mm vs frontier 3.58mm
+  radius disagreement 73% on instance 4: distance transform 0.75mm vs frontier 2.77mm
+  radius disagreement 61% on instance 5: distance transform 0.88mm vs frontier 2.25mm
+  radius disagreement 53% on instance 6: distance transform 1.26mm vs frontier 2.68mm
+  radius disagreement 71% on instance 7: distance transform 1.08mm vs frontier 3.66mm
+  radius disagreement 78% on instance 8: distance transform 0.64mm vs frontier 2.99mm
+  radius disagreement 63% on instance 9: distance transform 0.64mm vs frontier 1.74mm
+  radius disagreement 62% on instance 10: distance transform 1.23mm vs frontier 3.27mm
+  radius disagreement 80% on instance 13: distance transform 0.46mm vs frontier 2.25mm
+  radius disagreement 80% on instance 14: distance transform 0.48mm vs frontier 2.41mm
+  radius disagreement 65% on instance 15: distance transform 0.40mm vs frontier 1.14mm
+lumen HU median=84 p25=47 p75=122 contrast_enhanced=True
+components kept=1 dropped=0 caps=2 surface_points=26187
+flood: T=76HU (0.900 x lumen ref 84HU) retries=6 leak=growth growth=3.92 reached=24953
+  search: 0.400->LEAK:growth 0.650->LEAK:growth 0.775->LEAK:growth 0.838->LEAK:growth 0.869->LEAK:growth 0.884->LEAK:growth 0.900->LEAK:growth
+components=21 candidates=9 neck=2.0mm rejected: no_contact_patch=0 end_cap=0 aortic_continuation=0 too_short=12
+instances=16 from 9 candidates (split_components=4 absorbed_narrow_pieces=17 instance_too_short=2)
+  # 0 comp=20 len=15.0mm traced=2.8mm (bifurcation@3.4mm) ostium=(7.5,-122.0,1883.1) patch=21mm2 disagree=8.6mm r=3.20mm (dt=2.31 frontier=3.20 vesselness=4.81) vness=1.49e-06 seed<5mm
+  # 1 comp=1 len=15.0mm traced=2.8mm (bifurcation@3.4mm) ostium=(8.4,-152.3,1795.0) patch=31mm2 disagree=5.0mm r=2.30mm (dt=0.76 frontier=2.30 vesselness=1.48 MISMATCH) vness=4.08e-05 seed<5mm split=disjoint_patches shares=#2@2.2mm
+  # 2 comp=1 len=15.0mm traced=4.0mm (bifurcation@4.4mm) ostium=(9.5,-150.7,1803.0) patch=33mm2 disagree=3.4mm r=2.78mm (dt=0.40 frontier=2.78 vesselness=3.33 MISMATCH) vness=4.08e-05 seed<5mm split=disjoint_patches shares=#1@2.2mm,#4@4.5mm
+  # 3 comp=1 len=11.2mm traced=3.0mm (bifurcation@3.4mm) ostium=(18.2,-151.8,1816.2) patch=58mm2 disagree=4.1mm r=3.58mm (dt=1.19 frontier=3.58 vesselness=2.22 MISMATCH) vness=4.08e-05 seed<5mm split=disjoint_patches+watershed shares=#4@1.1mm
+  # 4 comp=1 len=15.0mm traced=3.0mm (bifurcation@3.4mm) ostium=(13.8,-147.2,1814.0) patch=22mm2 disagree=4.3mm r=2.77mm (dt=0.75 frontier=2.77 vesselness=1.48 MISMATCH) vness=4.08e-05 seed<5mm split=disjoint_patches+watershed shares=#2@4.5mm,#3@1.1mm
+  # 5 comp=9 len=10.9mm traced=3.0mm (bifurcation@3.4mm) ostium=(-4.6,-166.0,1807.7) patch=20mm2 disagree=3.4mm r=2.25mm (dt=0.88 frontier=2.25 vesselness=2.22 MISMATCH) vness=7.23e-05 seed<5mm split=disjoint_patches shares=#7@10.4mm,#6@9.4mm
+  # 6 comp=9 len=10.6mm traced=6.3mm (bifurcation@7.4mm) ostium=(-1.9,-168.2,1812.3) patch=22mm2 disagree=5.4mm r=2.68mm (dt=1.26 frontier=2.68 vesselness=2.22 MISMATCH) vness=7.23e-05 split=disjoint_patches shares=#5@9.4mm,#7@6.5mm
+  # 7 comp=9 len=15.0mm traced=3.1mm (bifurcation@3.4mm) ostium=(-5.0,-161.2,1822.1) patch=58mm2 disagree=4.3mm r=3.66mm (dt=1.08 frontier=3.66 vesselness=2.22 MISMATCH) vness=7.23e-05 seed<5mm split=disjoint_patches shares=#5@10.4mm,#6@6.5mm,#8@6.1mm
+  # 8 comp=9 len=15.0mm traced=4.7mm (bifurcation@5.4mm) ostium=(-4.0,-158.7,1829.2) patch=19mm2 disagree=2.6mm r=2.99mm (dt=0.64 frontier=2.99 vesselness=1.48 MISMATCH) vness=7.23e-05 seed<5mm split=disjoint_patches shares=#7@6.1mm
+  # 9 comp=12 len=15.0mm traced=8.8mm (max_length) ostium=(-5.1,-142.8,1826.8) patch=4mm2 disagree=1.6mm r=1.74mm (dt=0.64 frontier=1.74 vesselness=3.33 MISMATCH) vness=9.9e-06
+  #10 comp=2 len=15.0mm traced=4.8mm (bifurcation@4.9mm) ostium=(12.0,-173.8,1792.5) patch=49mm2 disagree=2.6mm r=3.27mm (dt=1.23 frontier=3.27 vesselness=1.48 MISMATCH) vness=7.35e-05 seed<5mm split=disjoint_patches
+  #11 comp=8 len=9.1mm traced=8.4mm (vessel_end) ostium=(11.6,-167.4,1808.5) patch=32mm2 disagree=4.6mm r=1.66mm (dt=0.90 frontier=1.66 vesselness=2.22) vness=6.16e-05 split=watershed shares=#12@1.6mm
+  #12 comp=8 len=14.9mm traced=8.8mm (max_length@11.9mm) ostium=(9.3,-169.1,1808.6) patch=22mm2 disagree=6.0mm r=1.98mm (dt=1.44 frontier=1.98 vesselness=2.22) vness=6.16e-05 split=watershed shares=#11@1.6mm
+  #13 comp=15 len=14.9mm traced=3.0mm (bifurcation@3.4mm) ostium=(12.0,-156.1,1831.7) patch=13mm2 disagree=6.7mm r=2.25mm (dt=0.46 frontier=2.25 vesselness=1.48 MISMATCH) vness=0.000178 seed<5mm
+  #14 comp=21 len=15.0mm traced=5.9mm (bifurcation@6.4mm) ostium=(20.7,-112.3,1904.0) patch=6mm2 disagree=5.0mm r=2.41mm (dt=0.48 frontier=2.41 vesselness=3.33 MISMATCH) vness=0.00011
+  #15 comp=10 len=5.6mm traced=5.0mm (vessel_end) ostium=(5.3,-169.4,1808.8) patch=19mm2 disagree=2.8mm r=1.14mm (dt=0.40 frontier=1.14 vesselness=1.48 MISMATCH) vness=8.98e-05
+timings: load_and_prepare_s=0.5s geometry_s=0.9s flood_s=2.4s candidates_s=2.7s parentage_s=0.1s tracing_s=0.5s
+scoring: 16 instances, confidence threshold=0.50
+  instance=  0 comp=20 confidence=0.00 status=VETOED (traced length 2.8mm < 5mm)
+  instance=  1 comp=1 confidence=0.00 status=VETOED (traced length 2.8mm < 5mm)
+  instance=  2 comp=1 confidence=0.00 status=VETOED (traced length 4.0mm < 5mm)
+  instance=  3 comp=1 confidence=0.00 status=VETOED (traced length 3.0mm < 5mm)
+  instance=  4 comp=1 confidence=0.00 status=VETOED (traced length 3.0mm < 5mm)
+  instance=  5 comp=9 confidence=0.00 status=VETOED (traced length 3.0mm < 5mm)
+  instance=  6 comp=9 confidence=0.67 status=KEPT
+  instance=  7 comp=9 confidence=0.00 status=VETOED (traced length 3.1mm < 5mm)
+  instance=  8 comp=9 confidence=0.00 status=VETOED (traced length 4.7mm < 5mm)
+  instance=  9 comp=12 confidence=0.79 status=KEPT
+  instance= 10 comp=2 confidence=0.00 status=VETOED (traced length 4.8mm < 5mm)
+  instance= 11 comp=8 confidence=0.62 status=KEPT
+  instance= 12 comp=8 confidence=0.65 status=KEPT
+  instance= 13 comp=15 confidence=0.00 status=VETOED (traced length 3.0mm < 5mm)
+  instance= 14 comp=21 confidence=0.44 status=BELOW_THRESHOLD (confidence 0.44 < 0.50)
+  instance= 15 comp=10 confidence=0.82 status=KEPT
+kept 5/16 as daughters

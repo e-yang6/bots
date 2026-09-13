@@ -1,0 +1,20 @@
+  radius disagreement 51% on instance 3: distance transform 0.71mm vs frontier 1.46mm
+lumen HU median=494 p25=474 p75=509 contrast_enhanced=True
+components kept=1 dropped=0 caps=2 surface_points=7409
+flood: T=249HU (0.503 x lumen ref 494HU) retries=12 leak=none growth=1.10 reached=6497
+  search: 0.400->LEAK:growth 0.650->ok 0.525->LEAK:growth 0.588->LEAK:growth 0.619->ok 0.603->ok
+  bone descent (ceiling 541HU, excised 1686 voxels in 1 components): 0.578->LEAK:growth 0.578(-1686bone)->ok 0.553(-1686bone)->ok 0.528(-1686bone)->ok 0.503(-1686bone)->ok 0.478(-1686bone)->LEAK:growth 0.478(-1824bone)->LEAK:growth
+components=5 candidates=4 neck=2.0mm rejected: no_contact_patch=0 end_cap=0 aortic_continuation=1 too_short=0
+  rejected aortic_continuation: label=1 len=15.0mm r~7.9mm (radius 1.23x local aorta)
+instances=4 from 4 candidates (split_components=0 absorbed_narrow_pieces=1 instance_too_short=0)
+  # 0 comp=5 len=15.0mm traced=8.1mm (max_length@13.4mm) ostium=(12.8,-116.8,382.8) patch=9mm2 disagree=2.0mm r=1.59mm (dt=1.59 frontier=1.59 vesselness=2.22) vness=1.72e-06
+  # 1 comp=2 len=15.0mm traced=9.1mm (max_length) ostium=(21.6,-144.8,344.4) patch=16mm2 disagree=10.5mm r=0.99mm (dt=0.79 frontier=0.99 vesselness=1.48) vness=0.000109
+  # 2 comp=4 len=7.4mm traced=6.9mm (vessel_end) ostium=(12.8,-127.2,356.4) patch=12mm2 disagree=3.4mm r=1.03mm (dt=0.93 frontier=1.03 vesselness=1.48) vness=5.47e-05
+  # 3 comp=3 len=6.4mm traced=5.0mm (vessel_end) ostium=(10.4,-135.2,339.6) patch=8mm2 disagree=2.9mm r=1.46mm (dt=0.71 frontier=1.46 vesselness=1.48 MISMATCH) vness=3.57e-05 seed<5mm
+timings: load_and_prepare_s=1.0s geometry_s=0.3s flood_s=0.7s candidates_s=0.6s parentage_s=0.0s tracing_s=0.1s
+scoring: 4 instances, confidence threshold=0.50
+  instance=  0 comp=5 confidence=0.71 status=KEPT
+  instance=  1 comp=2 confidence=0.30 status=BELOW_THRESHOLD (confidence 0.30 < 0.50)
+  instance=  2 comp=4 confidence=0.69 status=KEPT
+  instance=  3 comp=3 confidence=0.00 status=VETOED (traced length 5.0mm < 5mm)
+kept 2/4 as daughters

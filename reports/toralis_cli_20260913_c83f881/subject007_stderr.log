@@ -1,0 +1,20 @@
+  radius disagreement 69% on instance 1: distance transform 1.52mm vs frontier 4.92mm
+  radius disagreement 77% on instance 3: distance transform 0.68mm vs frontier 2.93mm
+lumen HU median=251 p25=242 p75=260 contrast_enhanced=True
+components kept=1 dropped=0 caps=2 surface_points=11482
+flood: T=173HU (0.688 x lumen ref 251HU) retries=8 leak=none growth=0.83 reached=7389
+  search: 0.400->LEAK:growth 0.650->LEAK:growth 0.775->ok 0.713->ok 0.681->LEAK:growth 0.697->LEAK:growth
+  bone descent (ceiling 282HU, excised 4133 voxels in 1 components): 0.688->LEAK:growth 0.688(-4133bone)->ok 0.662(-4133bone)->LEAK:growth
+components=5 candidates=4 neck=2.0mm rejected: no_contact_patch=0 end_cap=0 aortic_continuation=0 too_short=1
+instances=4 from 4 candidates (split_components=0 absorbed_narrow_pieces=0 instance_too_short=0)
+  # 0 comp=4 len=15.0mm traced=3.2mm (bifurcation@3.4mm) ostium=(17.5,-6.4,-1158.1) patch=153mm2 disagree=3.5mm r=4.51mm (dt=2.90 frontier=4.51 vesselness=3.33) vness=1.35e-05 seed<5mm
+  # 1 comp=5 len=15.0mm traced=9.3mm (max_length) ostium=(22.3,-1.6,-1141.3) patch=152mm2 disagree=9.3mm r=4.92mm (dt=1.52 frontier=4.92 vesselness=2.22 MISMATCH) vness=1.31e-05
+  # 2 comp=3 len=15.0mm traced=9.2mm (bifurcation@9.9mm) ostium=(24.7,-4.0,-1166.1) patch=90mm2 disagree=3.9mm r=3.11mm (dt=2.15 frontier=3.11 vesselness=3.33) vness=1.37e-05
+  # 3 comp=1 len=15.0mm traced=2.8mm (bifurcation@3.4mm) ostium=(15.1,-20.0,-1219.7) patch=88mm2 disagree=5.2mm r=2.93mm (dt=0.68 frontier=2.93 MISMATCH) vness=1.19e-05 seed<5mm
+timings: load_and_prepare_s=0.6s geometry_s=0.3s flood_s=1.0s candidates_s=0.6s parentage_s=0.0s tracing_s=0.2s
+scoring: 4 instances, confidence threshold=0.50
+  instance=  0 comp=4 confidence=0.00 status=VETOED (traced length 3.2mm < 5mm)
+  instance=  1 comp=5 confidence=0.48 status=BELOW_THRESHOLD (confidence 0.48 < 0.50)
+  instance=  2 comp=3 confidence=0.85 status=KEPT
+  instance=  3 comp=1 confidence=0.00 status=VETOED (traced length 2.8mm < 5mm)
+kept 1/4 as daughters
