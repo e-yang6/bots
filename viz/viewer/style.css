@@ -1,0 +1,469 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: #111;
+    color: #ccc;
+    overflow: hidden;
+    touch-action: none;
+}
+
+/* ─── App layout ─── */
+
+#app {
+    width: 100vw;
+    height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr;
+}
+
+/* Desktop: metrics panel on left, main area on right */
+body.companion #app {
+    grid-template-columns: 320px 1fr;
+}
+
+/* When video feed is active on desktop: metrics | video | 3D model */
+body.companion.has-video #app {
+    grid-template-columns: 320px 1fr 1fr;
+}
+
+#viewport {
+    width: 100%;
+    height: 100vh;
+}
+
+#viewport canvas {
+    display: block;
+}
+
+/* ─── Live camera feed ─── */
+
+#video-feed {
+    display: none;
+    width: 100%;
+    height: 100vh;
+    object-fit: cover;
+    background: #0a0a0a;
+}
+
+/* Show video when feed is active */
+body.has-video #video-feed {
+    display: block;
+}
+
+/* ─── Metrics panel ─── */
+
+#metrics-panel {
+    display: none;
+    background: #161616;
+    border-right: 1px solid #2a2a2a;
+    overflow-y: auto;
+    padding: 20px 16px;
+}
+
+body.companion #metrics-panel {
+    display: block;
+}
+
+#metrics-header {
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #2a2a2a;
+}
+
+#metrics-header h2 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #eee;
+    margin-bottom: 4px;
+}
+
+#metrics-count {
+    font-size: 12px;
+    color: #888;
+}
+
+/* Branch list items */
+
+.branch-item {
+    padding: 10px 10px 10px 14px;
+    margin-bottom: 4px;
+    border-left: 3px solid #444;
+    cursor: pointer;
+    border-radius: 0 4px 4px 0;
+}
+
+.branch-item:hover {
+    background: #1e1e1e;
+}
+
+.branch-item.selected {
+    background: #1a1a22;
+}
+
+.branch-item.rejected {
+    opacity: 0.6;
+}
+
+.branch-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+
+.branch-item-id {
+    font-size: 13px;
+    font-weight: 500;
+    color: #ddd;
+}
+
+.branch-item-conf {
+    font-size: 12px;
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    color: #aaa;
+    margin-left: auto;
+}
+
+.branch-item-details {
+    font-size: 11px;
+    color: #777;
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+.branch-item-reason {
+    font-size: 10px;
+    color: #966;
+    margin-top: 2px;
+    font-style: italic;
+}
+
+/* Branch status badges */
+
+.branch-badge {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-weight: 600;
+}
+
+.branch-badge.accepted {
+    color: #6c9;
+    background: rgba(102, 204, 153, 0.15);
+}
+
+.branch-badge.rejected-badge {
+    color: #c66;
+    background: rgba(204, 102, 102, 0.15);
+}
+
+/* ─── Overlay UI ─── */
+
+#overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10;
+}
+
+#overlay > * {
+    pointer-events: auto;
+}
+
+/* Top bar */
+#top-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 12px 16px;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+}
+
+body.companion #top-bar {
+    left: 320px;
+}
+
+#top-bar h1 {
+    font-size: 13px;
+    font-weight: 500;
+    color: #999;
+}
+
+#case-badge {
+    font-size: 12px;
+    color: #666;
+}
+
+#branch-badge {
+    font-size: 12px;
+    color: #666;
+    margin-left: auto;
+}
+
+/* ─── Toggle bar ─── */
+
+#toggle-bar {
+    position: absolute;
+    top: 40px;
+    right: 16px;
+    display: flex;
+    gap: 4px;
+}
+
+.toggle-btn {
+    font-family: inherit;
+    font-size: 11px;
+    padding: 4px 10px;
+    border: 1px solid #444;
+    background: #222;
+    color: #999;
+    cursor: pointer;
+    border-radius: 3px;
+}
+
+.toggle-btn:hover {
+    border-color: #666;
+    color: #ccc;
+}
+
+.toggle-btn.active {
+    border-color: #888;
+    color: #eee;
+    background: #333;
+}
+
+/* ─── Status bar ─── */
+
+#status {
+    position: absolute;
+    bottom: 72px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    color: #888;
+    white-space: nowrap;
+}
+
+body.companion #status {
+    left: calc(320px + (100% - 320px) / 2);
+}
+
+/* ─── AR button container ─── */
+
+#ar-button-container {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* ─── Branch info panel ─── */
+
+#info-panel {
+    position: absolute;
+    bottom: 120px;
+    left: 16px;
+    right: 16px;
+    max-width: 340px;
+    background: rgba(20, 20, 25, 0.95);
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 14px;
+    transform: translateY(12px);
+    opacity: 0;
+    transition: opacity 0.15s, transform 0.15s;
+    pointer-events: none;
+}
+
+body.companion #info-panel {
+    left: 336px;
+}
+
+#info-panel.visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+#info-panel h2 {
+    font-size: 13px;
+    color: #ddd;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+#info-panel h2 .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #888;
+    display: inline-block;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 3px 10px;
+    font-size: 12px;
+}
+
+.info-grid .label {
+    color: #666;
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.3px;
+    align-self: center;
+}
+
+.info-grid .value {
+    color: #bbb;
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 12px;
+}
+
+.info-grid .accept-text {
+    color: #6c9;
+}
+
+.info-grid .reject-text {
+    color: #c66;
+}
+
+/* ─── Rule breakdown ─── */
+
+#info-rules {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid #333;
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+#info-rules h3 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: #777;
+    margin-bottom: 8px;
+}
+
+/* Veto badge */
+.veto-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: #c44;
+    color: #fff;
+}
+
+.veto-reason {
+    font-size: 11px;
+    color: #c88;
+    margin-left: 4px;
+}
+
+#rule-veto {
+    margin-bottom: 6px;
+}
+
+/* Term rows */
+.rule-term {
+    display: grid;
+    grid-template-columns: 1fr 60px 36px;
+    grid-template-rows: auto auto;
+    gap: 0 6px;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.rule-term-name {
+    font-size: 11px;
+    color: #bbb;
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.rule-term-bar-track {
+    grid-column: 2;
+    grid-row: 1;
+    height: 6px;
+    background: #2a2a2a;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.rule-term-bar {
+    height: 100%;
+    border-radius: 3px;
+    min-width: 1px;
+}
+
+.rule-term-penalty {
+    grid-column: 3;
+    grid-row: 1;
+    font-size: 10px;
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    color: #999;
+    text-align: right;
+}
+
+.rule-term-note {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    font-size: 9px;
+    color: #555;
+    line-height: 1.3;
+    margin-bottom: 2px;
+}
+
+/* Flat penalties */
+.flat-penalty {
+    display: inline-block;
+    font-size: 10px;
+    color: #b88;
+    margin-right: 10px;
+    margin-top: 4px;
+}
+
+/* Total row */
+#rule-total {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 2px 8px;
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid #2a2a2a;
+}
+
+.rule-total-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: #666;
+}
+
+.rule-total-value {
+    font-size: 12px;
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    color: #ccc;
+    text-align: right;
+}

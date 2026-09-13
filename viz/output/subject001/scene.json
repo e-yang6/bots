@@ -2,10 +2,893 @@
   "case_id": "subject001",
   "mesh_file": "aorta.glb",
   "centroid_mm": [
-    14.727519822049283,
-    34.73969755589605,
-    -1014.3969223686535
+    13.768992221355436,
+    37.12299802303314,
+    -1017.23994140625
   ],
-  "branches": [],
+  "branches": [
+    {
+      "id": "candidate_001",
+      "mesh_file": "candidate_001.glb",
+      "accepted": false,
+      "confidence": 0.0,
+      "ostium": [
+        6.399999999999999,
+        -3.200000000000003,
+        22.799999999999955
+      ],
+      "seed": [
+        9.925940035799869,
+        -1.9440391230931553,
+        21.05598247766693
+      ],
+      "direction": [
+        0.813882027643051,
+        0.0,
+        -0.5810301584940631
+      ],
+      "radius_mm": 1.7810201883316041,
+      "reject_reason": "traced length 5.0mm < 5mm",
+      "rule_breakdown": {
+        "veto": "traced length 5.0mm < 5mm",
+        "terms": [
+          {
+            "name": "parallel_to_aorta",
+            "value": 74.65740885161578,
+            "onset": 45.0,
+            "full": 15.0,
+            "weight": 0.3,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "small angle to the centerline tangent = running alongside the aorta, vein-like"
+          },
+          {
+            "name": "flattened_cross_section",
+            "value": 1.5646899840532258,
+            "onset": 1.6,
+            "full": 3.0,
+            "weight": 0.2,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "major/minor axis ratio of the lumen blob at the seed"
+          },
+          {
+            "name": "hu_below_lumen",
+            "value": 7.247601509094238,
+            "onset": 60.0,
+            "full": 200.0,
+            "weight": 0.2,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "mean trace HU well under the aortic lumen reference"
+          },
+          {
+            "name": "ostium_disagreement",
+            "value": 3.124036271567292,
+            "onset": 2.0,
+            "full": 6.0,
+            "weight": 0.15,
+            "ramp": 0.281009067891823,
+            "penalty": 0.04215136018377345,
+            "note": "the three ostium estimates scatter rather than agree"
+          },
+          {
+            "name": "radius_vs_aorta",
+            "value": 0.30175587652576363,
+            "onset": 0.35,
+            "full": 0.7,
+            "weight": 0.2,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "seed radius as a fraction of the nearby aortic radius"
+          },
+          {
+            "name": "thin_ostium",
+            "value": 1.9776119402985075,
+            "onset": 1.0,
+            "full": 0.6,
+            "weight": 0.15,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "contact patch area vs. the vessel's own cross-section 2mm out: a real ostium is a wider funnel, not equal to or narrower than the vessel"
+          },
+          {
+            "name": "radius_inconsistent",
+            "value": 0.19895363116921239,
+            "onset": 0.35,
+            "full": 0.9,
+            "weight": 0.1,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "coefficient of variation of the frontier radius over the first few mm"
+          },
+          {
+            "name": "leak_margin",
+            "value": 0.3334415408753989,
+            "onset": 0.5,
+            "full": 0.0,
+            "weight": 0.15,
+            "ramp": 0.3331169182492022,
+            "penalty": 0.04996753773738033,
+            "note": "how far this component's own HU sits above the flood's chosen threshold"
+          }
+        ],
+        "case_flood_leaking_penalty": 0.0,
+        "shares_vessel_penalty": 0.05,
+        "total_penalty": 0.1421188979211538
+      }
+    },
+    {
+      "id": "branch_002",
+      "mesh_file": "branch_002.glb",
+      "accepted": true,
+      "confidence": 0.8044,
+      "ostium": [
+        2.3999999999999986,
+        -8.0,
+        22.0
+      ],
+      "seed": [
+        8.009488829881022,
+        -10.637354620305057,
+        22.41402174895586
+      ],
+      "direction": [
+        0.6531932344099846,
+        -0.7503254036587491,
+        0.10173685244471738
+      ],
+      "radius_mm": 1.7390594720840455,
+      "rule_breakdown": {
+        "veto": null,
+        "terms": [
+          {
+            "name": "parallel_to_aorta",
+            "value": 74.65740885161578,
+            "onset": 45.0,
+            "full": 15.0,
+            "weight": 0.3,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "small angle to the centerline tangent = running alongside the aorta, vein-like"
+          },
+          {
+            "name": "flattened_cross_section",
+            "value": 1.082833573672384,
+            "onset": 1.6,
+            "full": 3.0,
+            "weight": 0.2,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "major/minor axis ratio of the lumen blob at the seed"
+          },
+          {
+            "name": "hu_below_lumen",
+            "value": 83.50128936767578,
+            "onset": 60.0,
+            "full": 200.0,
+            "weight": 0.2,
+            "ramp": 0.16786635262625557,
+            "penalty": 0.033573270525251116,
+            "note": "mean trace HU well under the aortic lumen reference"
+          },
+          {
+            "name": "ostium_disagreement",
+            "value": 3.3768149089503603,
+            "onset": 2.0,
+            "full": 6.0,
+            "weight": 0.15,
+            "ramp": 0.3442037272375901,
+            "penalty": 0.05163055908563851,
+            "note": "the three ostium estimates scatter rather than agree"
+          },
+          {
+            "name": "radius_vs_aorta",
+            "value": 0.2946465283028262,
+            "onset": 0.35,
+            "full": 0.7,
+            "weight": 0.2,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "seed radius as a fraction of the nearby aortic radius"
+          },
+          {
+            "name": "thin_ostium",
+            "value": 2.078125,
+            "onset": 1.0,
+            "full": 0.6,
+            "weight": 0.15,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "contact patch area vs. the vessel's own cross-section 2mm out: a real ostium is a wider funnel, not equal to or narrower than the vessel"
+          },
+          {
+            "name": "radius_inconsistent",
+            "value": 0.281346059951092,
+            "onset": 0.35,
+            "full": 0.9,
+            "weight": 0.1,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "coefficient of variation of the frontier radius over the first few mm"
+          },
+          {
+            "name": "leak_margin",
+            "value": 0.29881512741438065,
+            "onset": 0.5,
+            "full": 0.0,
+            "weight": 0.15,
+            "ramp": 0.4023697451712387,
+            "penalty": 0.0603554617756858,
+            "note": "how far this component's own HU sits above the flood's chosen threshold"
+          }
+        ],
+        "case_flood_leaking_penalty": 0.0,
+        "shares_vessel_penalty": 0.05,
+        "total_penalty": 0.1955592913865754
+      }
+    },
+    {
+      "id": "branch_003",
+      "mesh_file": "branch_003.glb",
+      "accepted": true,
+      "confidence": 0.5693,
+      "ostium": [
+        0.7999999999999972,
+        -6.400000000000006,
+        42.0
+      ],
+      "seed": [
+        1.575202415600593,
+        -11.525065710409297,
+        37.57718236037533
+      ],
+      "direction": [
+        0.2250169611694562,
+        -0.8963689782373959,
+        -0.3819555236407906
+      ],
+      "radius_mm": 2.5148083209991454,
+      "rule_breakdown": {
+        "veto": null,
+        "terms": [
+          {
+            "name": "parallel_to_aorta",
+            "value": 16.393233297235316,
+            "onset": 45.0,
+            "full": 15.0,
+            "weight": 0.3,
+            "ramp": 0.9535588900921561,
+            "penalty": 0.2860676670276468,
+            "note": "small angle to the centerline tangent = running alongside the aorta, vein-like"
+          },
+          {
+            "name": "flattened_cross_section",
+            "value": 1.1505048914708988,
+            "onset": 1.6,
+            "full": 3.0,
+            "weight": 0.2,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "major/minor axis ratio of the lumen blob at the seed"
+          },
+          {
+            "name": "hu_below_lumen",
+            "value": 31.55132484436035,
+            "onset": 60.0,
+            "full": 200.0,
+            "weight": 0.2,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "mean trace HU well under the aortic lumen reference"
+          },
+          {
+            "name": "ostium_disagreement",
+            "value": 4.696690473406937,
+            "onset": 2.0,
+            "full": 6.0,
+            "weight": 0.15,
+            "ramp": 0.6741726183517343,
+            "penalty": 0.10112589275276014,
+            "note": "the three ostium estimates scatter rather than agree"
+          },
+          {
+            "name": "radius_vs_aorta",
+            "value": 0.42608062175210504,
+            "onset": 0.35,
+            "full": 0.7,
+            "weight": 0.2,
+            "ramp": 0.21737320500601448,
+            "penalty": 0.0434746410012029,
+            "note": "seed radius as a fraction of the nearby aortic radius"
+          },
+          {
+            "name": "thin_ostium",
+            "value": 1.7187499999999996,
+            "onset": 1.0,
+            "full": 0.6,
+            "weight": 0.15,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "contact patch area vs. the vessel's own cross-section 2mm out: a real ostium is a wider funnel, not equal to or narrower than the vessel"
+          },
+          {
+            "name": "radius_inconsistent",
+            "value": 0.09530543033798568,
+            "onset": 0.35,
+            "full": 0.9,
+            "weight": 0.1,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "coefficient of variation of the frontier radius over the first few mm"
+          },
+          {
+            "name": "leak_margin",
+            "value": 0.8182113293296542,
+            "onset": 0.5,
+            "full": 0.0,
+            "weight": 0.15,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "how far this component's own HU sits above the flood's chosen threshold"
+          }
+        ],
+        "case_flood_leaking_penalty": 0.0,
+        "shares_vessel_penalty": 0.0,
+        "total_penalty": 0.43066820078160983
+      }
+    },
+    {
+      "id": "branch_004",
+      "mesh_file": "branch_004.glb",
+      "accepted": true,
+      "confidence": 0.8577,
+      "ostium": [
+        -4.0000000000000036,
+        -5.600000000000001,
+        30.799999999999955
+      ],
+      "seed": [
+        -7.927199333098353,
+        -8.356611848156547,
+        28.00833856564759
+      ],
+      "direction": [
+        -0.8552062604711135,
+        -0.5182878081249973,
+        -0.0
+      ],
+      "radius_mm": 2.356987142562866,
+      "rule_breakdown": {
+        "veto": null,
+        "terms": [
+          {
+            "name": "parallel_to_aorta",
+            "value": 48.92756266417836,
+            "onset": 45.0,
+            "full": 15.0,
+            "weight": 0.3,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "small angle to the centerline tangent = running alongside the aorta, vein-like"
+          },
+          {
+            "name": "flattened_cross_section",
+            "value": 1.2670849720601536,
+            "onset": 1.6,
+            "full": 3.0,
+            "weight": 0.2,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "major/minor axis ratio of the lumen blob at the seed"
+          },
+          {
+            "name": "hu_below_lumen",
+            "value": 42.33634567260742,
+            "onset": 60.0,
+            "full": 200.0,
+            "weight": 0.2,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "mean trace HU well under the aortic lumen reference"
+          },
+          {
+            "name": "ostium_disagreement",
+            "value": 5.043056053030848,
+            "onset": 2.0,
+            "full": 6.0,
+            "weight": 0.15,
+            "ramp": 0.760764013257712,
+            "penalty": 0.1141146019886568,
+            "note": "the three ostium estimates scatter rather than agree"
+          },
+          {
+            "name": "radius_vs_aorta",
+            "value": 0.3993411898549403,
+            "onset": 0.35,
+            "full": 0.7,
+            "weight": 0.2,
+            "ramp": 0.14097482815697243,
+            "penalty": 0.028194965631394488,
+            "note": "seed radius as a fraction of the nearby aortic radius"
+          },
+          {
+            "name": "thin_ostium",
+            "value": 2.1537162162162162,
+            "onset": 1.0,
+            "full": 0.6,
+            "weight": 0.15,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "contact patch area vs. the vessel's own cross-section 2mm out: a real ostium is a wider funnel, not equal to or narrower than the vessel"
+          },
+          {
+            "name": "radius_inconsistent",
+            "value": 0.1894774543864266,
+            "onset": 0.35,
+            "full": 0.9,
+            "weight": 0.1,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "coefficient of variation of the frontier radius over the first few mm"
+          },
+          {
+            "name": "leak_margin",
+            "value": 0.6883622788508359,
+            "onset": 0.5,
+            "full": 0.0,
+            "weight": 0.15,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "how far this component's own HU sits above the flood's chosen threshold"
+          }
+        ],
+        "case_flood_leaking_penalty": 0.0,
+        "shares_vessel_penalty": 0.0,
+        "total_penalty": 0.14230956762005129
+      }
+    },
+    {
+      "id": "branch_005",
+      "mesh_file": "branch_005.glb",
+      "accepted": true,
+      "confidence": 0.5171,
+      "ostium": [
+        5.599999999999998,
+        -7.200000000000003,
+        -47.59999999999991
+      ],
+      "seed": [
+        8.989821508180786,
+        -5.3763315121463755,
+        -60.24656377263386
+      ],
+      "direction": [
+        0.8049679057879149,
+        -0.06030512645345288,
+        -0.5902456796748723
+      ],
+      "radius_mm": 1.1488113045692445,
+      "rule_breakdown": {
+        "veto": null,
+        "terms": [
+          {
+            "name": "parallel_to_aorta",
+            "value": 13.47485144816901,
+            "onset": 45.0,
+            "full": 15.0,
+            "weight": 0.3,
+            "ramp": 1.0,
+            "penalty": 0.3,
+            "note": "small angle to the centerline tangent = running alongside the aorta, vein-like"
+          },
+          {
+            "name": "flattened_cross_section",
+            "value": 1.4877685089957629,
+            "onset": 1.6,
+            "full": 3.0,
+            "weight": 0.2,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "major/minor axis ratio of the lumen blob at the seed"
+          },
+          {
+            "name": "hu_below_lumen",
+            "value": 83.00108337402344,
+            "onset": 60.0,
+            "full": 200.0,
+            "weight": 0.2,
+            "ramp": 0.16429345267159598,
+            "penalty": 0.032858690534319196,
+            "note": "mean trace HU well under the aortic lumen reference"
+          },
+          {
+            "name": "ostium_disagreement",
+            "value": 10.244797036014823,
+            "onset": 2.0,
+            "full": 6.0,
+            "weight": 0.15,
+            "ramp": 1.0,
+            "penalty": 0.15,
+            "note": "the three ostium estimates scatter rather than agree"
+          },
+          {
+            "name": "radius_vs_aorta",
+            "value": 0.1946415680429415,
+            "onset": 0.35,
+            "full": 0.7,
+            "weight": 0.2,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "seed radius as a fraction of the nearby aortic radius"
+          },
+          {
+            "name": "thin_ostium",
+            "value": 2.9670329670329667,
+            "onset": 1.0,
+            "full": 0.6,
+            "weight": 0.15,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "contact patch area vs. the vessel's own cross-section 2mm out: a real ostium is a wider funnel, not equal to or narrower than the vessel"
+          },
+          {
+            "name": "radius_inconsistent",
+            "value": 0.3356132570643313,
+            "onset": 0.35,
+            "full": 0.9,
+            "weight": 0.1,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "coefficient of variation of the frontier radius over the first few mm"
+          },
+          {
+            "name": "leak_margin",
+            "value": 0.6191094519287994,
+            "onset": 0.5,
+            "full": 0.0,
+            "weight": 0.15,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "how far this component's own HU sits above the flood's chosen threshold"
+          }
+        ],
+        "case_flood_leaking_penalty": 0.0,
+        "shares_vessel_penalty": 0.0,
+        "total_penalty": 0.4828586905343192
+      }
+    },
+    {
+      "id": "branch_006",
+      "mesh_file": "branch_006.glb",
+      "accepted": true,
+      "confidence": 0.9696,
+      "ostium": [
+        6.399999999999999,
+        -8.0,
+        -13.200000000000045
+      ],
+      "seed": [
+        12.12896425814964,
+        -5.976551865913375,
+        -13.234602414302799
+      ],
+      "direction": [
+        0.9983118592132393,
+        0.05806245525403531,
+        0.0014775128015448746
+      ],
+      "radius_mm": 0.9085456371307374,
+      "rule_breakdown": {
+        "veto": null,
+        "terms": [
+          {
+            "name": "parallel_to_aorta",
+            "value": 74.03991872547113,
+            "onset": 45.0,
+            "full": 15.0,
+            "weight": 0.3,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "small angle to the centerline tangent = running alongside the aorta, vein-like"
+          },
+          {
+            "name": "flattened_cross_section",
+            "value": 1.3628865868196327,
+            "onset": 1.6,
+            "full": 3.0,
+            "weight": 0.2,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "major/minor axis ratio of the lumen blob at the seed"
+          },
+          {
+            "name": "hu_below_lumen",
+            "value": 43.48001480102539,
+            "onset": 60.0,
+            "full": 200.0,
+            "weight": 0.2,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "mean trace HU well under the aortic lumen reference"
+          },
+          {
+            "name": "ostium_disagreement",
+            "value": 2.810419906579808,
+            "onset": 2.0,
+            "full": 6.0,
+            "weight": 0.15,
+            "ramp": 0.20260497664495203,
+            "penalty": 0.030390746496742803,
+            "note": "the three ostium estimates scatter rather than agree"
+          },
+          {
+            "name": "radius_vs_aorta",
+            "value": 0.1539336762672333,
+            "onset": 0.35,
+            "full": 0.7,
+            "weight": 0.2,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "seed radius as a fraction of the nearby aortic radius"
+          },
+          {
+            "name": "thin_ostium",
+            "value": 3.455882352941176,
+            "onset": 1.0,
+            "full": 0.6,
+            "weight": 0.15,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "contact patch area vs. the vessel's own cross-section 2mm out: a real ostium is a wider funnel, not equal to or narrower than the vessel"
+          },
+          {
+            "name": "radius_inconsistent",
+            "value": 0.15060255120095198,
+            "onset": 0.35,
+            "full": 0.9,
+            "weight": 0.1,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "coefficient of variation of the frontier radius over the first few mm"
+          },
+          {
+            "name": "leak_margin",
+            "value": 0.5325434182762537,
+            "onset": 0.5,
+            "full": 0.0,
+            "weight": 0.15,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "how far this component's own HU sits above the flood's chosen threshold"
+          }
+        ],
+        "case_flood_leaking_penalty": 0.0,
+        "shares_vessel_penalty": 0.0,
+        "total_penalty": 0.030390746496742803
+      }
+    },
+    {
+      "id": "branch_007",
+      "mesh_file": "branch_007.glb",
+      "accepted": true,
+      "confidence": 0.7666,
+      "ostium": [
+        3.1999999999999993,
+        0.7999999999999972,
+        -36.40000000000009
+      ],
+      "seed": [
+        6.179946769977299,
+        3.799088945929036,
+        -32.642921654367
+      ],
+      "direction": [
+        0.4227029740038789,
+        0.5370490651854788,
+        0.7300003406517559
+      ],
+      "radius_mm": 0.8000003635883333,
+      "rule_breakdown": {
+        "veto": null,
+        "terms": [
+          {
+            "name": "parallel_to_aorta",
+            "value": 24.529001901941566,
+            "onset": 45.0,
+            "full": 15.0,
+            "weight": 0.3,
+            "ramp": 0.6823666032686144,
+            "penalty": 0.20470998098058432,
+            "note": "small angle to the centerline tangent = running alongside the aorta, vein-like"
+          },
+          {
+            "name": "flattened_cross_section",
+            "value": 1.2915227181768982,
+            "onset": 1.6,
+            "full": 3.0,
+            "weight": 0.2,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "major/minor axis ratio of the lumen blob at the seed"
+          },
+          {
+            "name": "hu_below_lumen",
+            "value": 57.20311737060547,
+            "onset": 60.0,
+            "full": 200.0,
+            "weight": 0.2,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "mean trace HU well under the aortic lumen reference"
+          },
+          {
+            "name": "ostium_disagreement",
+            "value": 2.7655762377887907,
+            "onset": 2.0,
+            "full": 6.0,
+            "weight": 0.15,
+            "ramp": 0.19139405944719767,
+            "penalty": 0.02870910891707965,
+            "note": "the three ostium estimates scatter rather than agree"
+          },
+          {
+            "name": "radius_vs_aorta",
+            "value": 0.13554299525468405,
+            "onset": 0.35,
+            "full": 0.7,
+            "weight": 0.2,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "seed radius as a fraction of the nearby aortic radius"
+          },
+          {
+            "name": "thin_ostium",
+            "value": 2.083333333333333,
+            "onset": 1.0,
+            "full": 0.6,
+            "weight": 0.15,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "contact patch area vs. the vessel's own cross-section 2mm out: a real ostium is a wider funnel, not equal to or narrower than the vessel"
+          },
+          {
+            "name": "radius_inconsistent",
+            "value": 0.26235742866332196,
+            "onset": 0.35,
+            "full": 0.9,
+            "weight": 0.1,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "coefficient of variation of the frontier radius over the first few mm"
+          },
+          {
+            "name": "leak_margin",
+            "value": 0.6104528485635449,
+            "onset": 0.5,
+            "full": 0.0,
+            "weight": 0.15,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "how far this component's own HU sits above the flood's chosen threshold"
+          }
+        ],
+        "case_flood_leaking_penalty": 0.0,
+        "shares_vessel_penalty": 0.0,
+        "total_penalty": 0.23341908989766397
+      }
+    },
+    {
+      "id": "candidate_008",
+      "mesh_file": "candidate_008.glb",
+      "accepted": false,
+      "confidence": 0.0,
+      "ostium": [
+        -4.0000000000000036,
+        -3.200000000000003,
+        -33.200000000000045
+      ],
+      "seed": [
+        -7.613920680876065,
+        -1.580299073860722,
+        -34.80256931007739
+      ],
+      "direction": [
+        -0.9562952113574327,
+        0.26338073124199785,
+        0.12700416979482945
+      ],
+      "radius_mm": 0.7778560161590578,
+      "reject_reason": "traced length 5.0mm < 5mm",
+      "rule_breakdown": {
+        "veto": "traced length 5.0mm < 5mm",
+        "terms": [
+          {
+            "name": "parallel_to_aorta",
+            "value": 73.39538865189297,
+            "onset": 45.0,
+            "full": 15.0,
+            "weight": 0.3,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "small angle to the centerline tangent = running alongside the aorta, vein-like"
+          },
+          {
+            "name": "flattened_cross_section",
+            "value": 1.0000000000000002,
+            "onset": 1.6,
+            "full": 3.0,
+            "weight": 0.2,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "major/minor axis ratio of the lumen blob at the seed"
+          },
+          {
+            "name": "hu_below_lumen",
+            "value": 52.2598762512207,
+            "onset": 60.0,
+            "full": 200.0,
+            "weight": 0.2,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "mean trace HU well under the aortic lumen reference"
+          },
+          {
+            "name": "ostium_disagreement",
+            "value": 2.5548811698323464,
+            "onset": 2.0,
+            "full": 6.0,
+            "weight": 0.15,
+            "ramp": 0.1387202924580866,
+            "penalty": 0.02080804386871299,
+            "note": "the three ostium estimates scatter rather than agree"
+          },
+          {
+            "name": "radius_vs_aorta",
+            "value": 0.13179110798670665,
+            "onset": 0.35,
+            "full": 0.7,
+            "weight": 0.2,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "seed radius as a fraction of the nearby aortic radius"
+          },
+          {
+            "name": "thin_ostium",
+            "value": 7.249999999999999,
+            "onset": 1.0,
+            "full": 0.6,
+            "weight": 0.15,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "contact patch area vs. the vessel's own cross-section 2mm out: a real ostium is a wider funnel, not equal to or narrower than the vessel"
+          },
+          {
+            "name": "radius_inconsistent",
+            "value": 0.26141088867042445,
+            "onset": 0.35,
+            "full": 0.9,
+            "weight": 0.1,
+            "ramp": 0.0,
+            "penalty": 0.0,
+            "note": "coefficient of variation of the frontier radius over the first few mm"
+          },
+          {
+            "name": "leak_margin",
+            "value": 0.2122490937618351,
+            "onset": 0.5,
+            "full": 0.0,
+            "weight": 0.15,
+            "ramp": 0.5755018124763298,
+            "penalty": 0.08632527187144946,
+            "note": "how far this component's own HU sits above the flood's chosen threshold"
+          }
+        ],
+        "case_flood_leaking_penalty": 0.0,
+        "shares_vessel_penalty": 0.0,
+        "total_penalty": 0.10713331574016245
+      }
+    }
+  ],
   "scale_note": "Coordinates in mm, centered at aorta centroid"
 }
