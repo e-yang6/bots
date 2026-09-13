@@ -181,6 +181,7 @@ def main():
     ws_port = args.port + 1
     ssl_context = None
 
+    socketserver.TCPServer.allow_reuse_address = True
     with socketserver.TCPServer((args.host, args.port), handler) as httpd:
         if not args.no_ssl:
             try:
